@@ -3,159 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Malayalam Karaoke AI | Gemini 3.5 Flash</title>
+    <title>Advanced Malayalam Karaoke Studio</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #121212;
             color: #ffffff;
             text-align: center;
-            padding: 30px;
+            padding: 20px;
         }
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             background: #1e1e1e;
-            padding: 20px;
+            padding: 30px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
+        .api-link {
+            display: block;
+            margin-bottom: 15px;
+            color: #4caf50;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .api-link:hover { text-decoration: underline; }
+        
         input, button {
             padding: 12px;
-            margin: 10px 5px;
+            margin: 8px 5px;
             border-radius: 6px;
             border: none;
             font-size: 16px;
         }
-        input[type="password"] {
-            width: 80%;
-            background: #333;
-            color: white;
-            border: 1px solid #555;
-        }
-        input[type="file"] {
-            background: #333;
-            color: white;
-            cursor: pointer;
-        }
-        button {
-            background-color: #ff3b30;
-            color: white;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.3s;
-        }
-        button:hover { background-color: #cc2f26; }
+        input[type="password"] { width: 70%; background: #333; color: white; border: 1px solid #555; }
+        input[type="file"] { background: #333; color: white; cursor: pointer; }
         
-        #audioPlayer {
-            width: 100%;
-            margin-top: 20px;
-        }
+        button { background-color: #007bff; color: white; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        button:hover { background-color: #0056b3; }
+        .btn-danger { background-color: #ff3b30; }
+        .btn-danger:hover { background-color: #cc2f26; }
+        .btn-success { background-color: #28a745; }
+        
+        #audioPlayer { width: 100%; margin-top: 20px; }
+        
         #lyricsContainer {
-            margin-top: 40px;
-            font-size: 32px;
-            line-height: 1.8;
+            margin-top: 30px;
+            font-size: 28px;
+            line-height: 2;
             padding: 20px;
             background: #000;
             border-radius: 10px;
             min-height: 200px;
+            text-align: center;
         }
-        .lyric-word {
-            margin: 0 6px;
-            color: #666;
-            transition: color 0.1s;
-        }
-        /* Malayalam Text Highlight Color */
-        .highlight {
-            color: #ff3b30;
-            text-shadow: 0 0 12px rgba(255, 59, 48, 0.6);
-            font-weight: bold;
-        }
-        #status { color: #ffcc00; margin-top: 10px; font-style: italic; }
+        .lyric-line { display: block; margin-bottom: 10px; }
+        .lyric-word { margin: 0 5px; color: #666; transition: color 0.1s; }
         
-        /* Smooth fade out for API section */
-        #apiSection {
-            transition: opacity 0.5s ease, height 0.5s ease;
-        }
+        /* Highlight Color */
+        .highlight { color: #ff3b30; text-shadow: 0 0 12px rgba(255, 59, 48, 0.6); font-weight: bold; }
+        
+        #status { color: #ffcc00; margin-top: 10px; font-style: italic; }
+        .action-buttons { margin-top: 20px; display: none; padding: 15px; background: #2a2a2a; border-radius: 8px;}
+        
+        /* Hidden Canvas for Video Recording */
+        canvas { display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>🎵 AI Malayalam Karaoke (Gemini 3.5 Flash)</h2>
+    <h2>🎤 AI Karaoke Studio (Gemini 3.5 Flash)</h2>
     
-    <!-- API Key Section (Will hide after first use) -->
     <div id="apiSection">
-        <input type="password" id="apiKey" placeholder="Enter your Gemini 3.5 Flash API Key here...">
+        <a href="https://aistudio.google.com/app/apikey" target="_blank" class="api-link">🔑 Click here to get your Free Gemini API Key</a>
+        <input type="password" id="apiKey" placeholder="Paste your API Key here...">
         <br>
     </div>
     
-    <!-- Audio File Input -->
     <div id="uploadSection">
-        <input type="file" id="audioFile" accept="audio/*">
-        <button onclick="processAudio()">Generate Lyrics</button>
-        <button onclick="toggleKaraoke()" id="karaokeBtn">Turn ON Karaoke Mode</button>
+        <input type="file" id="mediaFile" accept="audio/mp3, audio/wav, video/mp4, audio/*, video/*">
+        <button onclick="processMedia()">Generate Lyrics</button>
     </div>
 
     <div id="status"></div>
-
     <audio id="audioPlayer" controls></audio>
 
-    <div id="lyricsContainer">Upload a song and click Generate Lyrics.</div>
+    <div class="action-buttons" id="actionButtons">
+        <button onclick="toggleKaraoke()" id="karaokeBtn" class="btn-danger">Karaoke Mode: OFF</button>
+        <button onclick="downloadLyrics()" class="btn-success">⬇️ Save Lyrics</button>
+        <button onclick="recordAndDownloadVideo()" class="btn-success">🎥 Save as Video (Karaoke + Lyrics)</button>
+    </div>
+
+    <div id="lyricsContainer">Lyrics will appear here line by line...</div>
+    
+    <!-- Video Rendering Canvas -->
+    <canvas id="videoCanvas" width="1280" height="720"></canvas>
 </div>
 
 <script>
     let lyricsData = [];
     let isKaraokeMode = false;
-    let audioContext;
-    let sourceNode;
-    let karaokeNode;
-    const audio = document.getElementById("audioPlayer");
+    let audioContext, sourceNode, karaokeNode, destNode;
+    let storedApiKey = "";
+    const media = document.getElementById("audioPlayer");
     const container = document.getElementById("lyricsContainer");
     const statusText = document.getElementById("status");
-    let storedApiKey = ""; // Store API key in memory after hiding input
+    const canvas = document.getElementById("videoCanvas");
+    const ctx = canvas.getContext("2d");
 
-    async function processAudio() {
+    // 1. Process Media via Gemini API
+    async function processMedia() {
         const apiKeyInput = document.getElementById("apiKey").value.trim();
-        const fileInput = document.getElementById("audioFile").files[0];
+        const fileInput = document.getElementById("mediaFile").files[0];
 
-        // Set API key if entered, or use previously stored one
-        if (apiKeyInput) {
-            storedApiKey = apiKeyInput;
-        }
+        if (apiKeyInput) storedApiKey = apiKeyInput;
+        if (!storedApiKey) return alert("API Key is required.");
+        if (!fileInput) return alert("Please select an MP3 or MP4 file.");
 
-        if (!storedApiKey) return alert("Please enter your Gemini API Key.");
-        if (!fileInput) return alert("Please select an audio file.");
-
-        // Hide API Section once key is confirmed
         document.getElementById("apiSection").style.display = "none";
+        statusText.innerText = "Analyzing media with Gemini 3.5 Flash... (Please wait)";
         
-        statusText.innerText = "Analyzing audio with Gemini 3.5 Flash... (This may take a minute)";
-        
-        // Load audio to player
-        const objectUrl = URL.createObjectURL(fileInput);
-        audio.src = objectUrl;
+        media.src = URL.createObjectURL(fileInput);
 
         try {
-            const base64Audio = await fileToBase64(fileInput);
-            const mimeType = fileInput.type;
-
-            const prompt = `Listen to this song. Transcribe the lyrics and translate them to Malayalam. 
-            Format EXACTLY as a JSON array. 
-            Each object must have "time" (start time in seconds as float) and "word" (the Malayalam word).
-            Example: [{"time": 0.5, "word": "ഇത്"}, {"time": 1.2, "word": "ഒരു"}]
-            Return ONLY the raw JSON array. No markdown, no backticks.`;
+            const base64Media = await fileToBase64(fileInput);
+            
+            // Structured Prompt for Line-by-Line output
+            const prompt = `Listen to this media. Transcribe the lyrics and translate them to Malayalam.
+            Organize the lyrics line by line.
+            Format EXACTLY as a JSON array of line objects.
+            Each object must have a "words" array.
+            Each word object inside the array must have "time" (start time in seconds as float) and "word" (Malayalam word).
+            Example: 
+            [ { "words": [ {"time": 0.5, "word": "ഇത്"}, {"time": 1.2, "word": "ഒരു"} ] } ]
+            Return ONLY JSON array.`;
 
             const requestBody = {
                 contents: [{
                     parts: [
                         { text: prompt },
-                        { inlineData: { mimeType: mimeType, data: base64Audio.split(',')[1] } }
+                        { inlineData: { mimeType: fileInput.type, data: base64Media.split(',')[1] } }
                     ]
                 }]
             };
 
-            // Using Gemini 3.5 Flash endpoint as requested
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${storedApiKey}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -163,20 +155,18 @@
             });
 
             const data = await response.json();
-            
             if(data.error) throw new Error(data.error.message);
 
-            let rawJson = data.candidates[0].content.parts[0].text;
-            rawJson = rawJson.replace(/```json/g, '').replace(/```/g, '').trim();
-            
+            let rawJson = data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim();
             lyricsData = JSON.parse(rawJson);
+            
             renderLyrics();
-            statusText.innerText = "Lyrics generated successfully! Hit Play.";
+            document.getElementById("actionButtons").style.display = "block";
+            statusText.innerText = "Done! Play the song to see the sync.";
 
         } catch (error) {
             console.error(error);
-            statusText.innerText = "Error generating lyrics. Please check your API Key or try a smaller file.";
-            // Show API section again if there's an error so user can correct it
+            statusText.innerText = "Error generated. Check API Key or file size.";
             document.getElementById("apiSection").style.display = "block";
         }
     }
@@ -190,36 +180,42 @@
         });
     }
 
+    // 2. Render Lyrics Line by Line
     function renderLyrics() {
         container.innerHTML = "";
-        lyricsData.forEach((item, index) => {
-            let span = document.createElement("span");
-            span.className = "lyric-word";
-            span.id = "word-" + index;
-            span.innerText = item.word;
-            container.appendChild(span);
+        lyricsData.forEach((lineObj, lineIndex) => {
+            let lineDiv = document.createElement("div");
+            lineDiv.className = "lyric-line";
+            
+            lineObj.words.forEach((wordObj, wordIndex) => {
+                let span = document.createElement("span");
+                span.className = "lyric-word";
+                span.id = `word-${lineIndex}-${wordIndex}`;
+                span.dataset.time = wordObj.time;
+                span.innerText = wordObj.word;
+                lineDiv.appendChild(span);
+            });
+            container.appendChild(lineDiv);
         });
     }
 
-    audio.addEventListener("timeupdate", () => {
-        let currentTime = audio.currentTime;
-        lyricsData.forEach((item, index) => {
-            let span = document.getElementById("word-" + index);
-            if (span) {
-                if (currentTime >= item.time) {
-                    span.classList.add("highlight");
-                } else {
-                    span.classList.remove("highlight");
-                }
+    // 3. Highlight Logic
+    media.addEventListener("timeupdate", () => {
+        let currentTime = media.currentTime;
+        document.querySelectorAll('.lyric-word').forEach(span => {
+            if (currentTime >= parseFloat(span.dataset.time)) {
+                span.classList.add("highlight");
+            } else {
+                span.classList.remove("highlight");
             }
         });
     });
 
+    // 4. Karaoke Filter
     function toggleKaraoke() {
         if (!audioContext) {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            sourceNode = audioContext.createMediaElementSource(audio);
-            
+            sourceNode = audioContext.createMediaElementSource(media);
             karaokeNode = audioContext.createGain();
             
             const splitter = audioContext.createChannelSplitter(2);
@@ -234,27 +230,120 @@
             gainNode.connect(merger, 0, 0);
             
             merger.connect(karaokeNode);
-            karaokeNode.connect(audioContext.destination);
+            
+            // Create destination for recording
+            destNode = audioContext.createMediaStreamDestination();
+            karaokeNode.connect(destNode);
+            sourceNode.connect(audioContext.destination);
         }
 
         isKaraokeMode = !isKaraokeMode;
         const btn = document.getElementById("karaokeBtn");
         
         if (isKaraokeMode) {
-            sourceNode.disconnect();
-            sourceNode.connect(karaokeNode);
-            btn.innerText = "Turn OFF Karaoke Mode";
-            btn.style.backgroundColor = "#4caf50";
+            sourceNode.disconnect(audioContext.destination);
+            karaokeNode.connect(audioContext.destination);
+            btn.innerText = "Karaoke Mode: ON";
+            btn.classList.replace("btn-danger", "btn-success");
         } else {
-            sourceNode.disconnect();
+            karaokeNode.disconnect(audioContext.destination);
             sourceNode.connect(audioContext.destination);
-            btn.innerText = "Turn ON Karaoke Mode";
-            btn.style.backgroundColor = "#ff3b30";
+            btn.innerText = "Karaoke Mode: OFF";
+            btn.classList.replace("btn-success", "btn-danger");
+        }
+        if (audioContext.state === 'suspended') audioContext.resume();
+    }
+
+    // 5. Download Lyrics (.txt file)
+    function downloadLyrics() {
+        let textContent = "";
+        lyricsData.forEach(line => {
+            line.words.forEach(w => textContent += w.word + " ");
+            textContent += "\n";
+        });
+        const blob = new Blob([textContent], { type: "text/plain" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "Malayalam_Lyrics.txt";
+        link.click();
+    }
+
+    // 6. Record and Save as Video (Canvas + Audio)
+    function recordAndDownloadVideo() {
+        if (!audioContext) toggleKaraoke(); // Init audio context
+        
+        statusText.innerText = "Recording Video... Please wait until the song finishes playing.";
+        media.currentTime = 0;
+        media.play();
+
+        const videoStream = canvas.captureStream(30);
+        // Mix audio with video stream
+        const audioStream = isKaraokeMode ? destNode.stream : sourceNode.context.createMediaStreamDestination().stream;
+        if(!isKaraokeMode) sourceNode.connect(sourceNode.context.createMediaStreamDestination()); // Route audio if not karaoke
+        
+        const combinedStream = new MediaStream([...videoStream.getTracks(), ...audioStream.getTracks()]);
+        
+        const recorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm' });
+        const chunks = [];
+        
+        recorder.ondataavailable = e => chunks.push(e.data);
+        recorder.onstop = () => {
+            const blob = new Blob(chunks, { type: 'video/webm' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "Karaoke_Video.webm";
+            link.click();
+            statusText.innerText = "Video Downloaded Successfully!";
+        };
+
+        recorder.start();
+
+        // Canvas Drawing Loop
+        function drawFrame() {
+            if (media.paused || media.ended) return;
+            
+            // Background
+            ctx.fillStyle = "#121212";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Text Settings
+            ctx.font = "bold 40px Arial";
+            ctx.textAlign = "center";
+            
+            let y = 300; // Vertical start position
+            let currentTime = media.currentTime;
+
+            // Draw Lyrics
+            lyricsData.forEach(lineObj => {
+                let textLine = "";
+                let x = canvas.width / 2;
+                
+                // Simplified drawing for video: just text highlight logic
+                ctx.fillStyle = "#ffffff"; 
+                // Check if this line is active
+                let lineStart = lineObj.words[0].time;
+                let lineEnd = lineObj.words[lineObj.words.length-1].time + 2; 
+                
+                if(currentTime >= lineStart && currentTime <= lineEnd) {
+                    ctx.fillStyle = "#ff3b30"; // Red if currently singing this line
+                } else if (currentTime < lineStart) {
+                    ctx.fillStyle = "#666666"; // Grey if future
+                }
+                
+                let lineText = lineObj.words.map(w => w.word).join(" ");
+                ctx.fillText(lineText, x, y);
+                y += 60;
+            });
+            
+            requestAnimationFrame(drawFrame);
         }
         
-        if (audioContext.state === 'suspended') {
-            audioContext.resume();
-        }
+        drawFrame();
+        
+        media.onended = () => {
+            recorder.stop();
+            media.onended = null;
+        };
     }
 </script>
 
