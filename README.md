@@ -1,1 +1,1 @@
- https://muralipaladan.github.io/karaoke/
+https://muralipaladan.github.io/Sing-Along/
