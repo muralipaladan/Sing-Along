@@ -34,7 +34,7 @@
   }
   h1 { font-size: 22px; color: var(--primary); text-align: center; margin-top: 0; }
   
-  input[type="password"], input[type="file"], input[type="text"] {
+  input[type="password"], input[type="file"], input[type="text"], select {
     width: 100%; padding: 14px; background: #0F172A; border: 1px solid #334155;
     color: white; border-radius: 10px; margin-top: 8px; box-sizing: border-box;
   }
@@ -94,11 +94,19 @@
   <div id="libraryView" class="view active">
     
     <div id="apiSection" class="card">
-      <h2 style="font-size: 16px; margin:0 0 10px 0;">⚙️ Setup API Key</h2>
-      <label style="font-size: 13px; color: var(--text-muted);">Gemini API Key നൽകുക</label>
+      <h2 style="font-size: 16px; margin:0 0 10px 0;">⚙️ Setup API Key & Model</h2>
+      
+      <label style="font-size: 13px; color: var(--text-muted);">AI Model തിരഞ്ഞെടുക്കുക</label>
+      <select id="modelSelect">
+        <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
+        <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash Lite</option>
+      </select>
+
+      <label style="font-size: 13px; color: var(--text-muted); margin-top: 12px; display: block;">Gemini API Key നൽകുക</label>
       <a href="https://aistudio.google.com/apikey" target="_blank" class="api-link">🔑 Get Free API Key</a>
       <input type="password" id="apiKey" placeholder="AIzaSy...">
-      <button id="saveApiBtn">Save Key</button>
+      
+      <button id="saveApiBtn">Save Settings</button>
     </div>
 
     <div class="card">
@@ -107,7 +115,7 @@
         <!-- Songs will load here -->
       </ul>
       <button id="showAddViewBtn" style="margin-top: 20px;">+ പുതിയ പാട്ട് ചേർക്കുക</button>
-      <button id="resetApiBtn" class="btn-outline" style="margin-top: 10px; font-size: 12px;">Change API Key</button>
+      <button id="resetApiBtn" class="btn-outline" style="margin-top: 10px; font-size: 12px;">Change API Key / Model</button>
     </div>
   </div>
 
@@ -213,6 +221,12 @@
     loadLibrary();
 
     const savedKey = localStorage.getItem('gemini_karaoke_key');
+    const savedModel = localStorage.getItem('gemini_karaoke_model');
+    
+    if(savedModel) {
+      document.getElementById('modelSelect').value = savedModel;
+    }
+
     if(savedKey) {
       document.getElementById('apiKey').value = savedKey;
       document.getElementById('apiSection').style.display = 'none';
@@ -223,17 +237,17 @@
 
   document.getElementById('saveApiBtn').addEventListener('click', () => {
     const key = document.getElementById('apiKey').value.trim();
+    const model = document.getElementById('modelSelect').value;
     if(key) {
       localStorage.setItem('gemini_karaoke_key', key);
+      localStorage.setItem('gemini_karaoke_model', model);
       document.getElementById('apiSection').style.display = 'none';
-      alert("API Key സേവ് ചെയ്തു!");
+      alert("സെറ്റിംഗ്സ് സേവ് ചെയ്തു!");
     }
   });
 
   document.getElementById('resetApiBtn').addEventListener('click', () => {
     document.getElementById('apiSection').style.display = 'block';
-    localStorage.removeItem('gemini_karaoke_key');
-    document.getElementById('apiKey').value = '';
   });
 
   document.getElementById('showAddViewBtn').addEventListener('click', () => showView('addView'));
@@ -297,7 +311,14 @@
 
   document.getElementById('processBtn').addEventListener('click', async () => {
     const apiKey = localStorage.getItem('gemini_karaoke_key');
-    if(!apiKey) return alert('ആദ്യം API Key സേവ് ചെയ്യുക!');
+    const selectedModel = localStorage.getItem('gemini_karaoke_model') || 'gemini-3.5-flash';
+    
+    if(!apiKey) {
+        alert('ആദ്യം API Key സേവ് ചെയ്യുക!');
+        document.getElementById('apiSection').style.display = 'block';
+        showView('libraryView');
+        return;
+    }
     
     const title = document.getElementById('songTitleInput').value.trim() || 'My Song';
     const file = document.getElementById('mediaFile').files[0];
@@ -312,7 +333,7 @@
       
       // 2. Fetch Words from AI
       simulateProgress(40, 95, 10000, 'AI വരികൾ കണ്ടെത്തുന്നു (ഇതിന് അല്പം സമയമെടുക്കും)...');
-      const jsonWords = await fetchWordLyricsFromGemini(apiKey, base64Audio);
+      const jsonWords = await fetchWordLyricsFromGemini(apiKey, selectedModel, base64Audio);
       
       clearInterval(progressInterval);
       updateProgress(100, 'പൂർത്തിയായി!');
@@ -323,7 +344,7 @@
       const songData = {
         id: Date.now(),
         title: title,
-        audioBlob: file, // Save the original file for full quality playback
+        audioBlob: file, 
         lyrics: jsonWords
       };
       
@@ -370,7 +391,6 @@
     
     let lastTime = 0;
     currentLyrics.forEach((item, index) => {
-      // Insert line break if time gap is > 2 seconds (simulating lines)
       if (index > 0 && (item.t - lastTime) > 2.0) {
         box.appendChild(document.createElement('br'));
       }
@@ -404,7 +424,6 @@
       if (i < activeIndex) el.classList.add('passed');
       if (i === activeIndex) {
         el.classList.add('active');
-        // Auto Scroll
         const box = document.getElementById('lyricsBox');
         const scrollAmount = el.offsetTop - (box.offsetHeight / 2) + (el.offsetHeight / 2);
         box.scrollTo({ top: scrollAmount, behavior: 'smooth' });
@@ -413,14 +432,11 @@
   });
 
   // --- API & Compression Core ---
-  
-  // 1. കൂടുതൽ മികച്ച ഓഡിയോ കംപ്രഷൻ (Size പകുതിയായി കുറയ്ക്കുന്നു)
   async function compressAudioFile(file) {
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const arrayBuffer = await file.arrayBuffer();
     const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
     
-    // 16000Hz ന് പകരം 8000Hz ആക്കി മാറ്റുന്നു. ഫയൽ സൈസ് പകുതിയാകും!
     const targetSampleRate = 8000; 
     const offlineContext = new OfflineAudioContext(1, audioBuffer.duration * targetSampleRate, targetSampleRate);
     const source = offlineContext.createBufferSource();
@@ -458,10 +474,9 @@
     return new Blob([buffer], {type: "audio/wav"});
   }
 
-  // 2. പുതിയ API കോൾ & കൃത്യമായ എറർ മെസ്സേജ്
-  async function fetchWordLyricsFromGemini(apiKey, base64Audio) {
-    // v1beta മോഡൽ സ്ഥിരമായി ഉപയോഗിക്കുന്നു
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  // API Call updated to use the selected Model
+  async function fetchWordLyricsFromGemini(apiKey, selectedModel, base64Audio) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
     
     const prompt = `Listen to the audio. Transcribe the Malayalam lyrics. 
     OUTPUT REQUIREMENT: You must return ONLY a valid JSON array of objects. Each object represents one word sung. 
@@ -480,7 +495,6 @@
     });
 
     if (!response.ok) {
-       // ഗൂഗിളിൽ നിന്നുള്ള കൃത്യമായ എറർ മെസ്സേജ് കണ്ടെത്തുന്നു
        const errorText = await response.text();
        let exactError = response.status;
        try {
@@ -496,7 +510,6 @@
     const data = await response.json();
     let text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
     
-    // Clean markdown
     text = text.replace(/```json/g, '').replace(/```/g, '').trim();
     
     try {
