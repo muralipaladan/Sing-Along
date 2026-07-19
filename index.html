@@ -48,26 +48,24 @@
   button:disabled { background: #334155; color: #94A3B8; cursor: not-allowed; }
   .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
 
-  /* API Section */
   #apiSection { display: none; margin-bottom: 20px; }
   .api-link { font-size: 13px; color: var(--primary); float: right; margin-top: 4px; text-decoration: none; }
 
-  /* Progress Bar */
   .progress-container { display: none; margin-top: 16px; text-align: center; }
   .progress-bar-bg { background: #334155; border-radius: 8px; height: 10px; width: 100%; overflow: hidden; margin-top: 8px; }
   .progress-bar-fill { background: var(--primary); height: 100%; width: 0%; transition: width 0.3s; }
   .progress-text { font-size: 14px; color: var(--primary); font-weight: bold; margin-top: 8px;}
 
-  /* Library Section */
   .song-list { list-style: none; padding: 0; margin: 0; }
   .song-item {
     background: #0F172A; padding: 16px; border-radius: 10px; margin-bottom: 10px;
     display: flex; justify-content: space-between; align-items: center; border: 1px solid #334155;
+    flex-wrap: wrap; gap: 10px;
   }
-  .song-title { font-weight: bold; font-size: 15px; }
-  .song-actions button { width: auto; padding: 8px 16px; margin: 0; font-size: 13px; }
+  .song-title { font-weight: bold; font-size: 15px; width: 100%; }
+  .song-actions { display: flex; gap: 5px; width: 100%; justify-content: flex-end; }
+  .song-actions button { width: auto; padding: 8px 12px; margin: 0; font-size: 13px; flex: 1; }
 
-  /* Player & Karaoke Box */
   audio { width: 100%; margin-top: 16px; border-radius: 8px; }
   .karaoke-container {
     background: #000; height: 400px; overflow-y: auto; border-radius: 12px;
@@ -83,55 +81,43 @@
 
   .view { display: none; }
   .view.active { display: block; }
-
 </style>
 </head>
 <body>
 
 <div class="container">
   
-  <!-- View 1: Library & Add New -->
   <div id="libraryView" class="view active">
-    
     <div id="apiSection" class="card">
       <h2 style="font-size: 16px; margin:0 0 10px 0;">⚙️ Setup API Key & Model</h2>
-      
       <label style="font-size: 13px; color: var(--text-muted);">AI Model തിരഞ്ഞെടുക്കുക</label>
       <select id="modelSelect">
         <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
         <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash Lite</option>
       </select>
-
       <label style="font-size: 13px; color: var(--text-muted); margin-top: 12px; display: block;">Gemini API Key നൽകുക</label>
       <a href="https://aistudio.google.com/apikey" target="_blank" class="api-link">🔑 Get Free API Key</a>
       <input type="password" id="apiKey" placeholder="AIzaSy...">
-      
       <button id="saveApiBtn">Save Settings</button>
     </div>
 
     <div class="card">
       <h1>🎵 പാട്ടുകളുടെ ശേഖരം</h1>
-      <ul class="song-list" id="savedSongsList">
-        <!-- Songs will load here -->
-      </ul>
+      <ul class="song-list" id="savedSongsList"></ul>
       <button id="showAddViewBtn" style="margin-top: 20px;">+ പുതിയ പാട്ട് ചേർക്കുക</button>
       <button id="resetApiBtn" class="btn-outline" style="margin-top: 10px; font-size: 12px;">Change API Key / Model</button>
     </div>
   </div>
 
-  <!-- View 2: Add New Song -->
   <div id="addView" class="view">
     <div class="card">
       <h1>പുതിയ പാട്ട് ചേർക്കുക</h1>
       <label style="font-size: 13px; color: var(--text-muted);">പാട്ടിന്റെ പേര് (സേവ് ചെയ്യാൻ)</label>
       <input type="text" id="songTitleInput" placeholder="ഉദാ: മാണിക്യ മലരായ...">
-      
       <label style="font-size: 13px; color: var(--text-muted); display: block; margin-top: 16px;">MP3 അല്ലെങ്കിൽ MP4 ഫയൽ</label>
       <input type="file" id="mediaFile" accept="audio/*, video/mp4">
-      
       <button id="processBtn">വരികൾ തയ്യാറാക്കുക</button>
       <button class="btn-outline" id="backToLibraryBtn">ക്യാൻസൽ</button>
-
       <div class="progress-container" id="progressBox">
         <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
         <div class="progress-text" id="progressText">0%</div>
@@ -140,23 +126,18 @@
     </div>
   </div>
 
-  <!-- View 3: Player -->
   <div id="playerView" class="view">
     <div class="card">
       <button class="btn-outline" id="playerBackBtn" style="width: auto; padding: 6px 12px; font-size: 13px; margin-bottom: 10px;">🔙 പുറകോട്ട്</button>
       <h1 id="playerTitle">പാട്ട്</h1>
       <audio id="audioPlayer" controls></audio>
-      
-      <div class="karaoke-container" id="lyricsBox">
-        <!-- Words will appear here -->
-      </div>
+      <div class="karaoke-container" id="lyricsBox"></div>
     </div>
   </div>
 
 </div>
 
 <script>
-  // --- IndexedDB Setup ---
   const DB_NAME = 'ProKaraokeDB';
   let db;
 
@@ -209,13 +190,11 @@
     });
   }
 
-  // --- UI Navigation ---
   function showView(viewId) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.getElementById(viewId).classList.add('active');
   }
 
-  // --- Initialization & API Key Logic ---
   document.addEventListener('DOMContentLoaded', async () => {
     await initDB();
     loadLibrary();
@@ -223,15 +202,44 @@
     const savedKey = localStorage.getItem('gemini_karaoke_key');
     const savedModel = localStorage.getItem('gemini_karaoke_model');
     
-    if(savedModel) {
-      document.getElementById('modelSelect').value = savedModel;
-    }
-
+    if(savedModel) { document.getElementById('modelSelect').value = savedModel; }
     if(savedKey) {
       document.getElementById('apiKey').value = savedKey;
       document.getElementById('apiSection').style.display = 'none';
     } else {
       document.getElementById('apiSection').style.display = 'block';
+    }
+
+    // --- NEW: Listen for Shared Song Data (Import from HTML file) ---
+    window.addEventListener('message', async (e) => {
+      if (e.data && e.data.type === 'IMPORT_SONG') {
+        try {
+          const songData = e.data.data;
+          
+          const response = await fetch(songData.audio);
+          const blob = await response.blob();
+          
+          const newSong = {
+            id: Date.now(),
+            title: songData.title,
+            audioBlob: blob,
+            lyrics: songData.lyrics
+          };
+          
+          await saveSongToDB(newSong);
+          alert(songData.title + " വിജയകരമായി ചേർത്തു!");
+          loadLibrary();
+          playSavedSong(newSong.id);
+        } catch(err) {
+          console.error(err);
+          alert("പാട്ട് ചേർക്കുന്നതിൽ പിഴവ് സംഭവിച്ചു.");
+        }
+      }
+    });
+    
+    // Notify the sharing window that the app is ready
+    if (window.opener) {
+      window.opener.postMessage('APP_READY', '*');
     }
   });
 
@@ -257,7 +265,6 @@
     showView('libraryView');
   });
 
-  // --- Load Library ---
   async function loadLibrary() {
     const songs = await getAllSongsFromDB();
     const list = document.getElementById('savedSongsList');
@@ -275,12 +282,85 @@
         <span class="song-title">${song.title}</span>
         <div class="song-actions">
           <button onclick="playSavedSong(${song.id})" style="background:#10B981; color:#fff;">Play</button>
-          <button onclick="deleteSong(${song.id})" style="background:#EF4444; color:#fff; margin-left:5px;">Del</button>
+          <button onclick="exportSong(${song.id})" style="background:#3B82F6; color:#fff;">Share</button>
+          <button onclick="deleteSong(${song.id})" style="background:#EF4444; color:#fff;">Del</button>
         </div>
       `;
       list.appendChild(li);
     });
   }
+
+  // --- NEW: Export / Share Song Logic ---
+  window.exportSong = async (id) => {
+    const song = await getSongFromDB(id);
+    if(!song) return alert('പാട്ട് കണ്ടെത്താനായില്ല.');
+
+    alert('പാട്ട് ഷെയർ ചെയ്യാനുള്ള ഫയൽ തയ്യാറാക്കുന്നു... അല്പം കാത്തിരിക്കുക.');
+
+    const reader = new FileReader();
+    reader.readAsDataURL(song.audioBlob);
+    reader.onloadend = () => {
+      const base64Audio = reader.result;
+      const songDataStr = JSON.stringify({
+        title: song.title,
+        lyrics: song.lyrics,
+        audio: base64Audio
+      });
+      
+      const htmlContent = '<!DOCTYPE html>\n' +
+      '<html lang="ml">\n' +
+      '<head>\n' +
+      '  <meta charset="UTF-8">\n' +
+      '  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n' +
+      '  <title>' + song.title + ' - Sing Along</title>\n' +
+      '  <style>\n' +
+      '    body { background: #0F172A; color: #F8FAFC; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }\n' +
+      '    .card { background: #1E293B; padding: 30px; border-radius: 16px; box-shadow: 0 10px 15px rgba(0,0,0,0.5); max-width: 400px; width: 90%; }\n' +
+      '    h1 { color: #38BDF8; font-size: 24px; margin-bottom: 10px; }\n' +
+      '    p { color: #94A3B8; font-size: 14px; margin-bottom: 24px; }\n' +
+      '    button { background: #38BDF8; color: #000; font-weight: bold; font-size: 16px; border: none; border-radius: 10px; padding: 15px 20px; cursor: pointer; width: 100%; transition: 0.2s; }\n' +
+      '    button:active { transform: scale(0.95); }\n' +
+      '    .loading { display: none; color: #10B981; margin-top: 15px; font-weight: bold; }\n' +
+      '  </style>\n' +
+      '</head>\n' +
+      '<body>\n' +
+      '  <div class="card">\n' +
+      '    <h1>🎵 ' + song.title + '</h1>\n' +
+      '    <p>നിങ്ങൾക്ക് ഒരു പുതിയ കരോക്കെ പാട്ട് ലഭിച്ചിട്ടുണ്ട്!</p>\n' +
+      '    <button id="openAppBtn">Play in Sing-Along App</button>\n' +
+      '    <div id="status" class="loading">App തുറക്കുന്നു... ദയവായി കാത്തിരിക്കുക!</div>\n' +
+      '  </div>\n' +
+      '  <script>\n' +
+      '    const songData = ' + songDataStr + ';\n' +
+      '    document.getElementById("openAppBtn").addEventListener("click", () => {\n' +
+      '      document.getElementById("status").style.display = "block";\n' +
+      '      const appWindow = window.open("https://muralipaladan.github.io/Sing-Along/", "SingAlongApp");\n' +
+      '      window.addEventListener("message", (e) => {\n' +
+      '        if(e.origin === "https://muralipaladan.github.io" && e.data === "APP_READY") {\n' +
+      '           appWindow.postMessage({ type: "IMPORT_SONG", data: songData }, "https://muralipaladan.github.io");\n' +
+      '           document.getElementById("status").innerText = "പാട്ട് വിജയകരമായി ആപ്പിലേക്ക് അയച്ചു!";\n' +
+      '           document.getElementById("status").style.color = "#38BDF8";\n' +
+      '        }\n' +
+      '      });\n' +
+      '      setTimeout(() => {\n' +
+      '        appWindow.postMessage({ type: "IMPORT_SONG", data: songData }, "https://muralipaladan.github.io");\n' +
+      '      }, 3500);\n' +
+      '    });\n' +
+      '  </script>\n' +
+      '</body>\n' +
+      '</html>';
+      
+      const blob = new Blob([htmlContent], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = song.title.replace(/[^a-zA-Z0-9]/g, '_') + '_karaoke.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    };
+  };
 
   window.deleteSong = async (id) => {
     if(confirm('ഈ പാട്ട് ഡിലീറ്റ് ചെയ്യണോ?')) {
@@ -289,7 +369,6 @@
     }
   }
 
-  // --- Processing & AI Logic ---
   let progressInterval;
   function updateProgress(percent, text) {
     document.getElementById('progressBox').style.display = 'block';
@@ -327,11 +406,9 @@
     document.getElementById('processBtn').disabled = true;
     
     try {
-      // 1. Audio Compression
       simulateProgress(0, 40, 3000, 'ഫയൽ കംപ്രസ് ചെയ്യുന്നു (Local Processing)...');
       const base64Audio = await compressAudioFile(file);
       
-      // 2. Fetch Words from AI
       simulateProgress(40, 95, 10000, 'AI വരികൾ കണ്ടെത്തുന്നു (ഇതിന് അല്പം സമയമെടുക്കും)...');
       const jsonWords = await fetchWordLyricsFromGemini(apiKey, selectedModel, base64Audio);
       
@@ -340,14 +417,7 @@
 
       if(!jsonWords || jsonWords.length === 0) throw new Error('വരികൾ കണ്ടെത്താൻ കഴിഞ്ഞില്ല.');
 
-      // 3. Save to DB
-      const songData = {
-        id: Date.now(),
-        title: title,
-        audioBlob: file, 
-        lyrics: jsonWords
-      };
-      
+      const songData = { id: Date.now(), title: title, audioBlob: file, lyrics: jsonWords };
       await saveSongToDB(songData);
       
       alert('പാട്ട് വിജയകരമായി ചേർത്തു!');
@@ -367,16 +437,15 @@
     }
   });
 
-  // --- Playback & Karaoke Sync ---
   let currentLyrics = [];
-  let currentActiveWordIndex = -1; // പുതിയതായി ചേർത്തത്
+  let currentActiveWordIndex = -1;
   
   window.playSavedSong = async (id) => {
     const song = await getSongFromDB(id);
     if(!song) return alert('പാട്ട് കണ്ടെത്താനായില്ല.');
 
     currentLyrics = song.lyrics;
-    currentActiveWordIndex = -1; // പുതിയ പാട്ട് തുടങ്ങുമ്പോൾ ഇൻഡക്സ് റീസെറ്റ് ചെയ്യുന്നു
+    currentActiveWordIndex = -1; 
     document.getElementById('playerTitle').innerText = song.title;
     
     const audioUrl = URL.createObjectURL(song.audioBlob);
@@ -390,38 +459,25 @@
   function renderWordLyrics() {
     const box = document.getElementById('lyricsBox');
     box.innerHTML = '';
-    
     let lastTime = 0;
     currentLyrics.forEach((item, index) => {
-      if (index > 0 && (item.t - lastTime) > 2.0) {
-        box.appendChild(document.createElement('br'));
-      }
-      
+      if (index > 0 && (item.t - lastTime) > 2.0) { box.appendChild(document.createElement('br')); }
       const span = document.createElement('span');
       span.className = 'lyric-word';
       span.id = 'word-' + index;
       span.innerText = item.w;
       box.appendChild(span);
-      
       lastTime = item.t;
     });
   }
 
-  // മെച്ചപ്പെടുത്തിയ സ്ക്രോളിംഗ് സിസ്റ്റം
   document.getElementById('audioPlayer').addEventListener('timeupdate', () => {
     if (!currentLyrics.length) return;
     const currentTime = document.getElementById('audioPlayer').currentTime;
-    
     let activeIndex = -1;
     for (let i = 0; i < currentLyrics.length; i++) {
-      if (currentTime >= currentLyrics[i].t) {
-        activeIndex = i;
-      } else {
-        break;
-      }
+      if (currentTime >= currentLyrics[i].t) { activeIndex = i; } else { break; }
     }
-
-    // വാക്ക് മാറുമ്പോൾ മാത്രം സ്ക്രോൾ ചെയ്യുക
     if (activeIndex !== currentActiveWordIndex) {
       const words = document.querySelectorAll('.lyric-word');
       words.forEach((el, i) => {
@@ -429,7 +485,6 @@
         if (i < activeIndex) el.classList.add('passed');
         if (i === activeIndex) {
           el.classList.add('active');
-          // ഈ വാക്ക് കൃത്യമായി സെന്ററിൽ കൊണ്ടുവരാൻ സഹായിക്കുന്നു
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
       });
@@ -437,22 +492,18 @@
     }
   });
 
-  // --- API & Compression Core ---
   async function compressAudioFile(file) {
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const arrayBuffer = await file.arrayBuffer();
     const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-    
     const targetSampleRate = 8000; 
     const offlineContext = new OfflineAudioContext(1, audioBuffer.duration * targetSampleRate, targetSampleRate);
     const source = offlineContext.createBufferSource();
     source.buffer = audioBuffer;
     source.connect(offlineContext.destination);
     source.start();
-
     const renderedBuffer = await offlineContext.startRendering();
     const wavBlob = bufferToWav(renderedBuffer);
-    
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onloadend = () => resolve(reader.result.split(',')[1]);
@@ -482,47 +533,30 @@
 
   async function fetchWordLyricsFromGemini(apiKey, selectedModel, base64Audio) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
-    
     const prompt = `Listen to the audio. Transcribe the Malayalam lyrics. 
     OUTPUT REQUIREMENT: You must return ONLY a valid JSON array of objects. Each object represents one word sung. 
     Format: [{"w": "word", "t": start_time_in_seconds}]. 
     Example: [{"w": "സ്നേഹം", "t": 12.5}, {"w": "തന്ന", "t": 13.0}]. 
     Do NOT output any markdown, code blocks (\`\`\`), or extra text. Only the raw JSON array.`;
-
-    const payload = {
-      contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "audio/wav", data: base64Audio } }] }]
-    };
-
-    const response = await fetch(url, { 
-      method: "POST", 
-      headers: { "Content-Type": "application/json" }, 
-      body: JSON.stringify(payload) 
-    });
-
+    const payload = { contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "audio/wav", data: base64Audio } }] }] };
+    const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     if (!response.ok) {
        const errorText = await response.text();
        let exactError = response.status;
        try {
            const errJson = JSON.parse(errorText);
-           if(errJson.error && errJson.error.message) {
-               exactError += " - " + errJson.error.message;
-           }
+           if(errJson.error && errJson.error.message) { exactError += " - " + errJson.error.message; }
        } catch(e) {}
-       
        throw new Error("Google API Error: " + exactError);
     }
-    
     const data = await response.json();
     let text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    
     text = text.replace(/```json/g, '').replace(/```/g, '').trim();
-    
     try {
       const jsonArr = JSON.parse(text);
       if(!Array.isArray(jsonArr)) throw new Error("Not an array");
       return jsonArr;
     } catch (e) {
-      console.error("AI Response was not valid JSON:", text);
       throw new Error("AI കൃത്യമായ സമയക്രമം (JSON) നൽകിയില്ല. ദയവായി വീണ്ടും ശ്രമിക്കുക.");
     }
   }
