@@ -165,17 +165,22 @@
 
   <div class="card">
     <label for="apikey">Gemini API Key</label>
-    <div class="keyrow">
+    <div class="keyrow" id="keyInputRow">
       <input type="password" id="apikey" placeholder="AIza...">
       <button class="btn-ghost" id="toggleKeyBtn">കാണിക്കുക</button>
     </div>
-    <p class="keyhint">Key browser ൽ മാത്രം സേവ് ആകുന്നു, എവിടെയും അയക്കുന്നില്ല. Key ഇല്ലെങ്കിൽ <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> ൽ നിന്ന് സൗജന്യമായി എടുക്കാം.</p>
+    <div class="keyrow" id="keyLockedRow" style="display:none;">
+      <input type="text" value="●●●●●●●●●●●●●●●●" disabled style="letter-spacing:2px;color:var(--muted);">
+      <button class="btn-ghost" id="changeKeyBtn">മാറ്റുക</button>
+    </div>
+    <p class="keyhint">Key browser ൽ മാത്രം സേവ് ആകുന്നു, ഒരിക്കൽ save ആയാൽ പിന്നെ ഈ പേജിൽ പ്ലെയിൻ ആയി കാണിക്കില്ല. Key ഇല്ലെങ്കിൽ <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> ൽ നിന്ന് സൗജന്യമായി എടുക്കാം.</p>
     <div class="modelrow">
       <label style="margin:0;white-space:nowrap;">Model:</label>
       <select id="modelSelect">
-        <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+        <option value="gemini-3.5-flash">gemini-3.5-flash</option>
+        <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite</option>
         <option value="gemini-2.5-pro">gemini-2.5-pro</option>
-        <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+        <option value="gemini-2.5-flash">gemini-2.5-flash</option>
       </select>
     </div>
   </div>
@@ -367,7 +372,7 @@ async function handleLoad(){
 }
 
 async function getLyrics(){
-  const apiKey = document.getElementById('apikey').value.trim();
+  const apiKey = activeApiKey;
   const btn = document.getElementById('getLyricsBtn');
   const outBox = document.getElementById('output');
   const copyBtn = document.getElementById('copyOutBtn');
@@ -381,7 +386,6 @@ async function getLyrics(){
     return;
   }
 
-  localStorage.setItem(KKEY, apiKey);
   const model = document.getElementById('modelSelect').value;
   localStorage.setItem(MKEY, model);
 
@@ -477,8 +481,41 @@ document.getElementById('toggleKeyBtn').addEventListener('click', () => {
   }
 });
 
-const savedKey = localStorage.getItem(KKEY);
-if(savedKey) document.getElementById('apikey').value = savedKey;
+function showLockedKeyUI(){
+  document.getElementById('keyInputRow').style.display = 'none';
+  document.getElementById('keyLockedRow').style.display = 'flex';
+}
+function showInputKeyUI(){
+  document.getElementById('keyInputRow').style.display = 'flex';
+  document.getElementById('keyLockedRow').style.display = 'none';
+  const inp = document.getElementById('apikey');
+  inp.value = '';
+  inp.type = 'password';
+  document.getElementById('toggleKeyBtn').textContent = 'കാണിക്കുക';
+  inp.focus();
+}
+function commitKey(){
+  const inp = document.getElementById('apikey');
+  const val = inp.value.trim();
+  if(!val) return;
+  activeApiKey = val;
+  localStorage.setItem(KKEY, val);
+  showLockedKeyUI();
+  setGenStatus('Key സേവ് ചെയ്തു.');
+}
+
+document.getElementById('apikey').addEventListener('blur', commitKey);
+document.getElementById('apikey').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter') commitKey();
+});
+document.getElementById('changeKeyBtn').addEventListener('click', showInputKeyUI);
+
+let activeApiKey = localStorage.getItem(KKEY) || '';
+if(activeApiKey){
+  showLockedKeyUI();
+}else{
+  showInputKeyUI();
+}
 const savedModel = localStorage.getItem(MKEY);
 if(savedModel) document.getElementById('modelSelect').value = savedModel;
 
