@@ -24,30 +24,38 @@
     color:var(--cream);
     font-family:"Noto Sans Malayalam","Noto Sans",-apple-system,Segoe UI,Roboto,sans-serif;
     min-height:100vh;
-    padding:28px 16px 60px;
+    padding:24px 16px 50px;
   }
-  .wrap{max-width:720px;margin:0 auto;}
+  .wrap{max-width:520px;margin:0 auto;}
+  .page{display:none;}
+  .page.active{display:block;}
 
-  header{display:flex;align-items:center;gap:16px;margin-bottom:26px;}
+  header{display:flex;align-items:center;gap:14px;margin-bottom:22px;}
   .disc{
-    width:56px;height:56px;border-radius:50%;flex:none;
+    width:52px;height:52px;border-radius:50%;flex:none;
     background:
-      radial-gradient(circle at 50% 50%, var(--ink) 0 9px, transparent 9.5px),
+      radial-gradient(circle at 50% 50%, var(--ink) 0 8px, transparent 8.5px),
       repeating-radial-gradient(circle at 50% 50%, #0E1B1A 0 2px, #1B2E2B 2px 4px);
     border:2px solid var(--gold-dim);
     animation:spin 6s linear infinite;
   }
-  .disc.spinning{animation-duration:1.6s;}
   @keyframes spin{to{transform:rotate(360deg);}}
-  h1{font-size:22px;margin:0;letter-spacing:.2px;font-weight:700;color:var(--cream);}
-  .sub{margin:2px 0 0;font-size:13.5px;color:var(--muted);}
+  h1{font-size:21px;margin:0;letter-spacing:.2px;font-weight:700;color:var(--cream);}
+  .sub{margin:2px 0 0;font-size:13px;color:var(--muted);}
+
+  /* --- Key page --- */
+  .keypage{display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:10vh;}
+  .keypage .disc{width:64px;height:64px;margin-bottom:18px;animation-duration:4s;}
+  .keypage h1{font-size:23px;margin-bottom:6px;}
+  .keypage .sub{margin-bottom:26px;}
+  .keypage .card{width:100%;text-align:left;}
 
   .card{
     background:var(--panel);
     border:1px solid var(--line);
     border-radius:var(--radius);
     padding:18px;
-    margin-bottom:18px;
+    margin-bottom:16px;
   }
   label{display:block;font-size:13px;color:var(--muted);margin-bottom:8px;}
 
@@ -58,8 +66,8 @@
     border:1px solid var(--line);
     color:var(--cream);
     border-radius:10px;
-    padding:12px 14px;
-    font-size:14.5px;
+    padding:13px 14px;
+    font-size:15px;
     outline:none;
     width:100%;
   }
@@ -69,14 +77,15 @@
   button{
     border:none;
     border-radius:10px;
-    padding:12px 18px;
-    font-size:14px;
+    padding:13px 18px;
+    font-size:14.5px;
     font-weight:700;
     cursor:pointer;
     white-space:nowrap;
   }
   .btn-primary{background:var(--gold);color:#20180A;}
   .btn-primary:hover{background:#E7B65B;}
+  .btn-block{width:100%;margin-top:14px;}
   .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--cream);padding:9px 14px;font-size:13px;font-weight:400;}
   .btn-ghost:hover{border-color:var(--gold-dim);}
   .btn-coral{background:var(--coral);color:#FFF3EC;}
@@ -84,28 +93,14 @@
   button:active{transform:scale(.98);}
   button:disabled{opacity:.45;cursor:not-allowed;}
 
+  .linklike{background:none;border:none;color:var(--gold);font-size:13px;font-weight:400;padding:4px 0;text-decoration:underline;cursor:pointer;}
+
   #status{font-size:13px;color:var(--muted);margin-top:10px;min-height:16px;}
   #status.err{color:#F0968A;}
   #genStatus{font-size:13px;color:var(--muted);margin-top:12px;min-height:16px;}
   #genStatus.err{color:#F0968A;}
 
-  .info{display:flex;gap:14px;margin-bottom:14px;}
-  .info img{width:120px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--line);flex:none;background:var(--panel-2);}
-  .info-text{min-width:0;}
-  .info-text .t{font-size:15.5px;font-weight:700;color:var(--cream);margin:0 0 4px;
-    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-  .info-text .a{font-size:13px;color:var(--muted);margin:0;}
-
-  .playerbox{position:relative;width:100%;padding-top:56.25%;border-radius:10px;overflow:hidden;background:#000;border:1px solid var(--line);}
-  .playerbox iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;}
-
-  h2{font-size:14px;margin:0 0 10px;color:var(--gold);font-weight:700;letter-spacing:.2px;}
-
-  .keyrow{display:flex;gap:8px;align-items:center;margin-bottom:6px;}
-  .keyhint{font-size:12px;color:var(--muted);margin:6px 0 0;}
-  .keyhint a{color:var(--gold);}
-
-  .modelrow{display:flex;gap:10px;align-items:center;margin-top:12px;}
+  .modelrow{display:flex;gap:10px;align-items:center;margin-top:14px;}
   select{
     background:var(--panel-2);
     border:1px solid var(--line);
@@ -114,20 +109,39 @@
     padding:10px 12px;
     font-size:13.5px;
     outline:none;
+    flex:1;
   }
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .topbar .brand{display:flex;align-items:center;gap:10px;}
+  .topbar .disc{width:34px;height:34px;}
+  .topbar h1{font-size:17px;}
+
+  /* --- song card --- */
+  .songcard{display:flex;gap:14px;align-items:center;}
+  .songcard img{width:84px;height:84px;object-fit:cover;border-radius:10px;border:1px solid var(--line);flex:none;background:var(--panel-2);}
+  .songcard-text{min-width:0;flex:1;}
+  .songcard-text .t{font-size:16px;font-weight:700;color:var(--cream);margin:0 0 4px;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .songcard-text .a{font-size:13px;color:var(--muted);margin:0 0 8px;}
+  .songcard-text a{font-size:12.5px;color:var(--gold);text-decoration:none;}
+  .songcard-text a:hover{text-decoration:underline;}
+
+  h2{font-size:14px;margin:0 0 10px;color:var(--gold);font-weight:700;letter-spacing:.2px;}
 
   .output{
     white-space:pre-wrap;
     background:var(--panel-2);
     border:1px solid var(--line);
     border-radius:10px;
-    padding:14px 16px;
-    font-size:14.5px;
-    line-height:1.85;
+    padding:16px;
+    font-size:17px;
+    font-weight:700;
+    line-height:2;
     min-height:60px;
     margin-top:12px;
   }
-  .output.empty{color:var(--muted);font-size:13.5px;}
+  .output.empty{color:var(--muted);font-size:14px;font-weight:400;}
 
   .actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;}
 
@@ -139,7 +153,7 @@
 
   .hist-item{
     display:flex;align-items:center;gap:10px;
-    padding:8px 4px;border-bottom:1px solid var(--line);
+    padding:9px 4px;border-bottom:1px solid var(--line);
     font-size:13.5px;cursor:pointer;
   }
   .hist-item:last-child{border-bottom:none;}
@@ -149,81 +163,86 @@
   .hist-item .del:hover{color:var(--coral);}
   .empty{color:var(--muted);font-size:13px;}
 
-  footer{text-align:center;color:var(--muted);font-size:12px;margin-top:24px;}
+  footer{text-align:center;color:var(--muted);font-size:11.5px;margin-top:22px;}
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <header>
-    <div class="disc" id="disc"></div>
-    <div>
-      <h1>പാട്ട് വരി സഹായി</h1>
-      <p class="sub">YouTube ലിങ്ക് ഇടൂ · പാട്ട് കേൾക്കൂ · Gemini AI വരികൾ എഴുതി തരും</p>
-    </div>
-  </header>
+  <!-- PAGE 1: API KEY -->
+  <div class="page active keypage" id="page-key">
+    <div class="disc"></div>
+    <h1>പാട്ട് വരി സഹായി</h1>
+    <p class="sub">YouTube പാട്ടിന്റെ വരികൾ Gemini AI വഴി എഴുതി തരും</p>
 
-  <div class="card">
-    <label for="apikey">Gemini API Key</label>
-    <div class="keyrow" id="keyInputRow">
+    <div class="card">
+      <label for="apikey">Gemini API Key</label>
       <input type="password" id="apikey" placeholder="AIza...">
-      <button class="btn-ghost" id="toggleKeyBtn">കാണിക്കുക</button>
-    </div>
-    <div class="keyrow" id="keyLockedRow" style="display:none;">
-      <input type="text" value="●●●●●●●●●●●●●●●●" disabled style="letter-spacing:2px;color:var(--muted);">
-      <button class="btn-ghost" id="changeKeyBtn">മാറ്റുക</button>
-    </div>
-    <p class="keyhint">Key browser ൽ മാത്രം സേവ് ആകുന്നു, ഒരിക്കൽ save ആയാൽ പിന്നെ ഈ പേജിൽ പ്ലെയിൻ ആയി കാണിക്കില്ല. Key ഇല്ലെങ്കിൽ <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> ൽ നിന്ന് സൗജന്യമായി എടുക്കാം.</p>
-    <div class="modelrow">
-      <label style="margin:0;white-space:nowrap;">Model:</label>
-      <select id="modelSelect">
-        <option value="gemini-3.5-flash">gemini-3.5-flash</option>
-        <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite</option>
-        <option value="gemini-2.5-pro">gemini-2.5-pro</option>
-        <option value="gemini-2.5-flash">gemini-2.5-flash</option>
-      </select>
+      <p class="keyhint" style="font-size:12px;color:var(--muted);margin:8px 0 0;">Key ഈ browser ൽ മാത്രം സേവ് ആകും, എവിടെയും അയക്കില്ല. Key ഇല്ലെങ്കിൽ <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--gold);">aistudio.google.com/apikey</a> ൽ നിന്ന് സൗജന്യമായി എടുക്കാം.</p>
+
+      <div class="modelrow">
+        <label style="margin:0;white-space:nowrap;">Model:</label>
+        <select id="modelSelect">
+          <option value="gemini-3.5-flash">gemini-3.5-flash</option>
+          <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite</option>
+          <option value="gemini-2.5-pro">gemini-2.5-pro</option>
+          <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+        </select>
+      </div>
+
+      <button class="btn-primary btn-block" id="continueBtn">തുടരാം</button>
+      <div id="keyStatus" style="font-size:13px;color:#F0968A;margin-top:8px;min-height:14px;"></div>
     </div>
   </div>
 
-  <div class="card">
-    <label for="ytlink">YouTube ലിങ്ക്</label>
-    <div class="row">
-      <input type="text" id="ytlink" placeholder="https://www.youtube.com/watch?v=...">
-      <button class="btn-primary" id="loadBtn">ചേർക്കുക</button>
+  <!-- PAGE 2: MAIN -->
+  <div class="page" id="page-main">
+    <div class="topbar">
+      <div class="brand">
+        <div class="disc"></div>
+        <h1>പാട്ട് വരി സഹായി</h1>
+      </div>
+      <button class="linklike" id="changeKeyBtn">Key മാറ്റുക</button>
     </div>
-    <div id="status">ലിങ്ക് paste ചെയ്താൽ ഉടനെ താഴെ പാട്ട് play ആകും.</div>
-  </div>
 
-  <div class="card" id="resultCard" style="display:none;">
-    <div class="info">
-      <img id="thumb" alt="thumbnail">
-      <div class="info-text">
-        <p class="t" id="vtitle">—</p>
-        <p class="a" id="vauthor">—</p>
+    <div class="card">
+      <label for="ytlink">YouTube ലിങ്ക്</label>
+      <div class="row">
+        <input type="text" id="ytlink" placeholder="https://www.youtube.com/watch?v=...">
+        <button class="btn-primary" id="loadBtn">ചേർക്കുക</button>
+      </div>
+      <div id="status">ലിങ്ക് paste ചെയ്താൽ ഉടനെ പാട്ട് ചേരും.</div>
+    </div>
+
+    <div class="card" id="songCardBox" style="display:none;">
+      <div class="songcard">
+        <img id="thumb" alt="thumbnail">
+        <div class="songcard-text">
+          <p class="t" id="vtitle">—</p>
+          <p class="a" id="vauthor">—</p>
+          <a id="ytOpenLink" href="#" target="_blank">YouTube-ൽ പാട്ട് കേൾക്കൂ ↗</a>
+        </div>
       </div>
     </div>
-    <div class="playerbox">
-      <iframe id="ytframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+    <div class="card" id="genCard" style="display:none;">
+      <h2>Gemini AI വരികൾ</h2>
+      <div class="actions" style="margin-top:0;">
+        <button class="btn-coral" id="getLyricsBtn">വരികൾ എടുക്കൂ</button>
+        <button class="btn-ghost" id="copyOutBtn" style="display:none;">വരികൾ Copy ചെയ്യുക</button>
+      </div>
+      <div id="genStatus"></div>
+      <div class="output empty" id="output">"വരികൾ എടുക്കൂ" ക്ലിക്ക് ചെയ്യുമ്പോൾ ഇവിടെ വരികൾ വരും.</div>
     </div>
-    <p class="keyhint" style="margin-top:10px;">Video ഇവിടെ play ആകുന്നില്ലെങ്കിൽ (embedding restriction / error 153 പോലുള്ളവ) — <a id="ytOpenLink" href="#" target="_blank">YouTube ൽ തന്നെ തുറന്ന് കാണൂ</a>. വരികൾ എടുക്കൽ ഇതുമായി ബന്ധമില്ല, അത് സാധാരണ പോലെ പ്രവർത്തിക്കും.</p>
-  </div>
 
-  <div class="card" id="genCard" style="display:none;">
-    <h2>Gemini AI വരികൾ</h2>
-    <div class="actions" style="margin-top:0;">
-      <button class="btn-coral" id="getLyricsBtn">വരികൾ എടുക്കൂ</button>
-      <button class="btn-ghost" id="copyOutBtn" style="display:none;">വരികൾ Copy ചെയ്യുക</button>
+    <div class="card">
+      <h2>അടുത്തിടെ ചേർത്ത പാട്ടുകൾ</h2>
+      <div id="history"><p class="empty">ഇതുവരെ ഒന്നും ചേർത്തിട്ടില്ല</p></div>
     </div>
-    <div id="genStatus"></div>
-    <div class="output empty" id="output">"വരികൾ എടുക്കൂ" ക്ലിക്ക് ചെയ്യുമ്പോൾ ഇവിടെ വരികൾ വരും.</div>
+
+    <footer>API key ഉം history ഉം ഈ browser ൽ മാത്രം സേവ് ആകുന്നു</footer>
   </div>
 
-  <div class="card">
-    <h2>അടുത്തിടെ ചേർത്തവ</h2>
-    <div id="history"><p class="empty">ഇതുവരെ ഒന്നും ചേർത്തിട്ടില്ല</p></div>
-  </div>
-
-  <footer>API key ഉം history ഉം ഈ browser ൽ മാത്രം സേവ് ആകുന്നു · Gemini API യിലേക്ക് മാത്രമേ ഡാറ്റ പോകുന്നുള്ളൂ</footer>
 </div>
 
 <script>
@@ -234,6 +253,12 @@ const MKEY = 'pattuVariSahayi_model';
 let currentVideoUrl = '';
 let currentTitle = '';
 let currentAuthor = '';
+let activeApiKey = localStorage.getItem(KKEY) || '';
+
+function goToPage(id){
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
 
 function extractVideoId(url){
   if(!url) return null;
@@ -256,13 +281,14 @@ function extractVideoId(url){
 function buildPrompt(title, author){
   const cleanTitle = title || 'ഈ വീഡിയോ';
   const cleanAuthor = author ? (' (' + author + ')') : '';
-  return '"' + cleanTitle + '"' + cleanAuthor + ' എന്ന ഈ YouTube വീഡിയോയിലെ പാട്ടിന്റെ പൂർണ്ണമായ വരികൾ (lyrics) എഴുതി തരൂ.\n\n' +
+  return '"' + cleanTitle + '"' + cleanAuthor + ' എന്ന ഈ YouTube വീഡിയോയിലെ പാട്ടിന്റെ പൂർണ്ണമായ വരികൾ (lyrics) കൃത്യമായി എഴുതി തരൂ.\n\n' +
 'നിർദ്ദേശങ്ങൾ:\n' +
+'- വീഡിയോ ശ്രദ്ധയോടെ കേട്ട്, ഊഹിക്കാതെ, കൃത്യമായി transcribe ചെയ്യുക\n' +
 '- വരികൾ വരി വരിയായി, ഖണ്ഡികകൾ (പല്ലവി / അനുപല്ലവി / ചരണം) വേർതിരിച്ച് എഴുതുക\n' +
 '- പാട്ട് മലയാളത്തിലാണെങ്കിൽ വരികൾ മലയാളം ലിപിയിൽ തന്നെ എഴുതുക (translate ചെയ്യരുത്, romanize ചെയ്യരുത്)\n' +
-'- പാട്ടിന്റെ പേര്, സിനിമ/ആൽബം, ഗായകൻ/ഗായിക, രചയിതാവ്, സംഗീത സംവിധായകൻ എന്നിവ അറിയാമെങ്കിൽ മുകളിൽ സൂചിപ്പിക്കുക\n' +
+'- പാട്ടിന്റെ പേര്, സിനിമ/ആൽബം, ഗായകൻ/ഗായിക, രചയിതാവ്, സംഗീത സംവിധായകൻ എന്നിവ അറിയാമെങ്കിൽ ആദ്യം സൂചിപ്പിക്കുക\n' +
 '- വീഡിയോയിൽ സംസാരമോ narration ഓ ഉണ്ടെങ്കിൽ അത് ഒഴിവാക്കി പാട്ട് ഭാഗം മാത്രം എടുക്കുക\n' +
-'- കൃത്യമായി transcribe ചെയ്യുക, ഊഹിച്ച് വാക്കുകൾ മാറ്റരുത്';
+'- lyrics അല്ലാതെ വേറെ ഒരു കമന്റും ചേർക്കരുത്, വരികൾ മാത്രം തരിക';
 }
 
 function setStatus(msg, isErr){
@@ -272,8 +298,11 @@ function setStatus(msg, isErr){
 }
 function setGenStatus(msg, isErr){
   const s = document.getElementById('genStatus');
-  s.textContent = msg || '';
+  s.innerHTML = msg || '';
   s.className = isErr ? 'err' : '';
+}
+function setKeyStatus(msg){
+  document.getElementById('keyStatus').textContent = msg || '';
 }
 
 function loadHistory(){
@@ -355,9 +384,8 @@ async function handleLoad(){
   document.getElementById('vtitle').textContent = title || '(പേര് ലഭ്യമായില്ല)';
   document.getElementById('vauthor').textContent = author || '';
   document.getElementById('thumb').src = thumb;
-  document.getElementById('ytframe').src = 'https://www.youtube.com/embed/' + id + '?rel=0';
   document.getElementById('ytOpenLink').href = watchUrl;
-  document.getElementById('resultCard').style.display = 'block';
+  document.getElementById('songCardBox').style.display = 'block';
   document.getElementById('genCard').style.display = 'block';
 
   document.getElementById('output').className = 'output empty';
@@ -367,7 +395,7 @@ async function handleLoad(){
 
   addToHistory(id, watchUrl, title || id);
 
-  setStatus('തയ്യാറായി. താഴെ പാട്ട് play ചെയ്യാം, "വരികൾ എടുക്കൂ" ക്ലിക്ക് ചെയ്യാം.');
+  setStatus('പാട്ട് ചേർത്തു. "വരികൾ എടുക്കൂ" ക്ലിക്ക് ചെയ്യാം.');
   loadBtn.disabled = false;
 }
 
@@ -379,6 +407,7 @@ async function getLyrics(){
 
   if(!apiKey){
     setGenStatus('Gemini API key ആദ്യം ചേർക്കൂ.', true);
+    goToPage('page-key');
     return;
   }
   if(!currentVideoUrl){
@@ -386,15 +415,13 @@ async function getLyrics(){
     return;
   }
 
-  const model = document.getElementById('modelSelect').value;
-  localStorage.setItem(MKEY, model);
+  const model = document.getElementById('modelSelect').value || localStorage.getItem(MKEY) || 'gemini-3.5-flash';
 
   btn.disabled = true;
   copyBtn.style.display = 'none';
   outBox.className = 'output empty';
   outBox.textContent = '';
   setGenStatus('<span class="spinner"></span>Gemini വീഡിയോ കേട്ട് വരികൾ എഴുതുന്നു... ഇത് 20-60 സെക്കൻഡ് എടുക്കാം.');
-  document.getElementById('genStatus').innerHTML = '<span class="spinner"></span>Gemini വീഡിയോ കേട്ട് വരികൾ എഴുതുന്നു... ഇത് 20-60 സെക്കൻഡ് എടുക്കാം.';
 
   const prompt = buildPrompt(currentTitle, currentAuthor);
   const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + encodeURIComponent(apiKey);
@@ -433,7 +460,7 @@ async function getLyrics(){
       if(finishReason === 'SAFETY' || finishReason === 'RECITATION'){
         throw new Error('Gemini ഈ content തരാൻ വിസമ്മതിച്ചു (finishReason: ' + finishReason + '). മറ്റൊരു model ഒന്ന് നോക്കൂ.');
       }
-      throw new Error('Output ലഭിച്ചില്ല. Video ദൈർഘ്യം കൂടുതലാണോ, അല്ലെങ്കിൽ model ഈ video access ചെയ്യാൻ കഴിയാത്തതാണോ എന്ന് നോക്കൂ.');
+      throw new Error('Output ലഭിച്ചില്ല. Video ദൈർഘ്യം കൂടുതലാണോ, model ഈ video access ചെയ്യാൻ കഴിയാത്തതാണോ എന്ന് നോക്കൂ.');
     }
 
     outBox.className = 'output';
@@ -448,6 +475,29 @@ async function getLyrics(){
     btn.disabled = false;
   }
 }
+
+/* ---- Page 1: key entry ---- */
+document.getElementById('continueBtn').addEventListener('click', () => {
+  const val = document.getElementById('apikey').value.trim();
+  if(!val){
+    setKeyStatus('API key ഇടൂ.');
+    return;
+  }
+  activeApiKey = val;
+  localStorage.setItem(KKEY, val);
+  localStorage.setItem(MKEY, document.getElementById('modelSelect').value);
+  document.getElementById('apikey').value = '';
+  setKeyStatus('');
+  goToPage('page-main');
+});
+document.getElementById('apikey').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter') document.getElementById('continueBtn').click();
+});
+
+/* ---- Page 2: main ---- */
+document.getElementById('changeKeyBtn').addEventListener('click', () => {
+  goToPage('page-key');
+});
 
 document.getElementById('loadBtn').addEventListener('click', handleLoad);
 document.getElementById('ytlink').addEventListener('keydown', (e) => {
@@ -469,56 +519,15 @@ document.getElementById('copyOutBtn').addEventListener('click', async () => {
   }
 });
 
-document.getElementById('toggleKeyBtn').addEventListener('click', () => {
-  const inp = document.getElementById('apikey');
-  const btn = document.getElementById('toggleKeyBtn');
-  if(inp.type === 'password'){
-    inp.type = 'text';
-    btn.textContent = 'മറയ്ക്കുക';
-  }else{
-    inp.type = 'password';
-    btn.textContent = 'കാണിക്കുക';
-  }
-});
-
-function showLockedKeyUI(){
-  document.getElementById('keyInputRow').style.display = 'none';
-  document.getElementById('keyLockedRow').style.display = 'flex';
-}
-function showInputKeyUI(){
-  document.getElementById('keyInputRow').style.display = 'flex';
-  document.getElementById('keyLockedRow').style.display = 'none';
-  const inp = document.getElementById('apikey');
-  inp.value = '';
-  inp.type = 'password';
-  document.getElementById('toggleKeyBtn').textContent = 'കാണിക്കുക';
-  inp.focus();
-}
-function commitKey(){
-  const inp = document.getElementById('apikey');
-  const val = inp.value.trim();
-  if(!val) return;
-  activeApiKey = val;
-  localStorage.setItem(KKEY, val);
-  showLockedKeyUI();
-  setGenStatus('Key സേവ് ചെയ്തു.');
-}
-
-document.getElementById('apikey').addEventListener('blur', commitKey);
-document.getElementById('apikey').addEventListener('keydown', (e) => {
-  if(e.key === 'Enter') commitKey();
-});
-document.getElementById('changeKeyBtn').addEventListener('click', showInputKeyUI);
-
-let activeApiKey = localStorage.getItem(KKEY) || '';
-if(activeApiKey){
-  showLockedKeyUI();
-}else{
-  showInputKeyUI();
-}
+/* ---- init ---- */
 const savedModel = localStorage.getItem(MKEY);
 if(savedModel) document.getElementById('modelSelect').value = savedModel;
 
+if(activeApiKey){
+  goToPage('page-main');
+}else{
+  goToPage('page-key');
+}
 renderHistory();
 </script>
 </body>
