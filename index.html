@@ -477,18 +477,38 @@ async function getLyrics(){
 }
 
 /* ---- Page 1: key entry ---- */
-document.getElementById('continueBtn').addEventListener('click', () => {
+document.getElementById('continueBtn').addEventListener('click', async () => {
   const val = document.getElementById('apikey').value.trim();
+  const btn = document.getElementById('continueBtn');
   if(!val){
     setKeyStatus('API key ഇടൂ.');
     return;
   }
-  activeApiKey = val;
-  localStorage.setItem(KKEY, val);
-  localStorage.setItem(MKEY, document.getElementById('modelSelect').value);
-  document.getElementById('apikey').value = '';
+  btn.disabled = true;
   setKeyStatus('');
-  goToPage('page-main');
+  document.getElementById('keyStatus').innerHTML = '<span class="spinner"></span>Key പരിശോധിക്കുന്നു...';
+  document.getElementById('keyStatus').style.color = 'var(--muted)';
+
+  try{
+    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models?key=' + encodeURIComponent(val));
+    if(!res.ok){
+      const data = await res.json().catch(() => ({}));
+      const msg = (data && data.error && data.error.message) ? data.error.message : ('HTTP ' + res.status);
+      throw new Error(msg);
+    }
+    activeApiKey = val;
+    localStorage.setItem(KKEY, val);
+    localStorage.setItem(MKEY, document.getElementById('modelSelect').value);
+    document.getElementById('apikey').value = '';
+    document.getElementById('keyStatus').style.color = '#F0968A';
+    setKeyStatus('');
+    goToPage('page-main');
+  }catch(err){
+    document.getElementById('keyStatus').style.color = '#F0968A';
+    setKeyStatus('Key അംഗീകരിച്ചില്ല: ' + err.message);
+  }finally{
+    btn.disabled = false;
+  }
 });
 document.getElementById('apikey').addEventListener('keydown', (e) => {
   if(e.key === 'Enter') document.getElementById('continueBtn').click();
