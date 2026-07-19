@@ -130,6 +130,21 @@
   .playerbox{position:relative;width:100%;padding-top:56.25%;border-radius:10px;overflow:hidden;background:#000;border:1px solid var(--line);}
   .playerbox iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;}
 
+  .karaoke-box{
+    max-height:340px;overflow-y:auto;
+    background:var(--panel-2);border:1px solid var(--line);border-radius:10px;
+    padding:16px;margin-top:4px;scroll-behavior:smooth;
+  }
+  .karaoke-line{
+    font-size:15.5px;font-weight:600;color:var(--muted);
+    line-height:1.9;margin:0;padding:5px 2px;
+    transition:color .25s ease, font-size .25s ease, transform .25s ease;
+  }
+  .karaoke-line.active{
+    color:var(--gold);font-weight:800;font-size:18.5px;transform:scale(1.02);
+  }
+  .karaoke-line.done{color:#5F7A73;}
+
   h2{font-size:14px;margin:0 0 10px;color:var(--gold);font-weight:700;letter-spacing:.2px;}
 
   .output{
@@ -229,12 +244,19 @@
         </div>
       </div>
       <div class="playerbox" id="playerBox" style="display:none;margin-top:14px;">
-        <iframe id="ytframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        <div id="ytPlayerDiv"></div>
       </div>
+    </div>
+
+    <div class="card" id="karaokeCard" style="display:none;">
+      <h2>Karaoke വരികൾ (YouTube captions)</h2>
+      <div id="karaokeStatus" style="font-size:13px;color:var(--muted);margin-bottom:8px;"></div>
+      <div class="karaoke-box" id="karaokeLines"></div>
     </div>
 
     <div class="card" id="genCard" style="display:none;">
       <h2>Gemini AI വരികൾ</h2>
+      <div id="genNote" style="font-size:12.5px;color:var(--muted);margin-bottom:10px;"></div>
       <div class="actions" style="margin-top:0;">
         <button class="btn-coral" id="getLyricsBtn">വരികൾ എടുക്കൂ</button>
         <button class="btn-ghost" id="copyOutBtn" style="display:none;">വരികൾ Copy ചെയ്യുക</button>
@@ -253,6 +275,7 @@
 
 </div>
 
+<script src="https://www.youtube.com/iframe_api"></script>
 <script>
 const HKEY = 'pattuVariSahayi_history';
 const KKEY = 'pattuVariSahayi_geminiKey';
@@ -263,6 +286,15 @@ let currentVideoId = '';
 let currentTitle = '';
 let currentAuthor = '';
 let activeApiKey = localStorage.getItem(KKEY) || '';
+
+let ytPlayer = null;
+let karaokeLines = [];
+let karaokeInterval = null;
+let ytApiReady = false;
+
+function onYouTubeIframeAPIReady(){
+  ytApiReady = true;
+}
 
 function goToPage(id){
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -360,7 +392,132 @@ function addToHistory(id, url, title){
   renderHistory();
 }
 
-async function handleLoad(){
+async function corsGet(url){
+  const attempts = [
+    url,
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
+    'https://corsproxy.io/?url=' + encodeURIComponent(url),
+    'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url)
+  ];
+  for(const a of attempts){
+    try{
+      const res = await fetch(a);
+      if(res.ok){
+        const text = await res.text();
+        if(text && text.trim().length > 20) return text;
+      }
+    }catch(e){ /* try next proxy */ }
+  }
+  return null;
+}
+
+function decodeHtml(str){
+  const ta = document.createElement('textarea');
+  ta.innerHTML = str;
+  return ta.value;
+}
+
+async function fetchCaptionLines(videoId){
+  try{
+    const listXml = await corsGet('https://www.youtube.com/api/timedtext?type=list&v=' + videoId);
+    if(!listXml) return null;
+    const listDoc = new DOMParser().parseFromString(listXml, 'text/xml');
+    const tracks = Array.from(listDoc.getElementsByTagName('track'));
+    if(!tracks.length) return null;
+
+    const chosen = tracks.find(t => t.getAttribute('lang_code') === 'ml')
+      || tracks.find(t => (t.getAttribute('lang_code') || '').startsWith('en'))
+      || tracks[0];
+
+    const lang = chosen.getAttribute('lang_code');
+    const kind = chosen.getAttribute('kind') || '';
+    let capUrl = 'https://www.youtube.com/api/timedtext?lang=' + encodeURIComponent(lang) + '&v=' + videoId;
+    if(kind) capUrl += '&kind=' + encodeURIComponent(kind);
+
+    const capXml = await corsGet(capUrl);
+    if(!capXml) return null;
+    const capDoc = new DOMParser().parseFromString(capXml, 'text/xml');
+    const texts = Array.from(capDoc.getElementsByTagName('text'));
+    if(!texts.length) return null;
+
+    return texts.map(t => ({
+      start: parseFloat(t.getAttribute('start')) || 0,
+      text: decodeHtml((t.textContent || '').replace(/\s+/g, ' ').trim())
+    })).filter(l => l.text);
+  }catch(e){
+    return null;
+  }
+}
+
+function renderKaraokeLines(lines){
+  const box = document.getElementById('karaokeLines');
+  box.innerHTML = '';
+  lines.forEach((l, i) => {
+    const p = document.createElement('p');
+    p.className = 'karaoke-line';
+    p.textContent = l.text;
+    p.dataset.index = i;
+    box.appendChild(p);
+  });
+}
+
+function stopKaraokeLoop(){
+  if(karaokeInterval){ clearInterval(karaokeInterval); karaokeInterval = null; }
+}
+
+function startKaraokeLoop(){
+  stopKaraokeLoop();
+  if(!karaokeLines.length || !ytPlayer) return;
+  karaokeInterval = setInterval(() => {
+    if(!ytPlayer || typeof ytPlayer.getCurrentTime !== 'function') return;
+    const t = ytPlayer.getCurrentTime();
+    let idx = -1;
+    for(let i = 0; i < karaokeLines.length; i++){
+      if(t >= karaokeLines[i].start) idx = i; else break;
+    }
+    const lines = document.querySelectorAll('#karaokeLines .karaoke-line');
+    lines.forEach((el, i) => {
+      el.classList.remove('active', 'done');
+      if(i < idx) el.classList.add('done');
+    });
+    if(idx >= 0 && lines[idx]){
+      lines[idx].classList.add('active');
+      lines[idx].scrollIntoView({block:'center', behavior:'smooth'});
+    }
+  }, 300);
+}
+
+function onPlayerStateChange(e){
+  const btn = document.getElementById('playToggleBtn');
+  if(e.data === YT.PlayerState.PLAYING){
+    btn.textContent = '⏸ പാട്ട് നിർത്തൂ';
+    startKaraokeLoop();
+  }else{
+    stopKaraokeLoop();
+    if(e.data === YT.PlayerState.PAUSED) btn.textContent = '▶ പാട്ട് പ്ലേ ചെയ്യൂ';
+  }
+}
+
+function createOrLoadPlayer(videoId){
+  if(!ytApiReady || typeof YT === 'undefined'){
+    setTimeout(() => createOrLoadPlayer(videoId), 300);
+    return;
+  }
+  if(ytPlayer && typeof ytPlayer.loadVideoById === 'function'){
+    ytPlayer.loadVideoById(videoId);
+    return;
+  }
+  ytPlayer = new YT.Player('ytPlayerDiv', {
+    videoId: videoId,
+    playerVars: { rel: 0 },
+    events: {
+      onReady: (e) => e.target.playVideo(),
+      onStateChange: onPlayerStateChange
+    }
+  });
+}
+
+
   const raw = document.getElementById('ytlink').value;
   const id = extractVideoId(raw);
   const loadBtn = document.getElementById('loadBtn');
@@ -398,18 +555,39 @@ async function handleLoad(){
   document.getElementById('genCard').style.display = 'block';
 
   document.getElementById('playerBox').style.display = 'none';
-  document.getElementById('ytframe').src = '';
   document.getElementById('playToggleBtn').textContent = '▶ പാട്ട് പ്ലേ ചെയ്യൂ';
+  stopKaraokeLoop();
+  if(ytPlayer && typeof ytPlayer.stopVideo === 'function'){ try{ ytPlayer.stopVideo(); }catch(e){} }
+  karaokeLines = [];
+  document.getElementById('karaokeCard').style.display = 'none';
+  document.getElementById('karaokeLines').innerHTML = '';
 
   document.getElementById('output').className = 'output empty';
   document.getElementById('output').textContent = '"വരികൾ എടുക്കൂ" ക്ലിക്ക് ചെയ്യുമ്പോൾ ഇവിടെ വരികൾ വരും.';
   document.getElementById('copyOutBtn').style.display = 'none';
+  document.getElementById('genNote').textContent = '';
   setGenStatus('');
 
   addToHistory(id, watchUrl, title || id);
 
-  setStatus('പാട്ട് ചേർത്തു. "വരികൾ എടുക്കൂ" ക്ലിക്ക് ചെയ്യാം.');
+  setStatus('പാട്ട് ചേർത്തു. "▶ പ്ലേ ചെയ്യൂ" ക്ലിക്ക് ചെയ്ത് കേൾക്കാം.');
   loadBtn.disabled = false;
+
+  document.getElementById('karaokeCard').style.display = 'block';
+  document.getElementById('karaokeStatus').textContent = 'Karaoke വരികൾ (YouTube captions) നോക്കുന്നു...';
+  document.getElementById('karaokeLines').innerHTML = '';
+
+  const lines = await fetchCaptionLines(id);
+  if(currentVideoId !== id) return; // user moved to a different song meanwhile
+  if(lines && lines.length){
+    karaokeLines = lines;
+    renderKaraokeLines(lines);
+    document.getElementById('karaokeStatus').textContent = 'Captions കിട്ടി — പാട്ട് play ചെയ്യുമ്പോൾ വരികൾ highlight ആകും.';
+    document.getElementById('genNote').textContent = 'Karaoke വരികൾ മുകളിൽ ലഭ്യമാണ്. കൃത്യത കുറവാണെങ്കിൽ Gemini ഉപയോഗിച്ചും വരികൾ എടുക്കാം.';
+  }else{
+    document.getElementById('karaokeCard').style.display = 'none';
+    document.getElementById('genNote').textContent = 'ഈ പാട്ടിന് YouTube captions ലഭ്യമല്ല, അതുകൊണ്ട് Gemini AI ഉപയോഗിച്ച് വരികൾ എടുക്കൂ.';
+  }
 }
 
 async function getLyrics(){
@@ -542,17 +720,16 @@ document.getElementById('ytlink').addEventListener('paste', () => {
 
 document.getElementById('playToggleBtn').addEventListener('click', () => {
   const box = document.getElementById('playerBox');
-  const frame = document.getElementById('ytframe');
-  const btn = document.getElementById('playToggleBtn');
-  const isPlaying = box.style.display !== 'none';
-  if(isPlaying){
-    box.style.display = 'none';
-    frame.src = '';
-    btn.textContent = '▶ പാട്ട് പ്ലേ ചെയ്യൂ';
+  box.style.display = 'block';
+  if(!ytPlayer || typeof ytPlayer.getPlayerState !== 'function'){
+    createOrLoadPlayer(currentVideoId);
+    return;
+  }
+  const state = ytPlayer.getPlayerState();
+  if(state === 1){ // playing
+    ytPlayer.pauseVideo();
   }else{
-    frame.src = 'https://www.youtube.com/embed/' + currentVideoId + '?rel=0&autoplay=1';
-    box.style.display = 'block';
-    btn.textContent = '⏸ പാട്ട് നിർത്തൂ';
+    ytPlayer.playVideo();
   }
 });
 
