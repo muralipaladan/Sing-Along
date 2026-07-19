@@ -127,6 +127,9 @@
   .songcard-text a{font-size:12.5px;color:var(--gold);text-decoration:none;}
   .songcard-text a:hover{text-decoration:underline;}
 
+  .playerbox{position:relative;width:100%;padding-top:56.25%;border-radius:10px;overflow:hidden;background:#000;border:1px solid var(--line);}
+  .playerbox iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;}
+
   h2{font-size:14px;margin:0 0 10px;color:var(--gold);font-weight:700;letter-spacing:.2px;}
 
   .output{
@@ -220,8 +223,13 @@
         <div class="songcard-text">
           <p class="t" id="vtitle">—</p>
           <p class="a" id="vauthor">—</p>
-          <a id="ytOpenLink" href="#" target="_blank">YouTube-ൽ പാട്ട് കേൾക്കൂ ↗</a>
+          <div class="actions" style="margin-top:6px;">
+            <button class="btn-coral" id="playToggleBtn">▶ പാട്ട് പ്ലേ ചെയ്യൂ</button>
+          </div>
         </div>
+      </div>
+      <div class="playerbox" id="playerBox" style="display:none;margin-top:14px;">
+        <iframe id="ytframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
       </div>
     </div>
 
@@ -251,6 +259,7 @@ const KKEY = 'pattuVariSahayi_geminiKey';
 const MKEY = 'pattuVariSahayi_model';
 
 let currentVideoUrl = '';
+let currentVideoId = '';
 let currentTitle = '';
 let currentAuthor = '';
 let activeApiKey = localStorage.getItem(KKEY) || '';
@@ -378,15 +387,19 @@ async function handleLoad(){
   }catch(e){}
 
   currentVideoUrl = watchUrl;
+  currentVideoId = id;
   currentTitle = title;
   currentAuthor = author;
 
   document.getElementById('vtitle').textContent = title || '(പേര് ലഭ്യമായില്ല)';
   document.getElementById('vauthor').textContent = author || '';
   document.getElementById('thumb').src = thumb;
-  document.getElementById('ytOpenLink').href = watchUrl;
   document.getElementById('songCardBox').style.display = 'block';
   document.getElementById('genCard').style.display = 'block';
+
+  document.getElementById('playerBox').style.display = 'none';
+  document.getElementById('ytframe').src = '';
+  document.getElementById('playToggleBtn').textContent = '▶ പാട്ട് പ്ലേ ചെയ്യൂ';
 
   document.getElementById('output').className = 'output empty';
   document.getElementById('output').textContent = '"വരികൾ എടുക്കൂ" ക്ലിക്ക് ചെയ്യുമ്പോൾ ഇവിടെ വരികൾ വരും.';
@@ -525,6 +538,22 @@ document.getElementById('ytlink').addEventListener('keydown', (e) => {
 });
 document.getElementById('ytlink').addEventListener('paste', () => {
   setTimeout(handleLoad, 50);
+});
+
+document.getElementById('playToggleBtn').addEventListener('click', () => {
+  const box = document.getElementById('playerBox');
+  const frame = document.getElementById('ytframe');
+  const btn = document.getElementById('playToggleBtn');
+  const isPlaying = box.style.display !== 'none';
+  if(isPlaying){
+    box.style.display = 'none';
+    frame.src = '';
+    btn.textContent = '▶ പാട്ട് പ്ലേ ചെയ്യൂ';
+  }else{
+    frame.src = 'https://www.youtube.com/embed/' + currentVideoId + '?rel=0&autoplay=1';
+    box.style.display = 'block';
+    btn.textContent = '⏸ പാട്ട് നിർത്തൂ';
+  }
 });
 
 document.getElementById('getLyricsBtn').addEventListener('click', getLyrics);
