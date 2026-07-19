@@ -1,351 +1,488 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ml">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Malayalam Sing-Along Studio</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
-            text-align: center;
-            padding: 20px;
-        }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: #1e1e1e;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-        .api-link {
-            display: block;
-            margin-bottom: 15px;
-            color: #4caf50;
-            text-decoration: none;
-            font-size: 14px;
-        }
-        .api-link:hover { text-decoration: underline; }
-        
-        input, button {
-            padding: 12px;
-            margin: 8px 5px;
-            border-radius: 6px;
-            border: none;
-            font-size: 16px;
-        }
-        input[type="password"] { width: 70%; background: #333; color: white; border: 1px solid #555; }
-        input[type="file"] { background: #333; color: white; cursor: pointer; }
-        
-        button { background-color: #007bff; color: white; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        button:hover { background-color: #0056b3; }
-        .btn-danger { background-color: #ff3b30; }
-        .btn-danger:hover { background-color: #cc2f26; }
-        .btn-success { background-color: #28a745; }
-        
-        #audioPlayer { width: 100%; margin-top: 20px; }
-        
-        #lyricsContainer {
-            margin-top: 30px;
-            font-size: 28px;
-            line-height: 2;
-            padding: 20px;
-            background: #000;
-            border-radius: 10px;
-            min-height: 200px;
-            text-align: center;
-        }
-        .lyric-line { display: block; margin-bottom: 10px; }
-        .lyric-word { margin: 0 5px; color: #666; transition: color 0.1s; }
-        
-        /* Highlight Color */
-        .highlight { color: #ff3b30; text-shadow: 0 0 12px rgba(255, 59, 48, 0.6); font-weight: bold; }
-        
-        #status { color: #ffcc00; margin-top: 10px; font-style: italic; }
-        .action-buttons { margin-top: 20px; display: none; padding: 15px; background: #2a2a2a; border-radius: 8px;}
-        
-        /* Hidden Canvas for Video Recording */
-        canvas { display: none; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>പാട്ട് വരി സഹായി</title>
+<style>
+  :root{
+    --ink:#152524;
+    --panel:#1D3230;
+    --panel-2:#25403C;
+    --line:#33514C;
+    --gold:#D9A544;
+    --gold-dim:#8C7038;
+    --cream:#F2EBDA;
+    --muted:#9FB3AC;
+    --coral:#E1602E;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(1200px 800px at 50% -10%, #22403B 0%, var(--ink) 60%);
+    color:var(--cream);
+    font-family:"Noto Sans Malayalam","Noto Sans",-apple-system,Segoe UI,Roboto,sans-serif;
+    min-height:100vh;
+    padding:28px 16px 60px;
+  }
+  .wrap{max-width:720px;margin:0 auto;}
+
+  header{display:flex;align-items:center;gap:16px;margin-bottom:26px;}
+  .disc{
+    width:56px;height:56px;border-radius:50%;flex:none;
+    background:
+      radial-gradient(circle at 50% 50%, var(--ink) 0 9px, transparent 9.5px),
+      repeating-radial-gradient(circle at 50% 50%, #0E1B1A 0 2px, #1B2E2B 2px 4px);
+    border:2px solid var(--gold-dim);
+    animation:spin 6s linear infinite;
+  }
+  .disc.spinning{animation-duration:1.6s;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  h1{font-size:22px;margin:0;letter-spacing:.2px;font-weight:700;color:var(--cream);}
+  .sub{margin:2px 0 0;font-size:13.5px;color:var(--muted);}
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px;
+    margin-bottom:18px;
+  }
+  label{display:block;font-size:13px;color:var(--muted);margin-bottom:8px;}
+
+  .row{display:flex;gap:10px;}
+  input[type=text],input[type=password]{
+    flex:1;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--cream);
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:14.5px;
+    outline:none;
+    width:100%;
+  }
+  input[type=text]:focus,input[type=password]:focus{border-color:var(--gold-dim);}
+  input::placeholder{color:#6E8580;}
+
+  button{
+    border:none;
+    border-radius:10px;
+    padding:12px 18px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .btn-primary{background:var(--gold);color:#20180A;}
+  .btn-primary:hover{background:#E7B65B;}
+  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--cream);padding:9px 14px;font-size:13px;font-weight:400;}
+  .btn-ghost:hover{border-color:var(--gold-dim);}
+  .btn-coral{background:var(--coral);color:#FFF3EC;}
+  .btn-coral:hover{background:#F06A3B;}
+  button:active{transform:scale(.98);}
+  button:disabled{opacity:.45;cursor:not-allowed;}
+
+  #status{font-size:13px;color:var(--muted);margin-top:10px;min-height:16px;}
+  #status.err{color:#F0968A;}
+  #genStatus{font-size:13px;color:var(--muted);margin-top:12px;min-height:16px;}
+  #genStatus.err{color:#F0968A;}
+
+  .info{display:flex;gap:14px;margin-bottom:14px;}
+  .info img{width:120px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--line);flex:none;background:var(--panel-2);}
+  .info-text{min-width:0;}
+  .info-text .t{font-size:15.5px;font-weight:700;color:var(--cream);margin:0 0 4px;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .info-text .a{font-size:13px;color:var(--muted);margin:0;}
+
+  .playerbox{position:relative;width:100%;padding-top:56.25%;border-radius:10px;overflow:hidden;background:#000;border:1px solid var(--line);}
+  .playerbox iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;}
+
+  h2{font-size:14px;margin:0 0 10px;color:var(--gold);font-weight:700;letter-spacing:.2px;}
+
+  .keyrow{display:flex;gap:8px;align-items:center;margin-bottom:6px;}
+  .keyhint{font-size:12px;color:var(--muted);margin:6px 0 0;}
+  .keyhint a{color:var(--gold);}
+
+  .modelrow{display:flex;gap:10px;align-items:center;margin-top:12px;}
+  select{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--cream);
+    border-radius:10px;
+    padding:10px 12px;
+    font-size:13.5px;
+    outline:none;
+  }
+
+  .output{
+    white-space:pre-wrap;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px 16px;
+    font-size:14.5px;
+    line-height:1.85;
+    min-height:60px;
+    margin-top:12px;
+  }
+  .output.empty{color:var(--muted);font-size:13.5px;}
+
+  .actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;}
+
+  .spinner{
+    display:inline-block;width:14px;height:14px;border-radius:50%;
+    border:2px solid var(--gold-dim);border-top-color:var(--gold);
+    animation:spin .8s linear infinite;vertical-align:-2px;margin-right:6px;
+  }
+
+  .hist-item{
+    display:flex;align-items:center;gap:10px;
+    padding:8px 4px;border-bottom:1px solid var(--line);
+    font-size:13.5px;cursor:pointer;
+  }
+  .hist-item:last-child{border-bottom:none;}
+  .hist-item:hover{color:var(--gold);}
+  .hist-item span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .hist-item .del{color:var(--muted);font-size:12px;cursor:pointer;flex:none;}
+  .hist-item .del:hover{color:var(--coral);}
+  .empty{color:var(--muted);font-size:13px;}
+
+  footer{text-align:center;color:var(--muted);font-size:12px;margin-top:24px;}
+</style>
 </head>
 <body>
+<div class="wrap">
 
-<div class="container">
-    <h2>🎤 AI Sing-Along Studio (Gemini 3.5 Flash)</h2>
-    
-    <div id="apiSection">
-        <a href="https://aistudio.google.com/app/apikey" target="_blank" class="api-link">🔑 Click here to get your Free Gemini API Key</a>
-        <input type="password" id="apiKey" placeholder="Paste your API Key here...">
-        <br>
+  <header>
+    <div class="disc" id="disc"></div>
+    <div>
+      <h1>പാട്ട് വരി സഹായി</h1>
+      <p class="sub">YouTube ലിങ്ക് ഇടൂ · പാട്ട് കേൾക്കൂ · Gemini AI വരികൾ എഴുതി തരും</p>
     </div>
-    
-    <div id="uploadSection">
-        <input type="file" id="mediaFile" accept="audio/mp3, audio/wav, video/mp4, audio/*, video/*">
-        <button onclick="processMedia()">Generate Lyrics</button>
+  </header>
+
+  <div class="card">
+    <label for="apikey">Gemini API Key</label>
+    <div class="keyrow">
+      <input type="password" id="apikey" placeholder="AIza...">
+      <button class="btn-ghost" id="toggleKeyBtn">കാണിക്കുക</button>
     </div>
-
-    <div id="status"></div>
-    <audio id="audioPlayer" controls></audio>
-
-    <div class="action-buttons" id="actionButtons">
-        <button onclick="downloadLyrics()" class="btn-success">⬇️ Save Lyrics</button>
-        <button onclick="recordAndDownloadVideo()" class="btn-success">🎥 Save as Video (Lyrics Synced)</button>
+    <p class="keyhint">Key browser ൽ മാത്രം സേവ് ആകുന്നു, എവിടെയും അയക്കുന്നില്ല. Key ഇല്ലെങ്കിൽ <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> ൽ നിന്ന് സൗജന്യമായി എടുക്കാം.</p>
+    <div class="modelrow">
+      <label style="margin:0;white-space:nowrap;">Model:</label>
+      <select id="modelSelect">
+        <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+        <option value="gemini-2.5-pro">gemini-2.5-pro</option>
+        <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+      </select>
     </div>
+  </div>
 
-    <div id="lyricsContainer">Lyrics will appear here line by line...</div>
-    
-    <!-- Video Rendering Canvas -->
-    <canvas id="videoCanvas" width="720" height="1280"></canvas>
+  <div class="card">
+    <label for="ytlink">YouTube ലിങ്ക്</label>
+    <div class="row">
+      <input type="text" id="ytlink" placeholder="https://www.youtube.com/watch?v=...">
+      <button class="btn-primary" id="loadBtn">ചേർക്കുക</button>
+    </div>
+    <div id="status">ലിങ്ക് paste ചെയ്താൽ ഉടനെ താഴെ പാട്ട് play ആകും.</div>
+  </div>
+
+  <div class="card" id="resultCard" style="display:none;">
+    <div class="info">
+      <img id="thumb" alt="thumbnail">
+      <div class="info-text">
+        <p class="t" id="vtitle">—</p>
+        <p class="a" id="vauthor">—</p>
+      </div>
+    </div>
+    <div class="playerbox">
+      <iframe id="ytframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+    <p class="keyhint" style="margin-top:10px;">Video ഇവിടെ play ആകുന്നില്ലെങ്കിൽ (embedding restriction / error 153 പോലുള്ളവ) — <a id="ytOpenLink" href="#" target="_blank">YouTube ൽ തന്നെ തുറന്ന് കാണൂ</a>. വരികൾ എടുക്കൽ ഇതുമായി ബന്ധമില്ല, അത് സാധാരണ പോലെ പ്രവർത്തിക്കും.</p>
+  </div>
+
+  <div class="card" id="genCard" style="display:none;">
+    <h2>Gemini AI വരികൾ</h2>
+    <div class="actions" style="margin-top:0;">
+      <button class="btn-coral" id="getLyricsBtn">വരികൾ എടുക്കൂ</button>
+      <button class="btn-ghost" id="copyOutBtn" style="display:none;">വരികൾ Copy ചെയ്യുക</button>
+    </div>
+    <div id="genStatus"></div>
+    <div class="output empty" id="output">"വരികൾ എടുക്കൂ" ക്ലിക്ക് ചെയ്യുമ്പോൾ ഇവിടെ വരികൾ വരും.</div>
+  </div>
+
+  <div class="card">
+    <h2>അടുത്തിടെ ചേർത്തവ</h2>
+    <div id="history"><p class="empty">ഇതുവരെ ഒന്നും ചേർത്തിട്ടില്ല</p></div>
+  </div>
+
+  <footer>API key ഉം history ഉം ഈ browser ൽ മാത്രം സേവ് ആകുന്നു · Gemini API യിലേക്ക് മാത്രമേ ഡാറ്റ പോകുന്നുള്ളൂ</footer>
 </div>
 
 <script>
-    let lyricsData = [];
-    let audioContext, sourceNode, destNode;
-    let audioGraphReady = false;
-    let storedApiKey = "";
-    const media = document.getElementById("audioPlayer");
-    const container = document.getElementById("lyricsContainer");
-    const statusText = document.getElementById("status");
-    const canvas = document.getElementById("videoCanvas");
-    const ctx = canvas.getContext("2d");
+const HKEY = 'pattuVariSahayi_history';
+const KKEY = 'pattuVariSahayi_geminiKey';
+const MKEY = 'pattuVariSahayi_model';
 
-    // 1. Process Media via Gemini API
-    async function processMedia() {
-        const apiKeyInput = document.getElementById("apiKey").value.trim();
-        const fileInput = document.getElementById("mediaFile").files[0];
+let currentVideoUrl = '';
+let currentTitle = '';
+let currentAuthor = '';
 
-        if (apiKeyInput) storedApiKey = apiKeyInput;
-        if (!storedApiKey) return alert("API Key is required.");
-        if (!fileInput) return alert("Please select an MP3 or MP4 file.");
+function extractVideoId(url){
+  if(!url) return null;
+  url = url.trim();
+  const patterns = [
+    /youtu\.be\/([A-Za-z0-9_-]{11})/,
+    /youtube\.com\/watch\?[^#]*v=([A-Za-z0-9_-]{11})/,
+    /youtube\.com\/embed\/([A-Za-z0-9_-]{11})/,
+    /youtube\.com\/shorts\/([A-Za-z0-9_-]{11})/,
+    /youtube\.com\/live\/([A-Za-z0-9_-]{11})/,
+    /^([A-Za-z0-9_-]{11})$/
+  ];
+  for(const p of patterns){
+    const m = url.match(p);
+    if(m) return m[1];
+  }
+  return null;
+}
 
-        document.getElementById("apiSection").style.display = "none";
-        statusText.innerText = "Analyzing media with Gemini 3.5 Flash... (Please wait)";
-        
-        media.src = URL.createObjectURL(fileInput);
+function buildPrompt(title, author){
+  const cleanTitle = title || 'ഈ വീഡിയോ';
+  const cleanAuthor = author ? (' (' + author + ')') : '';
+  return '"' + cleanTitle + '"' + cleanAuthor + ' എന്ന ഈ YouTube വീഡിയോയിലെ പാട്ടിന്റെ പൂർണ്ണമായ വരികൾ (lyrics) എഴുതി തരൂ.\n\n' +
+'നിർദ്ദേശങ്ങൾ:\n' +
+'- വരികൾ വരി വരിയായി, ഖണ്ഡികകൾ (പല്ലവി / അനുപല്ലവി / ചരണം) വേർതിരിച്ച് എഴുതുക\n' +
+'- പാട്ട് മലയാളത്തിലാണെങ്കിൽ വരികൾ മലയാളം ലിപിയിൽ തന്നെ എഴുതുക (translate ചെയ്യരുത്, romanize ചെയ്യരുത്)\n' +
+'- പാട്ടിന്റെ പേര്, സിനിമ/ആൽബം, ഗായകൻ/ഗായിക, രചയിതാവ്, സംഗീത സംവിധായകൻ എന്നിവ അറിയാമെങ്കിൽ മുകളിൽ സൂചിപ്പിക്കുക\n' +
+'- വീഡിയോയിൽ സംസാരമോ narration ഓ ഉണ്ടെങ്കിൽ അത് ഒഴിവാക്കി പാട്ട് ഭാഗം മാത്രം എടുക്കുക\n' +
+'- കൃത്യമായി transcribe ചെയ്യുക, ഊഹിച്ച് വാക്കുകൾ മാറ്റരുത്';
+}
 
-        try {
-            const base64Media = await fileToBase64(fileInput);
-            
-            // Structured Prompt for Line-by-Line output
-            const prompt = `Listen to this media. Transcribe the lyrics and translate them to Malayalam.
-            Organize the lyrics line by line.
-            Format EXACTLY as a JSON array of line objects.
-            Each object must have a "words" array.
-            Each word object inside the array must have "time" (start time in seconds as float) and "word" (Malayalam word).
-            Example: 
-            [ { "words": [ {"time": 0.5, "word": "ഇത്"}, {"time": 1.2, "word": "ഒരു"} ] } ]
-            Return ONLY JSON array.`;
+function setStatus(msg, isErr){
+  const s = document.getElementById('status');
+  s.textContent = msg || '';
+  s.className = isErr ? 'err' : '';
+}
+function setGenStatus(msg, isErr){
+  const s = document.getElementById('genStatus');
+  s.textContent = msg || '';
+  s.className = isErr ? 'err' : '';
+}
 
-            const requestBody = {
-                contents: [{
-                    parts: [
-                        { text: prompt },
-                        { inlineData: { mimeType: fileInput.type, data: base64Media.split(',')[1] } }
-                    ]
-                }]
-            };
+function loadHistory(){
+  try{ return JSON.parse(localStorage.getItem(HKEY) || '[]'); }
+  catch(e){ return []; }
+}
+function saveHistory(list){
+  localStorage.setItem(HKEY, JSON.stringify(list.slice(0,15)));
+}
+function renderHistory(){
+  const list = loadHistory();
+  const box = document.getElementById('history');
+  if(!list.length){
+    box.innerHTML = '<p class="empty">ഇതുവരെ ഒന്നും ചേർത്തിട്ടില്ല</p>';
+    return;
+  }
+  box.innerHTML = '';
+  list.forEach((item, idx) => {
+    const row = document.createElement('div');
+    row.className = 'hist-item';
+    const span = document.createElement('span');
+    span.textContent = item.title || item.id;
+    span.onclick = () => {
+      document.getElementById('ytlink').value = item.url;
+      handleLoad();
+    };
+    const del = document.createElement('span');
+    del.className = 'del';
+    del.textContent = 'നീക്കം ചെയ്യുക';
+    del.onclick = (e) => {
+      e.stopPropagation();
+      const l = loadHistory();
+      l.splice(idx,1);
+      saveHistory(l);
+      renderHistory();
+    };
+    row.appendChild(span);
+    row.appendChild(del);
+    box.appendChild(row);
+  });
+}
+function addToHistory(id, url, title){
+  let list = loadHistory().filter(x => x.id !== id);
+  list.unshift({id, url, title});
+  saveHistory(list);
+  renderHistory();
+}
 
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${storedApiKey}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(requestBody)
-            });
+async function handleLoad(){
+  const raw = document.getElementById('ytlink').value;
+  const id = extractVideoId(raw);
+  const loadBtn = document.getElementById('loadBtn');
 
-            const data = await response.json();
-            if(data.error) throw new Error(data.error.message);
+  if(!id){
+    setStatus('ശരിയായ YouTube ലിങ്ക് അല്ല. ലിങ്ക് ഒന്നുകൂടി പരിശോധിക്കൂ.', true);
+    return;
+  }
 
-            let rawJson = data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim();
-            lyricsData = JSON.parse(rawJson);
-            
-            renderLyrics();
-            document.getElementById("actionButtons").style.display = "block";
-            statusText.innerText = "Done! Play the song to see the sync.";
+  loadBtn.disabled = true;
+  setStatus('വിവരങ്ങൾ ലഭ്യമാക്കുന്നു...');
 
-        } catch (error) {
-            console.error(error);
-            statusText.innerText = "Error generated. Check API Key or file size.";
-            document.getElementById("apiSection").style.display = "block";
-        }
+  const watchUrl = 'https://www.youtube.com/watch?v=' + id;
+  let title = '', author = '', thumb = 'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg';
+
+  try{
+    const res = await fetch('https://www.youtube.com/oembed?url=' + encodeURIComponent(watchUrl) + '&format=json');
+    if(res.ok){
+      const data = await res.json();
+      title = data.title || '';
+      author = data.author_name || '';
+      if(data.thumbnail_url) thumb = data.thumbnail_url;
     }
+  }catch(e){}
 
-    function fileToBase64(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = error => reject(error);
-        });
-    }
+  currentVideoUrl = watchUrl;
+  currentTitle = title;
+  currentAuthor = author;
 
-    // 2. Render Lyrics Line by Line
-    function renderLyrics() {
-        container.innerHTML = "";
-        lyricsData.forEach((lineObj, lineIndex) => {
-            let lineDiv = document.createElement("div");
-            lineDiv.className = "lyric-line";
-            
-            lineObj.words.forEach((wordObj, wordIndex) => {
-                let span = document.createElement("span");
-                span.className = "lyric-word";
-                span.id = `word-${lineIndex}-${wordIndex}`;
-                span.dataset.time = wordObj.time;
-                span.innerText = wordObj.word;
-                lineDiv.appendChild(span);
-            });
-            container.appendChild(lineDiv);
-        });
-    }
+  document.getElementById('vtitle').textContent = title || '(പേര് ലഭ്യമായില്ല)';
+  document.getElementById('vauthor').textContent = author || '';
+  document.getElementById('thumb').src = thumb;
+  document.getElementById('ytframe').src = 'https://www.youtube.com/embed/' + id + '?rel=0';
+  document.getElementById('ytOpenLink').href = watchUrl;
+  document.getElementById('resultCard').style.display = 'block';
+  document.getElementById('genCard').style.display = 'block';
 
-    // 3. Highlight Logic
-    media.addEventListener("timeupdate", () => {
-        let currentTime = media.currentTime;
-        document.querySelectorAll('.lyric-word').forEach(span => {
-            if (currentTime >= parseFloat(span.dataset.time)) {
-                span.classList.add("highlight");
-            } else {
-                span.classList.remove("highlight");
-            }
-        });
+  document.getElementById('output').className = 'output empty';
+  document.getElementById('output').textContent = '"വരികൾ എടുക്കൂ" ക്ലിക്ക് ചെയ്യുമ്പോൾ ഇവിടെ വരികൾ വരും.';
+  document.getElementById('copyOutBtn').style.display = 'none';
+  setGenStatus('');
+
+  addToHistory(id, watchUrl, title || id);
+
+  setStatus('തയ്യാറായി. താഴെ പാട്ട് play ചെയ്യാം, "വരികൾ എടുക്കൂ" ക്ലിക്ക് ചെയ്യാം.');
+  loadBtn.disabled = false;
+}
+
+async function getLyrics(){
+  const apiKey = document.getElementById('apikey').value.trim();
+  const btn = document.getElementById('getLyricsBtn');
+  const outBox = document.getElementById('output');
+  const copyBtn = document.getElementById('copyOutBtn');
+
+  if(!apiKey){
+    setGenStatus('Gemini API key ആദ്യം ചേർക്കൂ.', true);
+    return;
+  }
+  if(!currentVideoUrl){
+    setGenStatus('ആദ്യം ഒരു YouTube ലിങ്ക് ചേർക്കൂ.', true);
+    return;
+  }
+
+  localStorage.setItem(KKEY, apiKey);
+  const model = document.getElementById('modelSelect').value;
+  localStorage.setItem(MKEY, model);
+
+  btn.disabled = true;
+  copyBtn.style.display = 'none';
+  outBox.className = 'output empty';
+  outBox.textContent = '';
+  setGenStatus('<span class="spinner"></span>Gemini വീഡിയോ കേട്ട് വരികൾ എഴുതുന്നു... ഇത് 20-60 സെക്കൻഡ് എടുക്കാം.');
+  document.getElementById('genStatus').innerHTML = '<span class="spinner"></span>Gemini വീഡിയോ കേട്ട് വരികൾ എഴുതുന്നു... ഇത് 20-60 സെക്കൻഡ് എടുക്കാം.';
+
+  const prompt = buildPrompt(currentTitle, currentAuthor);
+  const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + encodeURIComponent(apiKey);
+
+  const body = {
+    contents: [{
+      parts: [
+        { file_data: { file_uri: currentVideoUrl } },
+        { text: prompt }
+      ]
+    }]
+  };
+
+  try{
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
     });
 
-    // 4. Audio graph — taps the original, unmodified song for recording.
-    // Song is never altered or muted.
-    function setupAudioGraph() {
-        if (audioGraphReady) return;
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        sourceNode = audioContext.createMediaElementSource(media);
+    const data = await res.json();
 
-        destNode = audioContext.createMediaStreamDestination();
-        sourceNode.connect(destNode);
-        sourceNode.connect(audioContext.destination);
-
-        audioGraphReady = true;
+    if(!res.ok){
+      const msg = (data && data.error && data.error.message) ? data.error.message : ('HTTP ' + res.status);
+      throw new Error(msg);
     }
 
-    // 5. Download Lyrics (.txt file)
-    function downloadLyrics() {
-        let textContent = "";
-        lyricsData.forEach(line => {
-            line.words.forEach(w => textContent += w.word + " ");
-            textContent += "\n";
-        });
-        const blob = new Blob([textContent], { type: "text/plain" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = "Malayalam_Lyrics.txt";
-        link.click();
+    const candidate = data && data.candidates && data.candidates[0];
+    const finishReason = candidate && candidate.finishReason;
+    let text = '';
+    if(candidate && candidate.content && candidate.content.parts){
+      text = candidate.content.parts.map(p => p.text || '').join('\n').trim();
     }
 
-    // 6. Record and Save as Video (Canvas + Audio)
-    function recordAndDownloadVideo() {
-        setupAudioGraph();
-
-        statusText.innerText = "Recording Video... Please wait until the song finishes playing.";
-        media.currentTime = 0;
-        media.play();
-        if (audioContext.state === 'suspended') audioContext.resume();
-
-        const videoStream = canvas.captureStream(30);
-        // Song is never altered — recorded video always carries the original audio
-        const audioStream = destNode.stream;
-        const combinedStream = new MediaStream([...videoStream.getTracks(), ...audioStream.getTracks()]);
-        
-        const recorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm' });
-        const chunks = [];
-        
-        recorder.ondataavailable = e => chunks.push(e.data);
-        recorder.onstop = () => {
-            const blob = new Blob(chunks, { type: 'video/webm' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = "SingAlong_Video.webm";
-            link.click();
-            statusText.innerText = "Video Downloaded Successfully!";
-        };
-
-        recorder.start();
-
-        // Canvas Drawing Loop — one line at a time, synced exactly to song time
-        function drawFrame() {
-            if (media.paused || media.ended) return;
-            
-            ctx.fillStyle = "#121212";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-
-            let currentTime = media.currentTime;
-            const maxWidth = canvas.width - 80;
-            const midY = canvas.height / 2;
-
-            // find the line active right now (no delay: uses live media.currentTime)
-            let activeIdx = -1;
-            for (let i = 0; i < lyricsData.length; i++) {
-                let start = lyricsData[i].words[0].time;
-                let nextStart = (i + 1 < lyricsData.length) ? lyricsData[i + 1].words[0].time : Infinity;
-                if (currentTime >= start && currentTime < nextStart) { activeIdx = i; break; }
-            }
-
-            // previous line, small & dim, for context
-            if (activeIdx > 0) {
-                ctx.font = "26px Arial";
-                ctx.fillStyle = "#4a4a4a";
-                let prevText = lyricsData[activeIdx - 1].words.map(w => w.word).join(" ");
-                ctx.fillText(prevText, canvas.width / 2, midY - 160);
-            }
-
-            if (activeIdx >= 0) {
-                const words = lyricsData[activeIdx].words;
-                ctx.font = "bold 44px Arial";
-
-                // greedy word-wrap so long lines fit the portrait width
-                let rows = [[]];
-                let rowWidth = 0;
-                words.forEach(w => {
-                    let ww = ctx.measureText(w.word + " ").width;
-                    if (rowWidth + ww > maxWidth && rows[rows.length - 1].length > 0) {
-                        rows.push([]);
-                        rowWidth = 0;
-                    }
-                    rows[rows.length - 1].push({ w, ww });
-                    rowWidth += ww;
-                });
-
-                let startY = midY - (rows.length - 1) * 30;
-                rows.forEach((row, rIdx) => {
-                    let rowTotal = row.reduce((a, r) => a + r.ww, 0);
-                    let x = canvas.width / 2 - rowTotal / 2;
-                    let y = startY + rIdx * 60;
-                    row.forEach(({ w, ww }) => {
-                        let wx = x + ww / 2;
-                        ctx.fillStyle = currentTime >= w.time ? "#ff3b30" : "#666666";
-                        ctx.fillText(w.word, wx, y);
-                        x += ww;
-                    });
-                });
-            }
-
-            if (activeIdx + 1 < lyricsData.length) {
-                ctx.font = "26px Arial";
-                ctx.fillStyle = "#888888";
-                let nextText = lyricsData[activeIdx + 1].words.map(w => w.word).join(" ");
-                ctx.fillText(nextText, canvas.width / 2, midY + 160);
-            }
-            
-            requestAnimationFrame(drawFrame);
-        }
-        
-        drawFrame();
-        
-        media.onended = () => {
-            recorder.stop();
-            media.onended = null;
-        };
+    if(!text){
+      if(finishReason === 'SAFETY' || finishReason === 'RECITATION'){
+        throw new Error('Gemini ഈ content തരാൻ വിസമ്മതിച്ചു (finishReason: ' + finishReason + '). മറ്റൊരു model ഒന്ന് നോക്കൂ.');
+      }
+      throw new Error('Output ലഭിച്ചില്ല. Video ദൈർഘ്യം കൂടുതലാണോ, അല്ലെങ്കിൽ model ഈ video access ചെയ്യാൻ കഴിയാത്തതാണോ എന്ന് നോക്കൂ.');
     }
+
+    outBox.className = 'output';
+    outBox.textContent = text;
+    copyBtn.style.display = 'inline-block';
+    setGenStatus('വരികൾ തയ്യാറായി.');
+  }catch(err){
+    outBox.className = 'output empty';
+    outBox.textContent = 'വരികൾ ലഭിച്ചില്ല.';
+    setGenStatus('പിശക്: ' + err.message, true);
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+document.getElementById('loadBtn').addEventListener('click', handleLoad);
+document.getElementById('ytlink').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter') handleLoad();
+});
+document.getElementById('ytlink').addEventListener('paste', () => {
+  setTimeout(handleLoad, 50);
+});
+
+document.getElementById('getLyricsBtn').addEventListener('click', getLyrics);
+
+document.getElementById('copyOutBtn').addEventListener('click', async () => {
+  const text = document.getElementById('output').textContent;
+  try{
+    await navigator.clipboard.writeText(text);
+    setGenStatus('വരികൾ copy ചെയ്തു.');
+  }catch(e){
+    setGenStatus('Copy ചെയ്യാൻ കഴിഞ്ഞില്ല, സ്വയം select ചെയ്ത് copy ചെയ്യൂ.', true);
+  }
+});
+
+document.getElementById('toggleKeyBtn').addEventListener('click', () => {
+  const inp = document.getElementById('apikey');
+  const btn = document.getElementById('toggleKeyBtn');
+  if(inp.type === 'password'){
+    inp.type = 'text';
+    btn.textContent = 'മറയ്ക്കുക';
+  }else{
+    inp.type = 'password';
+    btn.textContent = 'കാണിക്കുക';
+  }
+});
+
+const savedKey = localStorage.getItem(KKEY);
+if(savedKey) document.getElementById('apikey').value = savedKey;
+const savedModel = localStorage.getItem(MKEY);
+if(savedModel) document.getElementById('modelSelect').value = savedModel;
+
+renderHistory();
 </script>
-
 </body>
 </html>
