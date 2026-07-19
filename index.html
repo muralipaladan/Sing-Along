@@ -413,12 +413,15 @@
   });
 
   // --- API & Compression Core ---
+  
+  // 1. കൂടുതൽ മികച്ച ഓഡിയോ കംപ്രഷൻ (Size പകുതിയായി കുറയ്ക്കുന്നു)
   async function compressAudioFile(file) {
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const arrayBuffer = await file.arrayBuffer();
     const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
     
-    const targetSampleRate = 16000;
+    // 16000Hz ന് പകരം 8000Hz ആക്കി മാറ്റുന്നു. ഫയൽ സൈസ് പകുതിയാകും!
+    const targetSampleRate = 8000; 
     const offlineContext = new OfflineAudioContext(1, audioBuffer.duration * targetSampleRate, targetSampleRate);
     const source = offlineContext.createBufferSource();
     source.buffer = audioBuffer;
@@ -455,11 +458,11 @@
     return new Blob([buffer], {type: "audio/wav"});
   }
 
+  // 2. പുതിയ API കോൾ & കൃത്യമായ എറർ മെസ്സേജ്
   async function fetchWordLyricsFromGemini(apiKey, base64Audio) {
-    let model = 'gemini-1.5-flash'; 
-    let url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${apiKey}`;
+    // v1beta മോഡൽ സ്ഥിരമായി ഉപയോഗിക്കുന്നു
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
     
-    // Asking AI specifically for JSON format to achieve word-by-word highlight
     const prompt = `Listen to the audio. Transcribe the Malayalam lyrics. 
     OUTPUT REQUIREMENT: You must return ONLY a valid JSON array of objects. Each object represents one word sung. 
     Format: [{"w": "word", "t": start_time_in_seconds}]. 
@@ -470,21 +473,30 @@
       contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "audio/wav", data: base64Audio } }] }]
     };
 
-    let response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    const response = await fetch(url, { 
+      method: "POST", 
+      headers: { "Content-Type": "application/json" }, 
+      body: JSON.stringify(payload) 
+    });
 
     if (!response.ok) {
-       if(response.status === 404) {
-           model = 'gemini-1.5-pro'; 
-           url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-           response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-           if (!response.ok) throw new Error("API Error");
-       } else { throw new Error("API Error: " + response.status); }
+       // ഗൂഗിളിൽ നിന്നുള്ള കൃത്യമായ എറർ മെസ്സേജ് കണ്ടെത്തുന്നു
+       const errorText = await response.text();
+       let exactError = response.status;
+       try {
+           const errJson = JSON.parse(errorText);
+           if(errJson.error && errJson.error.message) {
+               exactError += " - " + errJson.error.message;
+           }
+       } catch(e) {}
+       
+       throw new Error("Google API Error: " + exactError);
     }
     
     const data = await response.json();
     let text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
     
-    // Clean markdown if AI accidentally adds it
+    // Clean markdown
     text = text.replace(/```json/g, '').replace(/```/g, '').trim();
     
     try {
