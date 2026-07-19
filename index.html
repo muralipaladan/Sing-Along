@@ -91,8 +91,7 @@
     line-height: 1.9; padding: 24px 14px; background: radial-gradient(circle at 50% 0%, #140c26, #060309 75%);
     border-radius: 14px; min-height: 220px; text-align: center; overflow-y: auto; max-height: 400px; scroll-behavior: smooth;
   }
-  .lyric-line { display: block; margin-bottom: 10px; color: var(--text); transition: color 0.25s ease, transform 0.25s ease; }
-  .lyric-line.active { color: var(--gold); transform: scale(1.08); text-shadow: 0 0 14px rgba(255,206,84,0.5); }
+  .lyric-line { display: block; margin-bottom: 10px; color: var(--text); }
 
   .action-buttons { display: none; }
   .action-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
@@ -228,47 +227,6 @@
     });
   }
 
-  // Fills in any missing per-line timestamps by spreading them evenly across
-  // the audio's duration, so scrolling/highlighting always has a time to work
-  // with even if Gemini skipped a timestamp on some line.
-  function ensureLineTimes() {
-    if (!lyricsData.length) return;
-    const duration = (media.duration && isFinite(media.duration)) ? media.duration : 180;
-    const anyMissing = lyricsData.some(l => l.time == null || isNaN(l.time));
-    if (anyMissing) {
-      lyricsData.forEach((l, i) => {
-        if (l.time == null || isNaN(l.time)) l.time = (duration * i) / lyricsData.length;
-      });
-    }
-    // Keep times strictly ascending so scroll/interpolation math never breaks.
-    for (let i = 1; i < lyricsData.length; i++) {
-      if (lyricsData[i].time <= lyricsData[i - 1].time) lyricsData[i].time = lyricsData[i - 1].time + 0.4;
-    }
-  }
-
-  // Live sing-along: highlight + auto-scroll the currently-sung line as the
-  // song plays, synced to each line's vocal timestamp.
-  let lastActiveIdx = -1;
-  media.addEventListener("timeupdate", () => {
-    if (!lyricsData.length) return;
-    const t = media.currentTime;
-    let activeIdx = 0;
-    for (let i = 0; i < lyricsData.length; i++) {
-      if (lyricsData[i].time <= t) activeIdx = i; else break;
-    }
-    if (activeIdx !== lastActiveIdx) {
-      lastActiveIdx = activeIdx;
-      const prevEl = container.querySelector(".lyric-line.active");
-      if (prevEl) prevEl.classList.remove("active");
-      const activeEl = container.querySelector(`.lyric-line[data-idx="${activeIdx}"]`);
-      if (activeEl) {
-        activeEl.classList.add("active");
-        activeEl.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-    }
-  });
-  media.addEventListener("loadedmetadata", ensureLineTimes);
-
   async function processMedia() {
     const fileInput = document.getElementById("mediaFile").files[0];
     const apiKey = getApiKey();
@@ -289,7 +247,7 @@
       const requestBody = {
         contents: [{
           parts: [
-            { text: "Listen to this media carefully and transcribe the full song lyrics accurately, then translate/render them in Malayalam script. Break the song into short lyric lines exactly as they are actually sung. For EVERY line, give the approximate timestamp in seconds (decimals allowed, e.g. 12.4) marking exactly when that line STARTS being sung in the audio — this is critical, listen closely to the vocals for correct timing. Format EXACTLY as a JSON array of objects, ordered by increasing time, like: [{\"text\": \"...\", \"time\": 12.4}, {\"text\": \"...\", \"time\": 16.8}]. Return ONLY JSON, no markdown fences, no extra commentary." },
+            { text: "Listen to this media carefully and transcribe the full song lyrics accurately, then translate/render them in Malayalam script. Organize the lyrics line by line, exactly as they appear in the actual song. Format EXACTLY as a JSON array of strings. Return ONLY JSON." },
             { inlineData: { mimeType: fileInput.type, data: base64Media.split(',')[1] } }
           ]
         }]
@@ -307,19 +265,7 @@
           let rawJson = data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim();
           const parsed = JSON.parse(rawJson);
           if (!Array.isArray(parsed) || parsed.length === 0) throw new Error("Empty or invalid lyrics response");
-
-          // Normalize into {text, time} objects. Falls back gracefully if the
-          // model returns plain strings or omits a timestamp on some lines —
-          // ensureLineTimes() fills any gaps once the audio duration is known.
-          const normalized = parsed.map(item => {
-            if (typeof item === 'string') return { text: item, time: null };
-            const text = item.text || item.line || item.lyric || String(item);
-            const rawTime = (typeof item.time === 'number') ? item.time
-                           : (typeof item.start === 'number') ? item.start
-                           : (typeof item.timestamp === 'number') ? item.timestamp : null;
-            return { text, time: (rawTime != null && !isNaN(rawTime)) ? rawTime : null };
-          });
-          return normalized;
+          return parsed;
         },
         (err, attempt) => {
           statusText.innerText = `Attempt ${attempt} failed (${err.message || 'network/API error'}). Retrying...`;
@@ -327,14 +273,11 @@
       );
 
       lyricsData = parsedLyrics;
-      ensureLineTimes();
 
       container.innerHTML = "";
-      lyricsData.forEach((line, idx) => {
+      lyricsData.forEach(line => {
         let div = document.createElement("div");
-        div.className = "lyric-line"; div.innerText = line.text;
-        div.dataset.time = line.time;
-        div.dataset.idx = idx;
+        div.className = "lyric-line"; div.innerText = line;
         container.appendChild(div);
       });
       
@@ -363,7 +306,7 @@
 
   function downloadLyrics() {
     if(lyricsData.length === 0) return alert("No lyrics to save yet!");
-    let textContent = "Malayalam Lyrics\n\n" + lyricsData.map(l => l.text).join("\n");
+    let textContent = "Malayalam Lyrics\n\n" + lyricsData.join("\n");
     const blob = new Blob([textContent], { type: "text/plain" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -396,7 +339,6 @@
 
   function recordAndDownloadVideo() {
     if(lyricsData.length === 0) return alert("Please generate lyrics first.");
-    ensureLineTimes();
     setupAudioGraph();
     videoBtn.disabled = true;
     convertBar.style.display = 'block'; convertBar.value = 0;
@@ -417,8 +359,6 @@
 
     recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
     recorder.onstop = async () => {
-      stopDrawLoop();
-      clearInterval(watchdogTimer);
       const webmBlob = new Blob(chunks, { type: 'video/webm' });
       try {
         statusText.innerText = "Loading MP4 converter...";
@@ -444,97 +384,47 @@
 
     recorder.start();
 
-    // --- Build wrapped rows, and give each wrapped row a "virtual" vocal
-    // timestamp so the storyboard scroll speed matches how fast the lines
-    // are actually sung, instead of just a straight-line duration ratio. ---
     const maxWidth = canvas.width - 80;
     const lineHeight = 58;
     ctx.font = "bold 40px 'Baloo 2', Arial";
     let fullRows = [];
-    let rowTimes = [];
-    lyricsData.forEach((lineObj, lineIdx) => {
-      const lineStart = lineObj.time;
-      const lineEnd = (lineIdx < lyricsData.length - 1) ? lyricsData[lineIdx + 1].time : (media.duration || lineStart + 3);
-      let words = lineObj.text.split(" "); let row = "";
-      let rowsForThisLine = [];
+    lyricsData.forEach(lineText => {
+      let words = lineText.split(" "); let row = "";
       words.forEach(w => {
         let test = row ? row + " " + w : w;
-        if (ctx.measureText(test).width > maxWidth && row) { rowsForThisLine.push(row); row = w; } 
+        if (ctx.measureText(test).width > maxWidth && row) { fullRows.push(row); row = w; } 
         else { row = test; }
       });
-      if (row) rowsForThisLine.push(row);
-      // Spread this line's wrapped sub-rows evenly across its vocal time span.
-      rowsForThisLine.forEach((r, subIdx) => {
-        fullRows.push(r);
-        const frac = rowsForThisLine.length > 1 ? subIdx / rowsForThisLine.length : 0;
-        rowTimes.push(lineStart + frac * Math.max(0, lineEnd - lineStart));
-      });
+      if (row) fullRows.push(row);
     });
     
-    const ANCHOR_Y = canvas.height * 0.42; // fixed screen position where the "currently sung" row sits
-    const rowNaturalY = fullRows.map((_, i) => 130 + i * lineHeight);
     const blockHeight = fullRows.length * lineHeight;
-    const maxOffset = Math.max(0, blockHeight - canvas.height + 260);
-
-    function getScrollOffset(t) {
-      if (fullRows.length === 0) return 0;
-      let idx = 0;
-      for (let i = 0; i < rowTimes.length; i++) {
-        if (rowTimes[i] <= t) idx = i; else break;
-      }
-      let interpY = rowNaturalY[idx];
-      if (idx < rowTimes.length - 1) {
-        const span = rowTimes[idx + 1] - rowTimes[idx];
-        const frac = span > 0 ? Math.min(1, (t - rowTimes[idx]) / span) : 0;
-        interpY = rowNaturalY[idx] + frac * (rowNaturalY[idx + 1] - rowNaturalY[idx]);
-      }
-      let offset = interpY - ANCHOR_Y;
-      return Math.max(0, Math.min(maxOffset, offset));
-    }
+    const scrollDistance = Math.max(0, blockHeight - canvas.height + 260);
 
     function drawFrame() {
+      if (media.paused || media.ended) return;
       ctx.fillStyle = "#0d0916"; ctx.fillRect(0, 0, canvas.width, canvas.height);
       const grad = ctx.createRadialGradient(canvas.width/2, canvas.height*0.35, 50, canvas.width/2, canvas.height*0.35, canvas.width*0.7);
       grad.addColorStop(0, "rgba(255,46,154,0.18)"); grad.addColorStop(1, "rgba(13,9,22,0)");
       ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.shadowBlur = 0;
 
-      const offsetY = getScrollOffset(media.currentTime);
-      ctx.font = "bold 40px 'Baloo 2', Arial";
+      const progress = media.duration ? Math.min(1, media.currentTime / media.duration) : 0;
+      const offsetY = scrollDistance * progress;
+      ctx.font = "bold 40px 'Baloo 2', Arial"; ctx.fillStyle = "#f3f0fb";
       
       fullRows.forEach((row, i) => {
-        const y = rowNaturalY[i] - offsetY;
-        if (y > -lineHeight && y < canvas.height + lineHeight) {
-          ctx.fillStyle = (y > ANCHOR_Y - lineHeight/2 && y < ANCHOR_Y + lineHeight/2) ? "#ffce54" : "#f3f0fb";
-          ctx.fillText(row, canvas.width / 2, y);
-        }
+        const y = 130 + i * lineHeight - offsetY;
+        if (y > -lineHeight && y < canvas.height + lineHeight) ctx.fillText(row, canvas.width / 2, y);
       });
 
       ctx.font = "italic 26px 'Baloo 2', Arial"; ctx.fillStyle = "#ff2e9a";
       ctx.fillText("Dedicated to Aiswarya", canvas.width / 2, canvas.height - 50);
+      requestAnimationFrame(drawFrame);
     }
-
-    // A setInterval-driven loop keeps rendering frames even if the tab is
-    // backgrounded or briefly throttled (requestAnimationFrame stops
-    // completely when hidden, which would freeze the recorded video).
-    // Wake Lock (requested above) is the primary defence against the
-    // screen actually sleeping during this process.
-    let drawTimer = setInterval(drawFrame, 1000 / 30);
-    function stopDrawLoop() { clearInterval(drawTimer); }
-
-    // Watchdog: if playback unexpectedly pauses mid-recording (some browsers
-    // suspend background media), resume it automatically so the job still
-    // runs to completion instead of stalling silently.
-    let watchdogTimer = setInterval(() => {
-      if (!media.ended && media.paused && recorder.state === 'recording') {
-        media.play().catch(() => {});
-        if (audioContext && audioContext.state === 'suspended') audioContext.resume().catch(() => {});
-      }
-    }, 1000);
-
+    drawFrame();
     media.onended = () => { recorder.stop(); media.onended = null; };
   }
 </script>
 </body>
 </html>
-
