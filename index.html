@@ -201,8 +201,10 @@
       <div class="modelrow">
         <label style="margin:0;white-space:nowrap;">Model:</label>
         <select id="modelSelect">
-          <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-          <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+          <option value="gemini-3.5-flash">gemini-3.5-flash</option>
+          <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite</option>
+          <option value="gemini-2.5-pro">gemini-2.5-pro</option>
+          <option value="gemini-2.5-flash">gemini-2.5-flash</option>
         </select>
       </div>
 
@@ -515,7 +517,9 @@ function createOrLoadPlayer(videoId){
   });
 }
 
-// മുറിഞ്ഞുപോയ ഭാഗം ഇവിടെ തുടങ്ങി പരിഹരിച്ചിരിക്കുന്നു 
+// ------------------------------------------
+// Video Load & Fetch Details
+// ------------------------------------------
 async function handleLoad() {
   const raw = document.getElementById('ytlink').value;
   const id = extractVideoId(raw);
@@ -586,7 +590,9 @@ async function handleLoad() {
   }
 }
 
-// Gemini API വഴി Lyrics എടുക്കാനുള്ള ഫംഗ്ഷൻ
+// ------------------------------------------
+// Gemini API Call
+// ------------------------------------------
 async function handleGetLyrics() {
   if (!activeApiKey) {
     setGenStatus('API Key നൽകിയിട്ടില്ല!', true);
@@ -599,7 +605,7 @@ async function handleGetLyrics() {
 
   const btn = document.getElementById('getLyricsBtn');
   const out = document.getElementById('output');
-  const model = document.getElementById('modelSelect').value || 'gemini-1.5-flash';
+  const model = document.getElementById('modelSelect').value;
 
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> കാത്തിരിക്കൂ...';
@@ -609,7 +615,9 @@ async function handleGetLyrics() {
   document.getElementById('copyOutBtn').style.display = 'none';
 
   const prompt = buildPrompt(currentTitle, currentAuthor);
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${activeApiKey}`;
+  
+  // v1 API ഉപയോഗിക്കുന്നു (404 ഒഴിവാക്കാൻ)
+  const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${activeApiKey}`;
 
   try {
     const response = await fetch(url, {
@@ -621,6 +629,24 @@ async function handleGetLyrics() {
     });
 
     if (!response.ok) {
+       // v1 ലഭ്യമല്ലെങ്കിൽ v1beta ട്രൈ ചെയ്യാം
+       if(response.status === 404) {
+           const retryUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${activeApiKey}`;
+           const retryResponse = await fetch(retryUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+           });
+           if (!retryResponse.ok) throw new Error('API Error: ' + retryResponse.status + ' (Model not found)');
+           const data = await retryResponse.json();
+           const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'മറുപടി ലഭിച്ചില്ല.';
+           out.textContent = text;
+           document.getElementById('copyOutBtn').style.display = 'inline-block';
+           document.getElementById('genNote').textContent = 'ഇത് AI എഴുതിയതാണ്. തെറ്റുകൾ ഉണ്ടാകാം.';
+           btn.disabled = false;
+           btn.textContent = 'വരികൾ എടുക്കൂ';
+           return;
+       }
        throw new Error('API Error: ' + response.status);
     }
 
@@ -639,7 +665,9 @@ async function handleGetLyrics() {
   btn.textContent = 'വരികൾ എടുക്കൂ';
 }
 
-// ബട്ടണുകൾക്ക് click Events നൽകുന്നു
+// ------------------------------------------
+// Event Listeners
+// ------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
   renderHistory();
   
