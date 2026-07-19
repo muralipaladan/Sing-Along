@@ -73,25 +73,27 @@
     line-height: 2.2;
   }
   
-  /* --- പുതിക്കിയ വരികളുടെ ഡിസൈൻ --- */
+  /* --- പുതിക്കിയ വരികളുടെ ഡിസൈൻ (Attractive Font & Colors) --- */
   .lyric-word {
+    font-family: 'Segoe UI', 'Helvetica Neue', Tahoma, Arial, sans-serif; /* ആകർഷകമായ ഫോണ്ട് */
     font-size: 22px; 
-    color: #64748B; 
+    font-weight: 600;
+    color: #808080; /* ഗ്രേ നിറം (Gray) */
     margin: 0 5px; 
     transition: all 0.3s ease; 
     display: inline-block;
   }
   
   .lyric-word.active { 
-    color: #00E5FF; /* തിളങ്ങുന്ന സിയാൻ നിറം */
-    font-size: 32px; /* അക്ഷരങ്ങൾ കുറച്ചുകൂടി വലുതാക്കി */
+    color: #FFFFFF; /* തിളങ്ങുന്ന വെള്ള നിറം (White) */
+    font-size: 32px; 
     font-weight: 900; 
     transform: scale(1.15) translateY(-4px); 
-    text-shadow: 0px 0px 15px rgba(0, 229, 255, 0.8), 0px 0px 30px rgba(0, 229, 255, 0.5); 
+    text-shadow: 0px 0px 15px rgba(255, 255, 255, 0.8), 0px 0px 30px rgba(255, 255, 255, 0.5); 
   }
   
   .lyric-word.passed { 
-    color: #FFFFFF; /* പാടി കഴിഞ്ഞ വരികൾ വെളുത്ത നിറത്തിൽ കാണിക്കാൻ */
+    color: #D1D5DB; /* പാടി കഴിഞ്ഞ വരികൾ നേരിയ വെളുത്ത നിറത്തിൽ കാണിക്കാൻ */
     font-weight: 500;
   }
 
@@ -493,7 +495,6 @@
     });
   }
 
-  // ഓട്ടോ-സ്ക്രോൾ ഒഴിവാക്കിയ പുതിയ കോഡ്
   document.getElementById('audioPlayer').addEventListener('timeupdate', () => {
     if (!currentLyrics.length) return;
     const currentTime = document.getElementById('audioPlayer').currentTime;
@@ -509,7 +510,6 @@
         if (i < activeIndex) el.classList.add('passed');
         if (i === activeIndex) {
           el.classList.add('active');
-          // el.scrollIntoView ഫംഗ്ഷൻ ഇവിടെ നിന്നും പൂർണ്ണമായും നീക്കം ചെയ്തു.
         }
       });
       currentActiveWordIndex = activeIndex;
