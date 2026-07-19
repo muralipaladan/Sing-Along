@@ -73,27 +73,24 @@
     line-height: 2.2;
   }
   
-  /* --- പുതിക്കിയ വരികളുടെ ഡിസൈൻ (Attractive Font & Colors) --- */
+  /* --- പുതിക്കിയ വരികളുടെ ഡിസൈൻ --- */
   .lyric-word {
-    font-family: 'Segoe UI', 'Helvetica Neue', Tahoma, Arial, sans-serif; /* ആകർഷകമായ ഫോണ്ട് */
-    font-size: 22px; 
-    font-weight: 600;
-    color: #808080; /* ഗ്രേ നിറം (Gray) */
+    font-family: 'Segoe UI', 'Helvetica Neue', Tahoma, Arial, sans-serif;
+    font-size: 26px; /* കാണാൻ പാകത്തിലുള്ള വലിപ്പം */
+    font-weight: 700;
+    color: #808080; /* ഗ്രേ നിറം */
     margin: 0 5px; 
-    transition: all 0.3s ease; 
+    transition: color 0.3s ease, text-shadow 0.3s ease; 
     display: inline-block;
   }
   
   .lyric-word.active { 
-    color: #FFFFFF; /* തിളങ്ങുന്ന വെള്ള നിറം (White) */
-    font-size: 32px; 
-    font-weight: 900; 
-    transform: scale(1.15) translateY(-4px); 
-    text-shadow: 0px 0px 15px rgba(255, 255, 255, 0.8), 0px 0px 30px rgba(255, 255, 255, 0.5); 
+    color: #FFFFFF; /* Bright White */
+    text-shadow: 0px 0px 12px rgba(255, 255, 255, 0.85); /* വെളുത്ത തിളക്കം മാത്രം, വലിപ്പം മാറില്ല */
   }
   
   .lyric-word.passed { 
-    color: #D1D5DB; /* പാടി കഴിഞ്ഞ വരികൾ നേരിയ വെളുത്ത നിറത്തിൽ കാണിക്കാൻ */
+    color: #D1D5DB; /* പാടി കഴിഞ്ഞ വരികൾ */
     font-weight: 500;
   }
 
@@ -234,7 +231,6 @@
       document.getElementById('apiSection').style.display = 'block';
     }
 
-    // Import Song via Shared Link System
     window.addEventListener('message', async (e) => {
       if (e.data && e.data.type === 'IMPORT_SONG') {
         try {
@@ -312,7 +308,6 @@
     });
   }
 
-  // --- Export / Share Song Feature ---
   window.exportSong = async (id) => {
     const song = await getSongFromDB(id);
     if(!song) return alert('പാട്ട് കണ്ടെത്താനായില്ല.');
@@ -391,7 +386,6 @@
     }
   }
 
-  // --- Processing AI Features ---
   let progressInterval;
   function updateProgress(percent, text) {
     document.getElementById('progressBox').style.display = 'block';
@@ -460,7 +454,6 @@
     }
   });
 
-  // --- Audio Player Controls ---
   let currentLyrics = [];
   let currentActiveWordIndex = -1;
   
@@ -516,7 +509,6 @@
     }
   });
 
-  // --- Core Processing Functions ---
   async function compressAudioFile(file) {
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const arrayBuffer = await file.arrayBuffer();
