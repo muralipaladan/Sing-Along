@@ -191,7 +191,7 @@
 <script>
   const DB_NAME = 'ProKaraokeDB';
   let db;
-  let pendingFile = null; // Auto-save ഡ്രാഫ്റ്റിനായി മാറ്റിവെച്ച ഫയൽ
+  let pendingFile = null;
 
   function initDB() {
     return new Promise((resolve, reject) => {
@@ -229,7 +229,8 @@
     return new Promise((resolve, reject) => {
       const tx = db.transaction('songs', 'readonly');
       const request = tx.objectStore('songs').get(id);
-      request.onsuction = () => resolve(request.result);
+      // കഴിഞ്ഞ തവണ ഇവിടെ 'onsuction' എന്നായിപ്പോയി, അത് 'onsuccess' എന്ന് തിരുത്തി!
+      request.onsuccess = () => resolve(request.result);
       request.onerror = (e) => reject(e);
     });
   }
@@ -274,7 +275,6 @@
     await saveSongToDB(draftData);
   }
 
-  // ഫയൽ സെലക്ട് ചെയ്യുമ്പോൾ തനിയെ ഡ്രാഫ്റ്റ് ആക്കുന്നു
   document.getElementById('mediaFile').addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if(file) {
@@ -288,7 +288,6 @@
     }
   });
 
-  // ടൈപ്പ് ചെയ്യുമ്പോഴും വരികൾ കോപ്പി ചെയ്യുമ്പോഴും സേവ് ആകുന്നു
   document.getElementById('songTitleInput').addEventListener('input', saveDraft);
   document.getElementById('customLyrics').addEventListener('input', saveDraft);
 
@@ -302,7 +301,6 @@
   document.addEventListener('DOMContentLoaded', async () => {
     await initDB();
     
-    // പേജ് ലോഡ് ആകുമ്പോൾ ഡ്രാഫ്റ്റ് ഉണ്ടെങ്കിൽ തിരിച്ചെടുക്കുന്നു
     try {
         const draft = await getSongFromDB('DRAFT');
         if (draft && (draft.title || draft.audioBlob || draft.customLyrics)) {
@@ -313,7 +311,7 @@
                 document.getElementById('draftFileInfo').innerText = "✔️ നേരത്തെ തിരഞ്ഞെടുത്ത ഫയൽ: " + draft.fileName;
                 document.getElementById('draftFileInfo').style.display = 'block';
             }
-            showView('addView'); // ഡ്രാഫ്റ്റ് ഉണ്ടെങ്കിൽ നേരെ പാട്ട് ചേർക്കുന്ന പേജിലേക്ക് പോകും
+            showView('addView');
         } else {
             loadLibrary();
         }
@@ -365,7 +363,6 @@
       showView('addView');
   });
   
-  // ക്യാൻസൽ ചെയ്താൽ ഡ്രാഫ്റ്റ് മായ്ച്ചു കളയുന്നു
   document.getElementById('backToLibraryBtn').addEventListener('click', async () => {
       await deleteSongFromDB('DRAFT');
       pendingFile = null;
@@ -388,7 +385,6 @@
     const list = document.getElementById('savedSongsList');
     list.innerHTML = '';
     
-    // ഡ്രാഫ്റ്റ് ഒഴികെയുള്ള പാട്ടുകൾ മാത്രം കാണിക്കുന്നു
     const actualSongs = songs.filter(s => s.id !== 'DRAFT');
 
     if(actualSongs.length === 0) {
@@ -483,7 +479,6 @@
   };
 
   document.getElementById('processBtn').addEventListener('click', async () => {
-    // ഡ്രാഫ്റ്റിൽ ഫയൽ ഉണ്ടെങ്കിൽ അത് ഉപയോഗിക്കും, അല്ലെങ്കിൽ പുതിയത് എടുക്കും
     const file = pendingFile || document.getElementById('mediaFile').files[0];
     const title = document.getElementById('songTitleInput').value.trim() || (file ? (file.name ? file.name.replace(/\.[^/.]+$/, "") : 'My Song') : 'My Song');
     let customLyricsText = document.getElementById('customLyrics').value.trim();
@@ -518,7 +513,6 @@
       const songData = { id: Date.now(), title: title, audioBlob: file, lyrics: finalLyrics };
       await saveSongToDB(songData);
       
-      // സേവ് ചെയ്തു കഴിഞ്ഞാൽ ഡ്രാഫ്റ്റ് മായ്ച്ചു കളയുന്നു
       await deleteSongFromDB('DRAFT');
       pendingFile = null;
       
