@@ -34,11 +34,14 @@
   }
   h1 { font-size: 22px; color: var(--primary); text-align: center; margin-top: 0; }
   
-  input[type="password"], input[type="file"], input[type="text"], select {
+  input[type="password"], input[type="file"], input[type="text"], select, textarea {
     width: 100%; padding: 14px; background: #0F172A; border: 1px solid #334155;
     color: white; border-radius: 10px; margin-top: 8px; box-sizing: border-box;
+    font-family: inherit;
   }
   
+  textarea { resize: vertical; min-height: 100px; }
+
   button {
     width: 100%; padding: 14px; background: var(--primary); color: #000;
     font-weight: bold; font-size: 16px; border: none; border-radius: 10px;
@@ -66,6 +69,10 @@
   .song-actions { display: flex; gap: 5px; width: 100%; justify-content: flex-end; }
   .song-actions button { width: auto; padding: 8px 12px; margin: 0; font-size: 13px; flex: 1; }
 
+  /* Player View Updates */
+  #playerHeader { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  #playerHeader button { width: auto; padding: 6px 12px; margin: 0; font-size: 13px; }
+  
   audio { width: 100%; margin-top: 16px; border-radius: 8px; }
   .karaoke-container {
     background: #000; height: 400px; overflow-y: auto; border-radius: 12px;
@@ -73,24 +80,32 @@
     line-height: 2.2;
   }
   
-  /* --- പുതിക്കിയ വരികളുടെ ഡിസൈൻ --- */
+  /* Fullscreen adjustments */
+  #playerView:fullscreen {
+      background: #000; padding: 20px; display: flex; flex-direction: column; justify-content: center;
+  }
+  #playerView:fullscreen .card { box-shadow: none; border-radius: 0; background: transparent; height: 100%; display: flex; flex-direction: column;}
+  #playerView:fullscreen .karaoke-container { height: 100%; border: none; flex-grow: 1; }
+  #playerView:fullscreen #playerHeader button { background: #334155; color: white; border: none; }
+  
+  /* പുതിക്കിയ വരികളുടെ ഡിസൈൻ */
   .lyric-word {
     font-family: 'Segoe UI', 'Helvetica Neue', Tahoma, Arial, sans-serif;
-    font-size: 26px; /* കാണാൻ പാകത്തിലുള്ള വലിപ്പം */
+    font-size: 26px; 
     font-weight: 700;
-    color: #808080; /* ഗ്രേ നിറം */
+    color: #808080; 
     margin: 0 5px; 
     transition: color 0.3s ease, text-shadow 0.3s ease; 
     display: inline-block;
   }
   
   .lyric-word.active { 
-    color: #FFFFFF; /* Bright White */
-    text-shadow: 0px 0px 12px rgba(255, 255, 255, 0.85); /* വെളുത്ത തിളക്കം മാത്രം, വലിപ്പം മാറില്ല */
+    color: #FFFFFF; 
+    text-shadow: 0px 0px 12px rgba(255, 255, 255, 0.85); 
   }
   
   .lyric-word.passed { 
-    color: #D1D5DB; /* പാടി കഴിഞ്ഞ വരികൾ */
+    color: #D1D5DB; 
     font-weight: 500;
   }
 
@@ -129,12 +144,21 @@
   <div id="addView" class="view">
     <div class="card">
       <h1>പുതിയ പാട്ട് ചേർക്കുക</h1>
-      <label style="font-size: 13px; color: var(--text-muted);">പാട്ടിന്റെ പേര് (സേവ് ചെയ്യാൻ)</label>
-      <input type="text" id="songTitleInput" placeholder="ഉദാ: മാണിക്യ മലരായ...">
+      
       <label style="font-size: 13px; color: var(--text-muted); display: block; margin-top: 16px;">MP3 അല്ലെങ്കിൽ MP4 ഫയൽ</label>
       <input type="file" id="mediaFile" accept="audio/*, video/mp4">
+      
+      <label style="font-size: 13px; color: var(--text-muted); margin-top: 16px; display: block;">പാട്ടിന്റെ പേര്</label>
+      <input type="text" id="songTitleInput" placeholder="ഉദാ: മാണിക്യ മലരായ...">
+      
+      <button type="button" onclick="searchLyrics()" class="btn-outline" style="margin-top: 8px; padding: 10px; font-size: 14px;">🔍 വരികൾ തിരയുക (മലയാളസംഗീതം)</button>
+      
+      <label style="font-size: 13px; color: var(--text-muted); display: block; margin-top: 16px;">വരികൾ പേസ്റ്റ് ചെയ്യുക (നിർബന്ധമില്ല)</label>
+      <textarea id="customLyrics" placeholder="കോപ്പി ചെയ്ത വരികൾ ഇവിടെ പേസ്റ്റ് ചെയ്യുക..."></textarea>
+      
       <button id="processBtn">വരികൾ തയ്യാറാക്കുക</button>
       <button class="btn-outline" id="backToLibraryBtn">ക്യാൻസൽ</button>
+      
       <div class="progress-container" id="progressBox">
         <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
         <div class="progress-text" id="progressText">0%</div>
@@ -146,7 +170,10 @@
   <!-- View 3: Player -->
   <div id="playerView" class="view">
     <div class="card">
-      <button class="btn-outline" id="playerBackBtn" style="width: auto; padding: 6px 12px; font-size: 13px; margin-bottom: 10px;">🔙 പുറകോട്ട്</button>
+      <div id="playerHeader">
+        <button class="btn-outline" id="playerBackBtn">🔙 പുറകോട്ട്</button>
+        <button class="btn-outline" id="fullscreenBtn" onclick="toggleFullScreen()">🔲 Full Screen</button>
+      </div>
       <h1 id="playerTitle">പാട്ട്</h1>
       <audio id="audioPlayer" controls></audio>
       <div class="karaoke-container" id="lyricsBox"></div>
@@ -215,6 +242,39 @@
     document.getElementById(viewId).classList.add('active');
   }
 
+  // --- NEW: Toggle Fullscreen Mode ---
+  function toggleFullScreen() {
+    const playerView = document.getElementById('playerView');
+    if (!document.fullscreenElement) {
+        if (playerView.requestFullscreen) { playerView.requestFullscreen(); } 
+        else if (playerView.webkitRequestFullscreen) { playerView.webkitRequestFullscreen(); } 
+        else if (playerView.msRequestFullscreen) { playerView.msRequestFullscreen(); }
+    } else {
+        if (document.exitFullscreen) { document.exitFullscreen(); } 
+        else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); } 
+        else if (document.msExitFullscreen) { document.msExitFullscreen(); }
+    }
+  }
+
+  // --- Search Feature ---
+  function searchLyrics() {
+    let title = document.getElementById('songTitleInput').value.trim();
+    if(!title) {
+        title = "malayalam movie song"; // fallback query if empty
+    }
+    const query = encodeURIComponent(title + " lyrics site:malayalasangeetham.info OR site:malayalamlyrics.in");
+    window.open("https://www.google.com/search?q=" + query, "_blank");
+  }
+
+  // --- NEW: Auto-Fill Song Title from File ---
+  document.getElementById('mediaFile').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    const titleInput = document.getElementById('songTitleInput');
+    if(file && !titleInput.value) {
+       titleInput.value = file.name.replace(/\.[^/.]+$/, ""); // Removes extension like .mp3
+    }
+  });
+
   // --- Initialization & API Setup ---
   document.addEventListener('DOMContentLoaded', async () => {
     await initDB();
@@ -276,9 +336,16 @@
     document.getElementById('apiSection').style.display = 'block';
   });
 
-  document.getElementById('showAddViewBtn').addEventListener('click', () => showView('addView'));
+  document.getElementById('showAddViewBtn').addEventListener('click', () => {
+      document.getElementById('songTitleInput').value = '';
+      document.getElementById('mediaFile').value = '';
+      document.getElementById('customLyrics').value = '';
+      showView('addView');
+  });
+  
   document.getElementById('backToLibraryBtn').addEventListener('click', () => showView('libraryView'));
   document.getElementById('playerBackBtn').addEventListener('click', () => {
+    if (document.fullscreenElement) { document.exitFullscreen(); }
     document.getElementById('audioPlayer').pause();
     showView('libraryView');
   });
@@ -293,7 +360,8 @@
       return;
     }
 
-    songs.forEach(song => {
+    // reverse to show newest first
+    songs.reverse().forEach(song => {
       const li = document.createElement('li');
       li.className = 'song-item';
       li.innerHTML = `
@@ -416,8 +484,10 @@
         return;
     }
     
-    const title = document.getElementById('songTitleInput').value.trim() || 'My Song';
     const file = document.getElementById('mediaFile').files[0];
+    const title = document.getElementById('songTitleInput').value.trim() || (file ? file.name.replace(/\.[^/.]+$/, "") : 'My Song');
+    const customLyricsText = document.getElementById('customLyrics').value.trim();
+
     if(!file) return alert('ഒരു ഓഡിയോ/വീഡിയോ ഫയൽ തിരഞ്ഞെടുക്കുക!');
 
     document.getElementById('processBtn').disabled = true;
@@ -426,8 +496,8 @@
       simulateProgress(0, 40, 3000, 'ഫയൽ കംപ്രസ് ചെയ്യുന്നു (Local Processing)...');
       const base64Audio = await compressAudioFile(file);
       
-      simulateProgress(40, 95, 10000, 'AI വരികൾ കണ്ടെത്തുന്നു (ഇതിന് അല്പം സമയമെടുക്കും)...');
-      const jsonWords = await fetchWordLyricsFromGemini(apiKey, selectedModel, base64Audio);
+      simulateProgress(40, 95, 10000, 'AI വരികളും സമയവും ക്രമീകരിക്കുന്നു...');
+      const jsonWords = await fetchWordLyricsFromGemini(apiKey, selectedModel, base64Audio, customLyricsText);
       
       clearInterval(progressInterval);
       updateProgress(100, 'പൂർത്തിയായി!');
@@ -440,6 +510,7 @@
       alert('പാട്ട് വിജയകരമായി ചേർത്തു!');
       document.getElementById('songTitleInput').value = '';
       document.getElementById('mediaFile').value = '';
+      document.getElementById('customLyrics').value = '';
       document.getElementById('progressBox').style.display = 'none';
       
       loadLibrary();
@@ -478,6 +549,7 @@
     box.innerHTML = '';
     let lastTime = 0;
     currentLyrics.forEach((item, index) => {
+      // Add line break if time gap is more than 2 seconds
       if (index > 0 && (item.t - lastTime) > 2.0) { box.appendChild(document.createElement('br')); }
       const span = document.createElement('span');
       span.className = 'lyric-word';
@@ -503,6 +575,8 @@
         if (i < activeIndex) el.classList.add('passed');
         if (i === activeIndex) {
           el.classList.add('active');
+          // Smooth scroll to keep current word visible
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
       });
       currentActiveWordIndex = activeIndex;
@@ -548,15 +622,24 @@
     return new Blob([buffer], {type: "audio/wav"});
   }
 
-  async function fetchWordLyricsFromGemini(apiKey, selectedModel, base64Audio) {
+  async function fetchWordLyricsFromGemini(apiKey, selectedModel, base64Audio, customLyricsText) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
-    const prompt = `Listen to the audio. Transcribe the Malayalam lyrics. 
-    OUTPUT REQUIREMENT: You must return ONLY a valid JSON array of objects. Each object represents one word sung. 
+    
+    let prompt = `Listen to the audio. Provide the timestamp for each Malayalam word sung. 
+    OUTPUT REQUIREMENT: You must return ONLY a valid JSON array of objects. Each object represents one word. 
     Format: [{"w": "word", "t": start_time_in_seconds}]. 
     Example: [{"w": "സ്നേഹം", "t": 12.5}, {"w": "തന്ന", "t": 13.0}]. 
     Do NOT output any markdown, code blocks (\`\`\`), or extra text. Only the raw JSON array.`;
+
+    if (customLyricsText) {
+      prompt += `\n\nHere are the exact lyrics of the song:\n${customLyricsText}\n\nUse ONLY these exact words and find their timestamps by listening to the audio. Break the text into words appropriately.`;
+    } else {
+      prompt += `\n\nTranscribe the Malayalam lyrics yourself and add timestamps.`;
+    }
+
     const payload = { contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "audio/wav", data: base64Audio } }] }] };
     const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    
     if (!response.ok) {
        const errorText = await response.text();
        let exactError = response.status;
@@ -566,9 +649,11 @@
        } catch(e) {}
        throw new Error("Google API Error: " + exactError);
     }
+    
     const data = await response.json();
     let text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
     text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    
     try {
       const jsonArr = JSON.parse(text);
       if(!Array.isArray(jsonArr)) throw new Error("Not an array");
