@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Pro Karaoke AI</title>
-<!-- മനോഹരമായ മലയാളം ഫോണ്ട് (Google Fonts) -->
+<!-- മനോഹരമായ മലയാളം ഫോണ്ട് -->
 <link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -94,7 +94,7 @@
     line-height: 2.2;
     text-shadow: 0px 2px 15px rgba(56, 189, 248, 0.4);
     white-space: pre-wrap;
-    padding-bottom: 150px; /* സ്ക്രോൾ ചെയ്യാൻ സ്പേസ് */
+    padding-bottom: 150px;
   }
 
   /* Fullscreen adjustments */
@@ -107,14 +107,6 @@
   
   .view { display: none; }
   .view.active { display: block; }
-  
-  /* വീഡിയോ റെക്കോർഡിംഗ് അറിയിപ്പ് */
-  #recordingStatus {
-      display: none; background: #EF4444; color: white; padding: 10px; border-radius: 8px; 
-      margin-top: 10px; text-align: center; font-weight: bold; font-size: 14px;
-      animation: pulse 1.5s infinite;
-  }
-  @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 </style>
 </head>
 <body>
@@ -179,8 +171,6 @@
         <button class="btn-outline" id="fullscreenBtn" onclick="toggleFullScreen()">🔲 Full Screen</button>
       </div>
       <h1 id="playerTitle">പാട്ട്</h1>
-      
-      <div id="recordingStatus">🔴 വീഡിയോ റെക്കോർഡ് ചെയ്യുന്നു... പാട്ട് തീരുന്നത് വരെ കാത്തിരിക്കുക.</div>
       
       <audio id="audioPlayer" controls></audio>
       
@@ -291,7 +281,7 @@
       document.getElementById('apiSection').style.display = 'block';
     }
 
-    // Import Listner (From HTML Share)
+    // Import Listener (From HTML Share)
     window.addEventListener('message', async (e) => {
       if (e.data && e.data.type === 'IMPORT_SONG') {
         try {
@@ -354,7 +344,7 @@
         <span class="song-title">${song.title}</span>
         <div class="song-actions">
           <button onclick="playSavedSong(${song.id})" style="background:#10B981; color:#fff;">Play</button>
-          <button onclick="exportVideo(${song.id})" style="background:#F59E0B; color:#fff;">🎬 Export Video</button>
+          <button onclick="exportSong(${song.id})" style="background:#3B82F6; color:#fff;">Share</button>
           <button onclick="deleteSong(${song.id})" style="background:#EF4444; color:#fff;">Del</button>
         </div>
       `;
@@ -362,7 +352,79 @@
     });
   }
 
-  // --- NEW: Process (No Delay if lyrics pasted) ---
+  // --- Export Song as HTML (For sharing) ---
+  window.exportSong = async (id) => {
+    const song = await getSongFromDB(id);
+    if(!song) return alert('പാട്ട് കണ്ടെത്താനായില്ല.');
+
+    alert('പാട്ട് ഷെയർ ചെയ്യാനുള്ള ഫയൽ തയ്യാറാക്കുന്നു... അല്പം കാത്തിരിക്കുക.');
+
+    const reader = new FileReader();
+    reader.readAsDataURL(song.audioBlob);
+    reader.onloadend = () => {
+      const base64Audio = reader.result;
+      const songDataStr = JSON.stringify({
+        title: song.title,
+        lyrics: song.lyrics,
+        audio: base64Audio
+      });
+      
+      const htmlContent = `<!DOCTYPE html>
+<html lang="ml">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${song.title} - Sing Along</title>
+  <style>
+    body { background: #0F172A; color: #F8FAFC; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
+    .card { background: #1E293B; padding: 30px; border-radius: 16px; box-shadow: 0 10px 15px rgba(0,0,0,0.5); max-width: 400px; width: 90%; }
+    h1 { color: #38BDF8; font-size: 24px; margin-bottom: 10px; }
+    p { color: #94A3B8; font-size: 14px; margin-bottom: 24px; }
+    button { background: #38BDF8; color: #000; font-weight: bold; font-size: 16px; border: none; border-radius: 10px; padding: 15px 20px; cursor: pointer; width: 100%; transition: 0.2s; }
+    button:active { transform: scale(0.95); }
+    .loading { display: none; color: #10B981; margin-top: 15px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🎵 ${song.title}</h1>
+    <p>നിങ്ങൾക്ക് ഒരു പുതിയ കരോക്കെ പാട്ട് ലഭിച്ചിട്ടുണ്ട്!</p>
+    <button id="openAppBtn">Play in Sing-Along App</button>
+    <div id="status" class="loading">App തുറക്കുന്നു... ദയവായി കാത്തിരിക്കുക!</div>
+  </div>
+  <script>
+    const songData = ${songDataStr};
+    document.getElementById("openAppBtn").addEventListener("click", () => {
+      document.getElementById("status").style.display = "block";
+      const appWindow = window.open("https://muralipaladan.github.io/Sing-Along/", "SingAlongApp");
+      window.addEventListener("message", (e) => {
+        if(e.origin === "https://muralipaladan.github.io" && e.data === "APP_READY") {
+           appWindow.postMessage({ type: "IMPORT_SONG", data: songData }, "https://muralipaladan.github.io");
+           document.getElementById("status").innerText = "പാട്ട് വിജയകരമായി ആപ്പിലേക്ക് അയച്ചു!";
+           document.getElementById("status").style.color = "#38BDF8";
+        }
+      });
+      setTimeout(() => {
+        appWindow.postMessage({ type: "IMPORT_SONG", data: songData }, "https://muralipaladan.github.io");
+      }, 3500);
+    });
+  <\/script>
+</body>
+</html>`;
+      
+      const blob = new Blob([htmlContent], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = song.title.replace(/[^a-zA-Z0-9]/g, '_') + '_karaoke.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    };
+  };
+
+  // --- Processing (No Delay if lyrics pasted) ---
   document.getElementById('processBtn').addEventListener('click', async () => {
     const file = document.getElementById('mediaFile').files[0];
     const title = document.getElementById('songTitleInput').value.trim() || (file ? file.name.replace(/\.[^/.]+$/, "") : 'My Song');
@@ -376,7 +438,6 @@
     try {
       let finalLyrics = customLyricsText;
       
-      // വരികൾ നൽകിയില്ലെങ്കിൽ മാത്രം AI ഉപയോഗിക്കുന്നു (Time Delay ഒഴിവാക്കാൻ)
       if(!customLyricsText) {
           const apiKey = localStorage.getItem('gemini_karaoke_key');
           const selectedModel = localStorage.getItem('gemini_karaoke_model') || 'gemini-3.5-flash';
@@ -396,7 +457,6 @@
 
       if(!finalLyrics) throw new Error('വരികൾ കണ്ടെത്താൻ കഴിഞ്ഞില്ല.');
 
-      // Save as Text String directly to IndexedDB
       const songData = { id: Date.now(), title: title, audioBlob: file, lyrics: finalLyrics };
       await saveSongToDB(songData);
       
@@ -427,7 +487,6 @@
     const audio = document.getElementById('audioPlayer');
     audio.src = audioUrl;
 
-    // സ്ക്രീനിൽ മനോഹരമായി വരികൾ ഡിസ്പ്ലേ ചെയ്യുന്നു
     document.getElementById('lyricsContent').innerText = song.lyrics;
 
     showView('playerView');
@@ -439,94 +498,6 @@
       loadLibrary();
     }
   }
-
-  // --- NEW: Export as Video (MP4/WebM) via Canvas Recording ---
-  window.exportVideo = async (id) => {
-    const song = await getSongFromDB(id);
-    if(!song) return alert('പാട്ട് കണ്ടെത്താനായില്ല.');
-    
-    alert("വീഡിയോ റെക്കോർഡിംഗ് ആരംഭിക്കുന്നു. ഇതിനായി പാട്ട് മുഴുവനായി പ്ലേ ആവുന്നതാണ്. ദയവായി സ്ക്രീൻ അടയ്ക്കാതെ കാത്തിരിക്കുക.");
-    
-    // പ്ലെയർ സ്ക്രീൻ കാണിക്കുന്നു
-    await playSavedSong(id);
-    const audio = document.getElementById('audioPlayer');
-    const statusMsg = document.getElementById('recordingStatus');
-    statusMsg.style.display = 'block';
-
-    // Canvas നിർമ്മിക്കുന്നു (ഫോൺ സ്ക്രീൻ വലുപ്പം)
-    const canvas = document.createElement('canvas');
-    canvas.width = 720; canvas.height = 1280;
-    const ctx = canvas.getContext('2d');
-    
-    // Streams
-    const canvasStream = canvas.captureStream(30);
-    let audioStream;
-    if (audio.captureStream) { audioStream = audio.captureStream(); } 
-    else if (audio.mozCaptureStream) { audioStream = audio.mozCaptureStream(); }
-
-    const tracks = [...canvasStream.getTracks()];
-    if(audioStream) { tracks.push(...audioStream.getTracks()); }
-    const combinedStream = new MediaStream(tracks);
-
-    // Recorder
-    const recorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm' });
-    const chunks = [];
-    recorder.ondataavailable = e => chunks.push(e.data);
-    recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'video/webm' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = song.title.replace(/[^a-zA-Z0-9]/g, '_') + '_video.webm'; // WebM is mostly supported
-        a.click();
-        statusMsg.style.display = 'none';
-        alert("വീഡിയോ വിജയകരമായി സേവ് ചെയ്തു! നിങ്ങളുടെ ഗാലറിയിൽ പരിശോധിക്കുക.");
-    };
-
-    recorder.start();
-    audio.play();
-
-    // ആനിമേഷൻ - വരികൾ കാൻവാസിൽ വരയ്ക്കുന്നു
-    function draw() {
-        if(audio.ended || (audio.paused && audio.currentTime > 0)) return;
-        
-        // Background
-        const grad = ctx.createLinearGradient(0,0,0,canvas.height);
-        grad.addColorStop(0, '#0f172a'); grad.addColorStop(1, '#000000');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0,0, canvas.width, canvas.height);
-        
-        // Title
-        ctx.fillStyle = '#38BDF8';
-        ctx.font = 'bold 50px "Anek Malayalam", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText("🎵 " + song.title, canvas.width/2, 100);
-
-        // Lyrics
-        ctx.fillStyle = '#F8FAFC';
-        ctx.font = 'bold 36px "Anek Malayalam", sans-serif';
-        ctx.shadowColor = 'rgba(56, 189, 248, 0.5)';
-        ctx.shadowBlur = 10;
-
-        const lines = song.lyrics.split('\n');
-        // പതുക്കെ മുകളിലേക്ക് സ്ക്രോൾ ചെയ്യുന്നു
-        const scrollY = (audio.currentTime / audio.duration) * (lines.length * 50);
-        let y = canvas.height / 2; // സ്ക്രീനിന്റെ പകുതിയിൽ നിന്നും തുടങ്ങുന്നു
-        
-        lines.forEach((line, i) => {
-            const lineY = y + (i*60) - scrollY;
-            if(lineY > 150 && lineY < canvas.height) { // സ്ക്രീനിൽ ഉള്ളവ മാത്രം വരയ്ക്കുക
-                ctx.fillText(line, canvas.width/2, lineY);
-            }
-        });
-
-        ctx.shadowBlur = 0; // Reset shadow
-        requestAnimationFrame(draw);
-    }
-    draw();
-    
-    audio.onended = () => { recorder.stop(); }
-  };
 
   // --- Utility Functions ---
   async function compressAudioFile(file) {
@@ -568,7 +539,7 @@
     return new Blob([buffer], {type: "audio/wav"});
   }
 
-  // Updated AI Fetch: Only fetches plain text to save time
+  // Text-only generation to save time.
   async function fetchTextLyricsFromGemini(apiKey, selectedModel, base64Audio) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
     const prompt = `Listen to the audio. Transcribe the Malayalam lyrics clearly. Provide ONLY the pure text with proper line breaks. Do not include any timestamps, translations, or markdown.`;
