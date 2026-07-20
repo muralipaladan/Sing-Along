@@ -228,9 +228,15 @@
 
   function deleteSongFromDB(id) {
     return new Promise((resolve, reject) => {
-      const tx = db.transaction('songs', 'readwrite');
-      tx.objectStore('songs').delete(id);
-      tx.oncomplete = () => resolve();
+      try {
+        const tx = db.transaction('songs', 'readwrite');
+        const store = tx.objectStore('songs');
+        store.delete(id);
+        tx.oncomplete = () => resolve();
+        tx.onerror = (e) => reject(e);
+      } catch (error) {
+        reject(error);
+      }
     });
   }
 
@@ -373,15 +379,29 @@
         <div class="song-actions">
           <button onclick="playSavedSong(${song.id})" style="background:#10B981; color:#fff;">Play</button>
           <button onclick="exportSong(${song.id})" style="background:#3B82F6; color:#fff;">Share</button>
-          <button onclick="deleteSong(${song.id})" style="background:#EF4444; color:#fff;">Del</button>
+          <!-- 'ID' String ആയോ Number ആയോ പോകുന്നത് ഉറപ്പാക്കാൻ Quotes നൽകി -->
+          <button onclick="deleteSong('${song.id}')" style="background:#EF4444; color:#fff;">Del</button>
         </div>
       `;
       list.appendChild(li);
     });
   }
 
+  // --- പുതുക്കിയ ഡിലീറ്റ് ഫംഗ്ഷൻ (Type Error പരിഹരിച്ചത്) ---
+  window.deleteSong = async (id) => {
+    if(confirm('ഈ പാട്ട് ഡിലീറ്റ് ചെയ്യണോ?')) {
+      try {
+        // ഡാറ്റാബേസിൽ ഐഡി 'Number' ആയതിനാൽ നമ്പറിലേക്ക് മാറ്റുന്നു
+        await deleteSongFromDB(Number(id)); 
+      } catch (e) {
+        console.error("Delete failed", e);
+      }
+      loadLibrary();
+    }
+  }
+
   window.exportSong = async (id) => {
-    const song = await getSongFromDB(id);
+    const song = await getSongFromDB(Number(id)); // ഇവിടെയും Number ഉറപ്പാക്കി
     if(!song) return alert('പാട്ട് കണ്ടെത്താനായില്ല.');
 
     alert('പാട്ട് ഷെയർ ചെയ്യാനുള്ള ഫയൽ തയ്യാറാക്കുന്നു... അല്പം കാത്തിരിക്കുക.');
@@ -523,7 +543,7 @@
   let currentActiveLineIndex = -1;
 
   window.playSavedSong = async (id) => {
-    const song = await getSongFromDB(id);
+    const song = await getSongFromDB(Number(id)); // ഇവിടെയും Number ഉറപ്പാക്കി
     if(!song) return alert('പാട്ട് കണ്ടെത്താനായില്ല.');
 
     currentLyrics = Array.isArray(song.lyrics) ? song.lyrics : [];
@@ -555,7 +575,6 @@
       box.appendChild(div);
     });
     
-    // താഴെ സ്ക്രോൾ ചെയ്യാനുള്ള സ്പേസ്
     const paddingDiv = document.createElement('div');
     paddingDiv.style.height = "150px";
     box.appendChild(paddingDiv);
