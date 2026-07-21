@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Pro Karaoke AI</title>
+<title>Pro Karaoke App</title>
 <!-- മനോഹരമായ മലയാളം ഫോണ്ട് -->
 <link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
@@ -36,7 +36,7 @@
   }
   h1 { font-size: 22px; color: var(--primary); text-align: center; margin-top: 0; }
   
-  input[type="password"], input[type="file"], input[type="text"], select, textarea {
+  input[type="file"], input[type="text"], textarea {
     width: 100%; padding: 14px; background: #0F172A; border: 1px solid #334155;
     color: white; border-radius: 10px; margin-top: 8px; box-sizing: border-box;
     font-family: inherit;
@@ -52,9 +52,6 @@
   button:active { transform: scale(0.97); }
   button:disabled { background: #334155; color: #94A3B8; cursor: not-allowed; }
   .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
-
-  #apiSection { display: none; margin-bottom: 20px; }
-  .api-link { font-size: 13px; color: var(--primary); float: right; margin-top: 4px; text-decoration: none; }
 
   .progress-container { display: none; margin-top: 16px; text-align: center; }
   .progress-bar-bg { background: #334155; border-radius: 8px; height: 10px; width: 100%; overflow: hidden; margin-top: 8px; }
@@ -112,24 +109,10 @@
 <div class="container">
   
   <div id="libraryView" class="view active">
-    <div id="apiSection" class="card">
-      <h2 style="font-size: 16px; margin:0 0 10px 0;">⚙️ Setup API Key & Model</h2>
-      <label style="font-size: 13px; color: var(--text-muted);">AI Model</label>
-      <select id="modelSelect">
-        <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
-        <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash Lite</option>
-      </select>
-      <label style="font-size: 13px; color: var(--text-muted); margin-top: 12px; display: block;">Gemini API Key</label>
-      <a href="https://aistudio.google.com/apikey" target="_blank" class="api-link">🔑 Get Free API Key</a>
-      <input type="password" id="apiKey" placeholder="AIzaSy...">
-      <button id="saveApiBtn">Save Settings</button>
-    </div>
-
     <div class="card">
       <h1>🎵 പാട്ടുകളുടെ ശേഖരം</h1>
       <ul class="song-list" id="savedSongsList"></ul>
       <button id="showAddViewBtn" style="margin-top: 20px;">+ പുതിയ പാട്ട് ചേർക്കുക</button>
-      <button id="resetApiBtn" class="btn-outline" style="margin-top: 10px; font-size: 12px;">Change API Key / Model</button>
     </div>
   </div>
 
@@ -296,28 +279,7 @@
             showView('addView');
         } else { loadLibrary(); }
     } catch(e) { loadLibrary(); }
-
-    const savedKey = localStorage.getItem('gemini_karaoke_key');
-    const savedModel = localStorage.getItem('gemini_karaoke_model');
-    if(savedModel) { document.getElementById('modelSelect').value = savedModel; }
-    if(savedKey) {
-      document.getElementById('apiKey').value = savedKey;
-      document.getElementById('apiSection').style.display = 'none';
-    } else { document.getElementById('apiSection').style.display = 'block'; }
   });
-
-  document.getElementById('saveApiBtn').addEventListener('click', () => {
-    const key = document.getElementById('apiKey').value.trim();
-    const model = document.getElementById('modelSelect').value;
-    if(key) {
-      localStorage.setItem('gemini_karaoke_key', key);
-      localStorage.setItem('gemini_karaoke_model', model);
-      document.getElementById('apiSection').style.display = 'none';
-      alert("സെറ്റിംഗ്സ് സേവ് ചെയ്തു!");
-    }
-  });
-
-  document.getElementById('resetApiBtn').addEventListener('click', () => { document.getElementById('apiSection').style.display = 'block'; });
 
   document.getElementById('showAddViewBtn').addEventListener('click', () => { showView('addView'); });
   
@@ -442,7 +404,6 @@
     <p>പാട്ട് കേൾക്കാൻ സ്ക്രീനിൽ തൊടുക</p>
   </div>
 
-  <!-- നിങ്ങളുടെ GitHub Player ഇവിടെ ലോഡ് ആകും -->
   <iframe id="playerFrame" src="https://songslyrics.github.io/player/"></iframe>
 
   <script>
@@ -457,12 +418,10 @@
           splash.style.display = 'none'; 
           glow.style.display = 'none';
           frame.style.display = 'block';
-          // ഡാറ്റ സുരക്ഷിതമായി പ്ലെയറിലേക്ക് അയക്കുന്നു
           frame.contentWindow.postMessage({ type: 'PLAY_SONG', payload: songData }, "*");
       }, 500);
     }
 
-    // പ്ലെയർ തയ്യാറാണോ എന്ന് പരിശോധിക്കുന്നു
     window.addEventListener('message', (e) => {
       if (e.data === 'PLAYER_READY') {
         frame.contentWindow.postMessage({ type: 'PLAY_SONG', payload: songData }, "*");
@@ -484,22 +443,11 @@
     };
   };
 
-  let progressInterval;
   function updateProgress(percent, text) {
     document.getElementById('progressBox').style.display = 'block';
     document.getElementById('progressBar').style.width = percent + '%';
     document.getElementById('progressText').innerText = percent + '%';
     document.getElementById('progressStatus').innerText = text;
-  }
-  function simulateProgress(start, end, duration, text) {
-    clearInterval(progressInterval);
-    let p = start;
-    const step = (end - start) / (duration / 100);
-    progressInterval = setInterval(() => {
-      p += step;
-      if(p >= end) { p = end; clearInterval(progressInterval); }
-      updateProgress(Math.floor(p), text);
-    }, 100);
   }
 
   document.getElementById('processBtn').addEventListener('click', async () => {
@@ -507,57 +455,41 @@
     const title = document.getElementById('songTitleInput').value.trim() || (file ? (file.name ? file.name.replace(/\.[^/.]+$/, "") : 'My Song') : 'My Song');
     let customLyricsText = document.getElementById('customLyrics').value.trim();
 
-    const apiKey = localStorage.getItem('gemini_karaoke_key');
-    const selectedModel = localStorage.getItem('gemini_karaoke_model') || 'gemini-3.5-flash';
-    
-    if(!apiKey && !customLyricsText) {
-        alert('വരികൾ പേസ്റ്റ് ചെയ്യുക, അല്ലെങ്കിൽ AI ഉപയോഗിക്കാൻ API Key സേവ് ചെയ്യുക!');
-        document.getElementById('apiSection').style.display = 'block';
-        showView('libraryView');
+    if(!customLyricsText) {
+        alert('ദയവായി വരികൾ നൽകുക/പേസ്റ്റ് ചെയ്യുക!');
         return;
     }
     if(!file) return alert('ഒരു ഓഡിയോ/വീഡിയോ ഫയൽ തിരഞ്ഞെടുക്കുക!');
 
     document.getElementById('processBtn').disabled = true;
     document.getElementById('progressBox').style.display = 'block';
+    document.getElementById('progressStatus').innerText = 'വരികൾ സേവ് ചെയ്യുന്നു...';
+    
+    updateProgress(50, 'പ്രോസസ്സ് ചെയ്യുന്നു...');
     
     try {
-      let finalLyrics = customLyricsText;
-      
-      if(!customLyricsText) {
-          simulateProgress(0, 40, 3000, 'ഫയൽ കംപ്രസ് ചെയ്യുന്നു (Local Processing)...');
-          const base64Audio = await compressAudioFile(file);
-          
-          simulateProgress(40, 95, 8000, 'AI വരികൾ കണ്ടെത്തുന്നു...');
-          finalLyrics = await fetchTextLyricsFromGemini(apiKey, selectedModel, base64Audio);
-      } else {
-          document.getElementById('progressStatus').innerText = 'വരികൾ സേവ് ചെയ്യുന്നു...';
-      }
-
-      clearInterval(progressInterval);
-      updateProgress(100, 'പൂർത്തിയായി!');
-
-      if(!finalLyrics) throw new Error('വരികൾ കണ്ടെത്താൻ കഴിഞ്ഞില്ല.');
-
-      const songData = { id: Date.now(), title: title, audioBlob: file, lyrics: finalLyrics };
+      const songData = { id: Date.now(), title: title, audioBlob: file, lyrics: customLyricsText };
       await saveSongToDB(songData);
       
       await deleteSongFromDB('DRAFT');
       pendingFile = null;
       
-      alert('പാട്ട് വിജയകരമായി ചേർത്തു!');
-      document.getElementById('songTitleInput').value = '';
-      document.getElementById('mediaFile').value = '';
-      document.getElementById('customLyrics').value = '';
-      document.getElementById('draftFileInfo').style.display = 'none';
-      document.getElementById('progressBox').style.display = 'none';
+      updateProgress(100, 'പൂർത്തിയായി!');
       
-      loadLibrary();
-      showView('libraryView');
+      setTimeout(() => {
+          alert('പാട്ട് വിജയകരമായി ചേർത്തു!');
+          document.getElementById('songTitleInput').value = '';
+          document.getElementById('mediaFile').value = '';
+          document.getElementById('customLyrics').value = '';
+          document.getElementById('draftFileInfo').style.display = 'none';
+          document.getElementById('progressBox').style.display = 'none';
+          
+          loadLibrary();
+          showView('libraryView');
+      }, 300);
 
     } catch (error) {
       alert("പിഴവ്: " + error.message);
-      clearInterval(progressInterval);
       document.getElementById('progressBox').style.display = 'none';
     } finally {
       document.getElementById('processBtn').disabled = false;
@@ -579,57 +511,6 @@
 
     showView('playerView');
   };
-
-  async function compressAudioFile(file) {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const arrayBuffer = await file.arrayBuffer();
-    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-    const targetSampleRate = 8000; 
-    const offlineContext = new OfflineAudioContext(1, audioBuffer.duration * targetSampleRate, targetSampleRate);
-    const source = offlineContext.createBufferSource();
-    source.buffer = audioBuffer;
-    source.connect(offlineContext.destination);
-    source.start();
-    const renderedBuffer = await offlineContext.startRendering();
-    const wavBlob = bufferToWav(renderedBuffer);
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result.split(',')[1]);
-      reader.readAsDataURL(wavBlob);
-    });
-  }
-
-  function bufferToWav(abuffer) {
-    let numOfChan = abuffer.numberOfChannels, length = abuffer.length * numOfChan * 2 + 44,
-        buffer = new ArrayBuffer(length), view = new DataView(buffer), channels = [], i, sample, offset = 0, pos = 0;
-    function setUint16(data) { view.setUint16(pos, data, true); pos += 2; }
-    function setUint32(data) { view.setUint32(pos, data, true); pos += 4; }
-    setUint32(0x46464952); setUint32(length - 8); setUint32(0x45564157); setUint32(0x20746d66);
-    setUint32(16); setUint16(1); setUint16(numOfChan); setUint32(abuffer.sampleRate);
-    setUint32(abuffer.sampleRate * 2 * numOfChan); setUint16(numOfChan * 2); setUint16(16);
-    setUint32(0x61746164); setUint32(length - pos - 4);
-    for(i = 0; i < abuffer.numberOfChannels; i++) channels.push(abuffer.getChannelData(i));
-    while(pos < length) {
-      for(i = 0; i < numOfChan; i++) {
-        sample = Math.max(-1, Math.min(1, channels[i][offset]));
-        sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767)|0;
-        view.setInt16(pos, sample, true); pos += 2;
-      } offset++;
-    }
-    return new Blob([buffer], {type: "audio/wav"});
-  }
-
-  async function fetchTextLyricsFromGemini(apiKey, selectedModel, base64Audio) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
-    const prompt = `Listen to the audio. Transcribe the Malayalam lyrics clearly. Provide ONLY the pure text with proper line breaks. Do not include any timestamps, translations, or markdown.`;
-    const payload = { contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "audio/wav", data: base64Audio } }] }] };
-    const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-    
-    if (!response.ok) { throw new Error("Google API Error"); }
-    const data = await response.json();
-    let text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    return text.trim();
-  }
 </script>
 </body>
 </html>
