@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Pro Karaoke AI</title>
+<!-- മനോഹരമായ മലയാളം ഫോണ്ട് -->
 <link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -398,7 +399,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>\${song.title} - Play</title>
+  <title>${song.title} - Play</title>
   <link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
     body, html {
@@ -437,7 +438,7 @@
   <!-- ആദ്യത്തെ സ്ക്രീൻ (Tap to Play) -->
   <div id="splash" onclick="startApp()">
     <div class="play-btn-large">▶</div>
-    <h2>\${song.title}</h2>
+    <h2>${song.title}</h2>
     <p>പാട്ട് കേൾക്കാൻ സ്ക്രീനിൽ തൊടുക</p>
   </div>
 
@@ -445,7 +446,7 @@
   <iframe id="playerFrame" src="https://songslyrics.github.io/player/"></iframe>
 
   <script>
-    const songData = \${songDataStr};
+    const songData = ${songDataStr};
     const frame = document.getElementById('playerFrame');
     const splash = document.getElementById('splash');
     const glow = document.getElementById('glow');
