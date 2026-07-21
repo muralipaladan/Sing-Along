@@ -1,3 +1,382 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pro Karaoke AI</title>
+<!-- മനോഹരമായ മലയാളം ഫോണ്ട് -->
+<link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0F172A;
+    --surface: #1E293B;
+    --primary: #38BDF8;
+    --text: #F8FAFC;
+    --text-muted: #94A3B8;
+    --radius: 16px;
+  }
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, sans-serif;
+    margin: 0;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+  }
+  .container { width: 100%; max-width: 500px; }
+  .card {
+    background: var(--surface);
+    padding: 24px;
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+  }
+  h1 { font-size: 22px; color: var(--primary); text-align: center; margin-top: 0; }
+  
+  input[type="password"], input[type="file"], input[type="text"], select, textarea {
+    width: 100%; padding: 14px; background: #0F172A; border: 1px solid #334155;
+    color: white; border-radius: 10px; margin-top: 8px; box-sizing: border-box;
+    font-family: inherit;
+  }
+  
+  textarea { resize: vertical; min-height: 150px; }
+
+  button {
+    width: 100%; padding: 14px; background: var(--primary); color: #000;
+    font-weight: bold; font-size: 16px; border: none; border-radius: 10px;
+    margin-top: 16px; cursor: pointer; transition: 0.2s;
+  }
+  button:active { transform: scale(0.97); }
+  button:disabled { background: #334155; color: #94A3B8; cursor: not-allowed; }
+  .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+
+  #apiSection { display: none; margin-bottom: 20px; }
+  .api-link { font-size: 13px; color: var(--primary); float: right; margin-top: 4px; text-decoration: none; }
+
+  .progress-container { display: none; margin-top: 16px; text-align: center; }
+  .progress-bar-bg { background: #334155; border-radius: 8px; height: 10px; width: 100%; overflow: hidden; margin-top: 8px; }
+  .progress-bar-fill { background: var(--primary); height: 100%; width: 0%; transition: width 0.3s; }
+  .progress-text { font-size: 14px; color: var(--primary); font-weight: bold; margin-top: 8px;}
+
+  .song-list { list-style: none; padding: 0; margin: 0; }
+  .song-item {
+    background: #0F172A; padding: 16px; border-radius: 10px; margin-bottom: 10px;
+    display: flex; justify-content: space-between; align-items: center; border: 1px solid #334155;
+    flex-wrap: wrap; gap: 10px;
+  }
+  .song-title { font-weight: bold; font-size: 15px; width: 100%; }
+  .song-actions { display: flex; gap: 5px; width: 100%; justify-content: flex-end; flex-wrap: wrap; }
+  .song-actions button { width: auto; padding: 8px 12px; margin: 0; font-size: 13px; flex: 1; min-width: 60px; }
+
+  /* Player View Updates */
+  #playerHeader { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; }
+  #playerHeader button { width: auto; padding: 8px 12px; margin: 0; font-size: 13px; }
+  
+  audio { width: 100%; margin-top: 16px; border-radius: 8px; }
+  
+  /* സിനിമാറ്റിക് ഡിസൈൻ */
+  .karaoke-container {
+    background: linear-gradient(145deg, #0f172a, #000000);
+    height: 400px; overflow-y: auto; border-radius: 12px;
+    padding: 30px 20px; text-align: center; margin-top: 16px; 
+    border: 1px solid #334155; box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+    position: relative; scroll-behavior: smooth;
+    font-family: 'Anek Malayalam', sans-serif;
+  }
+  
+  .lyrics-display {
+    font-size: 24px; color: #F8FAFC; font-weight: 600;
+    line-height: 2.4; white-space: pre-wrap;
+    text-shadow: 0px 2px 15px rgba(56, 189, 248, 0.5);
+    padding-bottom: 50px;
+  }
+  
+  #playerView:fullscreen { background: #000; padding: 20px; display: flex; flex-direction: column; justify-content: center; }
+  #playerView:fullscreen .card { box-shadow: none; border-radius: 0; background: transparent; height: 100%; display: flex; flex-direction: column;}
+  #playerView:fullscreen .karaoke-container { height: 100%; border: none; flex-grow: 1;}
+  #playerView:fullscreen .lyrics-display { font-size: 30px; line-height: 2.6; }
+  #playerView:fullscreen #playerHeader button { background: #334155; color: white; border: none; }
+  
+  .view { display: none; }
+  .view.active { display: block; }
+  
+  #draftFileInfo {
+    display: none; font-size: 13px; color: #10B981; margin-top: 8px; 
+    padding: 10px; background: #064E3B; border-radius: 8px; border: 1px solid #047857;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  
+  <div id="libraryView" class="view active">
+    <div id="apiSection" class="card">
+      <h2 style="font-size: 16px; margin:0 0 10px 0;">⚙️ Setup API Key & Model</h2>
+      <label style="font-size: 13px; color: var(--text-muted);">AI Model</label>
+      <select id="modelSelect">
+        <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
+        <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash Lite</option>
+      </select>
+      <label style="font-size: 13px; color: var(--text-muted); margin-top: 12px; display: block;">Gemini API Key</label>
+      <a href="https://aistudio.google.com/apikey" target="_blank" class="api-link">🔑 Get Free API Key</a>
+      <input type="password" id="apiKey" placeholder="AIzaSy...">
+      <button id="saveApiBtn">Save Settings</button>
+    </div>
+
+    <div class="card">
+      <h1>🎵 പാട്ടുകളുടെ ശേഖരം</h1>
+      <ul class="song-list" id="savedSongsList"></ul>
+      <button id="showAddViewBtn" style="margin-top: 20px;">+ പുതിയ പാട്ട് ചേർക്കുക</button>
+      <button id="resetApiBtn" class="btn-outline" style="margin-top: 10px; font-size: 12px;">Change API Key / Model</button>
+    </div>
+  </div>
+
+  <div id="addView" class="view">
+    <div class="card">
+      <h1>പുതിയ പാട്ട് ചേർക്കുക</h1>
+      
+      <label style="font-size: 13px; color: var(--text-muted); display: block; margin-top: 16px;">MP3 / MP4 ഫയൽ തിരഞ്ഞെടുക്കുക</label>
+      <input type="file" id="mediaFile" accept="audio/*, video/mp4">
+      <div id="draftFileInfo"></div>
+      
+      <label style="font-size: 13px; color: var(--text-muted); margin-top: 16px; display: block;">പാട്ടിന്റെ പേര്</label>
+      <input type="text" id="songTitleInput" placeholder="ഉദാ: മാണിക്യ മലരായ...">
+      
+      <button type="button" onclick="searchLyrics()" class="btn-outline" style="margin-top: 8px; padding: 10px; font-size: 14px;">🔍 വരികൾ തിരയുക (Google)</button>
+      
+      <label style="font-size: 13px; color: var(--text-muted); display: block; margin-top: 16px;">വരികൾ പേസ്റ്റ് ചെയ്യുക (വരികൾ മാത്രം മതി)</label>
+      <textarea id="customLyrics" placeholder="കോപ്പി ചെയ്ത വരികൾ ഇവിടെ പേസ്റ്റ് ചെയ്യുക..."></textarea>
+      
+      <button id="processBtn">പാട്ടും വരികളും സേവ് ചെയ്യുക</button>
+      <button class="btn-outline" id="backToLibraryBtn">ക്യാൻസൽ</button>
+      
+      <div class="progress-container" id="progressBox">
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
+        <div class="progress-text" id="progressText">0%</div>
+        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;" id="progressStatus">പ്രോസസ്സ് ചെയ്യുന്നു...</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="playerView" class="view">
+    <div class="card">
+      <div id="playerHeader">
+        <button class="btn-outline" id="playerBackBtn">🔙 പുറകോട്ട്</button>
+        <button class="btn-outline" id="fullscreenBtn" onclick="toggleFullScreen()">🔲 Full Screen</button>
+      </div>
+      <h1 id="playerTitle">പാട്ട്</h1>
+      <audio id="audioPlayer" controls></audio>
+      <div class="karaoke-container" id="lyricsBox"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const DB_NAME = 'ProKaraokeDB';
+  let db;
+  let pendingFile = null;
+
+  function initDB() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, 1);
+      request.onupgradeneeded = (e) => {
+        let db = e.target.result;
+        if (!db.objectStoreNames.contains('songs')) {
+          db.createObjectStore('songs', { keyPath: 'id' });
+        }
+      };
+      request.onsuccess = (e) => { db = e.target.result; resolve(db); };
+      request.onerror = (e) => reject(e);
+    });
+  }
+
+  function saveSongToDB(song) {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('songs', 'readwrite');
+      tx.objectStore('songs').put(song);
+      tx.oncomplete = () => resolve();
+      tx.onerror = (e) => reject(e);
+    });
+  }
+
+  function getAllSongsFromDB() {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('songs', 'readonly');
+      const request = tx.objectStore('songs').getAll();
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = (e) => reject(e);
+    });
+  }
+
+  function getSongFromDB(id) {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('songs', 'readonly');
+      const request = tx.objectStore('songs').get(id);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = (e) => reject(e);
+    });
+  }
+
+  function deleteSongFromDB(id) {
+    return new Promise((resolve, reject) => {
+      try {
+        const tx = db.transaction('songs', 'readwrite');
+        const store = tx.objectStore('songs');
+        store.delete(id);
+        tx.oncomplete = () => resolve();
+        tx.onerror = (e) => reject(e);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  function showView(viewId) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(viewId).classList.add('active');
+  }
+
+  function toggleFullScreen() {
+    const playerView = document.getElementById('playerView');
+    if (!document.fullscreenElement) {
+        if (playerView.requestFullscreen) { playerView.requestFullscreen(); } 
+        else if (playerView.webkitRequestFullscreen) { playerView.webkitRequestFullscreen(); } 
+    } else {
+        if (document.exitFullscreen) { document.exitFullscreen(); } 
+        else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); } 
+    }
+  }
+
+  async function saveDraft() {
+    const title = document.getElementById('songTitleInput').value.trim();
+    const lyrics = document.getElementById('customLyrics').value.trim();
+    if(!pendingFile && !title && !lyrics) return;
+    
+    const draftData = { id: 'DRAFT', title: title, audioBlob: pendingFile, fileName: pendingFile ? (pendingFile.name || 'Audio') : '', customLyrics: lyrics };
+    await saveSongToDB(draftData);
+  }
+
+  document.getElementById('mediaFile').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if(file) {
+        pendingFile = file;
+        document.getElementById('draftFileInfo').innerText = "✔️ തിരഞ്ഞെടുത്ത ഫയൽ: " + file.name;
+        document.getElementById('draftFileInfo').style.display = 'block';
+        const titleInput = document.getElementById('songTitleInput');
+        if(!titleInput.value) { titleInput.value = file.name.replace(/\.[^/.]+$/, ""); }
+        await saveDraft();
+    }
+  });
+
+  document.getElementById('songTitleInput').addEventListener('input', saveDraft);
+  document.getElementById('customLyrics').addEventListener('input', saveDraft);
+
+  function searchLyrics() {
+    let title = document.getElementById('songTitleInput').value.trim();
+    if(!title) { title = "malayalam movie song"; }
+    const query = encodeURIComponent(title + " lyrics malayalam");
+    window.open("https://www.google.com/search?q=" + query, "_blank");
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    await initDB();
+    try {
+        const draft = await getSongFromDB('DRAFT');
+        if (draft && (draft.title || draft.audioBlob || draft.customLyrics)) {
+            if (draft.title) document.getElementById('songTitleInput').value = draft.title;
+            if (draft.customLyrics) document.getElementById('customLyrics').value = draft.customLyrics;
+            if (draft.audioBlob) {
+                pendingFile = draft.audioBlob;
+                document.getElementById('draftFileInfo').innerText = "✔️ നേരത്തെ തിരഞ്ഞെടുത്ത ഫയൽ: " + draft.fileName;
+                document.getElementById('draftFileInfo').style.display = 'block';
+            }
+            showView('addView');
+        } else { loadLibrary(); }
+    } catch(e) { loadLibrary(); }
+
+    const savedKey = localStorage.getItem('gemini_karaoke_key');
+    const savedModel = localStorage.getItem('gemini_karaoke_model');
+    if(savedModel) { document.getElementById('modelSelect').value = savedModel; }
+    if(savedKey) {
+      document.getElementById('apiKey').value = savedKey;
+      document.getElementById('apiSection').style.display = 'none';
+    } else { document.getElementById('apiSection').style.display = 'block'; }
+  });
+
+  document.getElementById('saveApiBtn').addEventListener('click', () => {
+    const key = document.getElementById('apiKey').value.trim();
+    const model = document.getElementById('modelSelect').value;
+    if(key) {
+      localStorage.setItem('gemini_karaoke_key', key);
+      localStorage.setItem('gemini_karaoke_model', model);
+      document.getElementById('apiSection').style.display = 'none';
+      alert("സെറ്റിംഗ്സ് സേവ് ചെയ്തു!");
+    }
+  });
+
+  document.getElementById('resetApiBtn').addEventListener('click', () => { document.getElementById('apiSection').style.display = 'block'; });
+
+  document.getElementById('showAddViewBtn').addEventListener('click', () => { showView('addView'); });
+  
+  document.getElementById('backToLibraryBtn').addEventListener('click', async () => {
+      await deleteSongFromDB('DRAFT');
+      pendingFile = null;
+      document.getElementById('songTitleInput').value = '';
+      document.getElementById('mediaFile').value = '';
+      document.getElementById('customLyrics').value = '';
+      document.getElementById('draftFileInfo').style.display = 'none';
+      loadLibrary();
+      showView('libraryView');
+  });
+  
+  document.getElementById('playerBackBtn').addEventListener('click', () => {
+    if (document.fullscreenElement) { document.exitFullscreen(); }
+    document.getElementById('audioPlayer').pause();
+    showView('libraryView');
+  });
+
+  async function loadLibrary() {
+    const songs = await getAllSongsFromDB();
+    const list = document.getElementById('savedSongsList');
+    list.innerHTML = '';
+    const actualSongs = songs.filter(s => s.id !== 'DRAFT');
+
+    if(actualSongs.length === 0) {
+      list.innerHTML = '<p style="text-align:center; color:#94A3B8; font-size:14px;">ഇതുവരെ പാട്ടുകൾ സേവ് ചെയ്തിട്ടില്ല.</p>';
+      return;
+    }
+
+    actualSongs.reverse().forEach(song => {
+      const li = document.createElement('li');
+      li.className = 'song-item';
+      li.innerHTML = `
+        <span class="song-title">${song.title}</span>
+        <div class="song-actions">
+          <button onclick="playSavedSong(${song.id})" style="background:#10B981; color:#fff;">Play</button>
+          <button onclick="exportSong(${song.id})" style="background:#3B82F6; color:#fff;">Share</button>
+          <button onclick="deleteSong('${song.id}')" style="background:#EF4444; color:#fff;">Del</button>
+        </div>
+      `;
+      list.appendChild(li);
+    });
+  }
+
+  window.deleteSong = async (id) => {
+    if(confirm('ഈ പാട്ട് ഡിലീറ്റ് ചെയ്യണോ?')) {
+      try {
+        await deleteSongFromDB(Number(id)); 
+      } catch (e) {
+        console.error("Delete failed", e);
+      }
+      loadLibrary();
+    }
+  }
+
   // --- എക്കാലത്തും പ്രവർത്തിക്കുന്ന പ്രൊഫഷണൽ ഫുൾ-സ്ക്രീൻ പ്ലെയർ ---
   window.exportSong = async (id) => {
     const song = await getSongFromDB(Number(id));
@@ -9,6 +388,7 @@
     reader.readAsDataURL(song.audioBlob);
     reader.onloadend = () => {
       const base64Audio = reader.result;
+      // വരികളിലെ HTML ടാഗുകൾ ഒഴിവാക്കുന്നു
       const escapedLyrics = (song.lyrics || 'വരികൾ ലഭ്യമല്ല.').replace(/`/g, '\\`').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       
       const htmlContent = `<!DOCTYPE html>
@@ -142,3 +522,153 @@
       URL.revokeObjectURL(url);
     };
   };
+
+  let progressInterval;
+  function updateProgress(percent, text) {
+    document.getElementById('progressBox').style.display = 'block';
+    document.getElementById('progressBar').style.width = percent + '%';
+    document.getElementById('progressText').innerText = percent + '%';
+    document.getElementById('progressStatus').innerText = text;
+  }
+  function simulateProgress(start, end, duration, text) {
+    clearInterval(progressInterval);
+    let p = start;
+    const step = (end - start) / (duration / 100);
+    progressInterval = setInterval(() => {
+      p += step;
+      if(p >= end) { p = end; clearInterval(progressInterval); }
+      updateProgress(Math.floor(p), text);
+    }, 100);
+  }
+
+  document.getElementById('processBtn').addEventListener('click', async () => {
+    const file = pendingFile || document.getElementById('mediaFile').files[0];
+    const title = document.getElementById('songTitleInput').value.trim() || (file ? (file.name ? file.name.replace(/\.[^/.]+$/, "") : 'My Song') : 'My Song');
+    let customLyricsText = document.getElementById('customLyrics').value.trim();
+
+    const apiKey = localStorage.getItem('gemini_karaoke_key');
+    const selectedModel = localStorage.getItem('gemini_karaoke_model') || 'gemini-3.5-flash';
+    
+    if(!apiKey && !customLyricsText) {
+        alert('വരികൾ പേസ്റ്റ് ചെയ്യുക, അല്ലെങ്കിൽ AI ഉപയോഗിക്കാൻ API Key സേവ് ചെയ്യുക!');
+        document.getElementById('apiSection').style.display = 'block';
+        showView('libraryView');
+        return;
+    }
+    if(!file) return alert('ഒരു ഓഡിയോ/വീഡിയോ ഫയൽ തിരഞ്ഞെടുക്കുക!');
+
+    document.getElementById('processBtn').disabled = true;
+    document.getElementById('progressBox').style.display = 'block';
+    
+    try {
+      let finalLyrics = customLyricsText;
+      
+      if(!customLyricsText) {
+          simulateProgress(0, 40, 3000, 'ഫയൽ കംപ്രസ് ചെയ്യുന്നു (Local Processing)...');
+          const base64Audio = await compressAudioFile(file);
+          
+          simulateProgress(40, 95, 8000, 'AI വരികൾ കണ്ടെത്തുന്നു...');
+          finalLyrics = await fetchTextLyricsFromGemini(apiKey, selectedModel, base64Audio);
+      } else {
+          document.getElementById('progressStatus').innerText = 'വരികൾ സേവ് ചെയ്യുന്നു...';
+      }
+
+      clearInterval(progressInterval);
+      updateProgress(100, 'പൂർത്തിയായി!');
+
+      if(!finalLyrics) throw new Error('വരികൾ കണ്ടെത്താൻ കഴിഞ്ഞില്ല.');
+
+      const songData = { id: Date.now(), title: title, audioBlob: file, lyrics: finalLyrics };
+      await saveSongToDB(songData);
+      
+      await deleteSongFromDB('DRAFT');
+      pendingFile = null;
+      
+      alert('പാട്ട് വിജയകരമായി ചേർത്തു!');
+      document.getElementById('songTitleInput').value = '';
+      document.getElementById('mediaFile').value = '';
+      document.getElementById('customLyrics').value = '';
+      document.getElementById('draftFileInfo').style.display = 'none';
+      document.getElementById('progressBox').style.display = 'none';
+      
+      loadLibrary();
+      showView('libraryView');
+
+    } catch (error) {
+      alert("പിഴവ്: " + error.message);
+      clearInterval(progressInterval);
+      document.getElementById('progressBox').style.display = 'none';
+    } finally {
+      document.getElementById('processBtn').disabled = false;
+    }
+  });
+
+  window.playSavedSong = async (id) => {
+    const song = await getSongFromDB(Number(id));
+    if(!song) return alert('പാട്ട് കണ്ടെത്താനായില്ല.');
+
+    document.getElementById('playerTitle').innerText = song.title;
+    
+    const audioUrl = URL.createObjectURL(song.audioBlob);
+    const audio = document.getElementById('audioPlayer');
+    audio.src = audioUrl;
+
+    const box = document.getElementById('lyricsBox');
+    box.innerHTML = `<div class="lyrics-display">${song.lyrics || 'വരികൾ ലഭ്യമല്ല.'}</div>`;
+
+    showView('playerView');
+  };
+
+  async function compressAudioFile(file) {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const arrayBuffer = await file.arrayBuffer();
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    const targetSampleRate = 8000; 
+    const offlineContext = new OfflineAudioContext(1, audioBuffer.duration * targetSampleRate, targetSampleRate);
+    const source = offlineContext.createBufferSource();
+    source.buffer = audioBuffer;
+    source.connect(offlineContext.destination);
+    source.start();
+    const renderedBuffer = await offlineContext.startRendering();
+    const wavBlob = bufferToWav(renderedBuffer);
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result.split(',')[1]);
+      reader.readAsDataURL(wavBlob);
+    });
+  }
+
+  function bufferToWav(abuffer) {
+    let numOfChan = abuffer.numberOfChannels, length = abuffer.length * numOfChan * 2 + 44,
+        buffer = new ArrayBuffer(length), view = new DataView(buffer), channels = [], i, sample, offset = 0, pos = 0;
+    function setUint16(data) { view.setUint16(pos, data, true); pos += 2; }
+    function setUint32(data) { view.setUint32(pos, data, true); pos += 4; }
+    setUint32(0x46464952); setUint32(length - 8); setUint32(0x45564157); setUint32(0x20746d66);
+    setUint32(16); setUint16(1); setUint16(numOfChan); setUint32(abuffer.sampleRate);
+    setUint32(abuffer.sampleRate * 2 * numOfChan); setUint16(numOfChan * 2); setUint16(16);
+    setUint32(0x61746164); setUint32(length - pos - 4);
+    for(i = 0; i < abuffer.numberOfChannels; i++) channels.push(abuffer.getChannelData(i));
+    while(pos < length) {
+      for(i = 0; i < numOfChan; i++) {
+        sample = Math.max(-1, Math.min(1, channels[i][offset]));
+        sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767)|0;
+        view.setInt16(pos, sample, true); pos += 2;
+      } offset++;
+    }
+    return new Blob([buffer], {type: "audio/wav"});
+  }
+
+  async function fetchTextLyricsFromGemini(apiKey, selectedModel, base64Audio) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
+    const prompt = `Listen to the audio. Transcribe the Malayalam lyrics clearly. Provide ONLY the pure text with proper line breaks. Do not include any timestamps, translations, or markdown.`;
+    const payload = { contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "audio/wav", data: base64Audio } }] }] };
+    const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    
+    if (!response.ok) { throw new Error("Google API Error"); }
+    const data = await response.json();
+    let text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    return text.trim();
+  }
+</script>
+</body>
+</html>
