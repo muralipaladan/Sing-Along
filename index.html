@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Pro Karaoke AI</title>
-<!-- മനോഹരമായ മലയാളം ഫോണ്ട് -->
 <link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -71,13 +70,11 @@
   .song-actions { display: flex; gap: 5px; width: 100%; justify-content: flex-end; flex-wrap: wrap; }
   .song-actions button { width: auto; padding: 8px 12px; margin: 0; font-size: 13px; flex: 1; min-width: 60px; }
 
-  /* Player View Updates */
   #playerHeader { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; }
   #playerHeader button { width: auto; padding: 8px 12px; margin: 0; font-size: 13px; }
   
   audio { width: 100%; margin-top: 16px; border-radius: 8px; }
   
-  /* സിനിമാറ്റിക് ഡിസൈൻ */
   .karaoke-container {
     background: linear-gradient(145deg, #0f172a, #000000);
     height: 400px; overflow-y: auto; border-radius: 12px;
@@ -377,7 +374,7 @@
     }
   }
 
-  // --- എക്കാലത്തും പ്രവർത്തിക്കുന്ന പ്രൊഫഷണൽ ഫുൾ-സ്ക്രീൻ പ്ലെയർ ---
+  // --- Iframe അടിസ്ഥാനമാക്കിയുള്ള ഷെയർ ഡിസൈൻ ---
   window.exportSong = async (id) => {
     const song = await getSongFromDB(Number(id));
     if(!song) return alert('പാട്ട് കണ്ടെത്താനായില്ല.');
@@ -388,30 +385,34 @@
     reader.readAsDataURL(song.audioBlob);
     reader.onloadend = () => {
       const base64Audio = reader.result;
-      // വരികളിലെ HTML ടാഗുകൾ ഒഴിവാക്കുന്നു
       const escapedLyrics = (song.lyrics || 'വരികൾ ലഭ്യമല്ല.').replace(/`/g, '\\`').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      
+      const songDataStr = JSON.stringify({
+        title: song.title,
+        lyrics: escapedLyrics,
+        audio: base64Audio
+      });
       
       const htmlContent = `<!DOCTYPE html>
 <html lang="ml">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>${song.title} - Play</title>
+  <title>\${song.title} - Play</title>
   <link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
-    body {
-      margin: 0; padding: 0; background: #000; display: flex; flex-direction: column;
-      height: 100vh; font-family: 'Anek Malayalam', system-ui, sans-serif; color: #fff;
+    body, html {
+      margin: 0; padding: 0; height: 100vh; background: #0F172A;
+      color: #fff; font-family: 'Anek Malayalam', system-ui, sans-serif;
       overflow: hidden; -webkit-tap-highlight-color: transparent;
     }
     .bg-glow {
       position: absolute; width: 150vw; height: 150vw; top: -25vw; left: -25vw;
       background: radial-gradient(circle, rgba(56,189,248,0.15) 0%, rgba(0,0,0,1) 60%);
-      z-index: -1; animation: pulse 4s infinite alternate; pointer-events: none;
+      z-index: 1; animation: pulse 4s infinite alternate; pointer-events: none;
     }
     @keyframes pulse { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
 
-    /* ആദ്യത്തെ സ്ക്രീൻ (Splash Screen) */
     #splash {
       position: absolute; inset: 0; display: flex; flex-direction: column;
       align-items: center; justify-content: center; z-index: 20;
@@ -427,85 +428,44 @@
     h2 { font-size: 28px; margin: 0 0 10px 0; color: #F8FAFC; text-align: center; padding: 0 20px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
     p { color: #94A3B8; font-size: 16px; margin: 0; letter-spacing: 0.5px; }
 
-    /* ഉള്ളിലെ പ്ലെയർ ഡിസൈൻ */
-    .top-bar {
-      display: flex; justify-content: space-between; align-items: center;
-      background: rgba(15, 23, 42, 0.7); padding: 15px 20px;
-      border-bottom: 1px solid rgba(255,255,255,0.05); z-index: 10; backdrop-filter: blur(10px);
-    }
-    .song-title { margin: 0; font-size: 18px; color: #38BDF8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 75%; }
-    
-    #miniPlayBtn {
-      background: #38BDF8; color: #000; border: none; border-radius: 50%;
-      width: 40px; height: 40px; font-size: 18px; cursor: pointer;
-      display: flex; justify-content: center; align-items: center;
-      box-shadow: 0 0 15px rgba(56,189,248,0.4);
-    }
-
-    .lyrics-container {
-      flex-grow: 1; overflow-y: auto; padding: 30px 20px;
-      text-align: center; scroll-behavior: smooth; position: relative;
-    }
-    .lyrics-text {
-      font-size: 26px; color: #F8FAFC; font-weight: 600;
-      line-height: 2.6; white-space: pre-wrap;
-      text-shadow: 0px 2px 12px rgba(0,0,0,0.8);
-      padding-bottom: 70vh; /* സ്ക്രോൾ ചെയ്യാനുള്ള സ്ഥലം */
-    }
+    #playerFrame { width: 100%; height: 100%; border: none; display: none; position: relative; z-index: 10; }
   </style>
 </head>
 <body>
-  <div class="bg-glow"></div>
+  <div class="bg-glow" id="glow"></div>
 
   <!-- ആദ്യത്തെ സ്ക്രീൻ (Tap to Play) -->
-  <div id="splash" onclick="startPlayer()">
+  <div id="splash" onclick="startApp()">
     <div class="play-btn-large">▶</div>
-    <h2>${song.title}</h2>
+    <h2>\${song.title}</h2>
     <p>പാട്ട് കേൾക്കാൻ സ്ക്രീനിൽ തൊടുക</p>
   </div>
 
-  <!-- പ്രധാന പ്ലെയർ -->
-  <div class="top-bar">
-    <h1 class="song-title">🎵 ${song.title}</h1>
-    <button id="miniPlayBtn" onclick="togglePlay()">⏸️</button>
-  </div>
-
-  <div class="lyrics-container">
-    <div class="lyrics-text">${escapedLyrics}</div>
-  </div>
-
-  <audio id="audio" src="${base64Audio}"></audio>
+  <!-- നിങ്ങളുടെ GitHub Player ഇവിടെ ലോഡ് ആകും -->
+  <iframe id="playerFrame" src="https://songslyrics.github.io/player/"></iframe>
 
   <script>
-    const audio = document.getElementById('audio');
+    const songData = \${songDataStr};
+    const frame = document.getElementById('playerFrame');
     const splash = document.getElementById('splash');
-    const miniBtn = document.getElementById('miniPlayBtn');
-    let hasStarted = false;
+    const glow = document.getElementById('glow');
 
-    function startPlayer() {
-      if(hasStarted) return;
-      hasStarted = true;
+    function startApp() {
       splash.style.opacity = '0';
-      setTimeout(() => { splash.style.display = 'none'; }, 500);
-      audio.play();
-      miniBtn.innerHTML = '⏸️';
+      setTimeout(() => { 
+          splash.style.display = 'none'; 
+          glow.style.display = 'none';
+          frame.style.display = 'block';
+          // ഡാറ്റ സുരക്ഷിതമായി പ്ലെയറിലേക്ക് അയക്കുന്നു
+          frame.contentWindow.postMessage({ type: 'PLAY_SONG', payload: songData }, "*");
+      }, 500);
     }
 
-    function togglePlay() {
-      if(audio.paused) {
-        audio.play();
-        miniBtn.innerHTML = '⏸️';
-      } else {
-        audio.pause();
-        miniBtn.innerHTML = '▶️';
+    // പ്ലെയർ തയ്യാറാണോ എന്ന് പരിശോധിക്കുന്നു
+    window.addEventListener('message', (e) => {
+      if (e.data === 'PLAYER_READY') {
+        frame.contentWindow.postMessage({ type: 'PLAY_SONG', payload: songData }, "*");
       }
-    }
-
-    audio.addEventListener('ended', () => {
-      hasStarted = false;
-      miniBtn.innerHTML = '▶️';
-      splash.style.display = 'flex';
-      setTimeout(() => { splash.style.opacity = '1'; }, 50);
     });
   <\/script>
 </body>
