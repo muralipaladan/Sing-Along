@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Pro Karaoke App</title>
-<!-- മനോഹരമായ മലയാളം ഫോണ്ട് -->
+<title>Pro Karaoke App - Sync Maker</title>
 <link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -82,11 +81,20 @@
     font-family: 'Anek Malayalam', sans-serif;
   }
   
+  .karaoke-container::-webkit-scrollbar { width: 5px; }
+  .karaoke-container::-webkit-scrollbar-thumb { background: #334155; border-radius: 5px; }
+
   .lyrics-display {
-    font-size: 24px; color: #F8FAFC; font-weight: 600;
-    line-height: 2.4; white-space: pre-wrap;
-    text-shadow: 0px 2px 15px rgba(56, 189, 248, 0.5);
-    padding-bottom: 50px;
+    font-size: 24px; color: #F8FAFC; font-weight: 600; line-height: 2.4; white-space: pre-wrap;
+    text-shadow: 0px 2px 15px rgba(56, 189, 248, 0.5); padding-bottom: 50px;
+  }
+
+  .lyric-line {
+    padding: 10px 8px; font-size: 20px; color: #94A3B8; transition: all 0.3s ease; line-height: 1.8;
+  }
+  .active-lyric {
+    color: var(--primary); font-size: 28px; font-weight: 800; transform: scale(1.05);
+    text-shadow: 0px 2px 15px rgba(56, 189, 248, 0.8);
   }
   
   #playerView:fullscreen { background: #000; padding: 20px; display: flex; flex-direction: column; justify-content: center; }
@@ -102,12 +110,19 @@
     display: none; font-size: 13px; color: #10B981; margin-top: 8px; 
     padding: 10px; background: #064E3B; border-radius: 8px; border: 1px solid #047857;
   }
+
+  /* Sync Maker UI Styles */
+  .sync-maker-box { background: #0F172A; padding: 20px; border-radius: 12px; margin-top: 16px; text-align: center; border: 1px solid #334155; }
+  .sync-prev { color: #94A3B8; font-size: 14px; margin-bottom: 8px; min-height: 20px; }
+  .sync-current { color: var(--primary); font-size: 24px; font-weight: bold; min-height: 35px; margin-bottom: 8px; transition: 0.2s; }
+  .sync-next { color: #64748B; font-size: 16px; min-height: 24px; }
 </style>
 </head>
 <body>
 
 <div class="container">
   
+  <!-- Library View -->
   <div id="libraryView" class="view active">
     <div class="card">
       <h1>🎵 പാട്ടുകളുടെ ശേഖരം</h1>
@@ -116,6 +131,7 @@
     </div>
   </div>
 
+  <!-- Add View -->
   <div id="addView" class="view">
     <div class="card">
       <h1>പുതിയ പാട്ട് ചേർക്കുക</h1>
@@ -129,8 +145,11 @@
       
       <button type="button" onclick="searchLyrics()" class="btn-outline" style="margin-top: 8px; padding: 10px; font-size: 14px;">🔍 വരികൾ തിരയുക (Google)</button>
       
-      <label style="font-size: 13px; color: var(--text-muted); display: block; margin-top: 16px;">വരികൾ പേസ്റ്റ് ചെയ്യുക (വരികൾ മാത്രം മതി)</label>
-      <textarea id="customLyrics" placeholder="കോപ്പി ചെയ്ത വരികൾ ഇവിടെ പേസ്റ്റ് ചെയ്യുക..."></textarea>
+      <label style="font-size: 13px; color: var(--text-muted); display: block; margin-top: 16px;">വരികൾ പേസ്റ്റ് ചെയ്യുക</label>
+      <textarea id="customLyrics" placeholder="സാധാരണ വരികളോ അല്ലെങ്കിൽ സിങ്ക് ചെയ്ത വരികളോ പേസ്റ്റ് ചെയ്യാം..."></textarea>
+      
+      <!-- New Button for LRC Maker -->
+      <button type="button" id="openSyncMakerBtn" class="btn-outline" style="margin-top: 8px; padding: 10px; font-size: 14px; border-color: #10B981; color: #10B981;">⏱️ വരികൾ പാട്ടിനൊപ്പം സ്വയം സിങ്ക് ചെയ്യുക (LRC Maker)</button>
       
       <button id="processBtn">പാട്ടും വരികളും സേവ് ചെയ്യുക</button>
       <button class="btn-outline" id="backToLibraryBtn">ക്യാൻസൽ</button>
@@ -143,6 +162,30 @@
     </div>
   </div>
 
+  <!-- Sync Maker View -->
+  <div id="syncView" class="view">
+    <div class="card">
+      <h1>⏱️ LRC Maker</h1>
+      <p style="font-size: 13px; color: var(--text-muted); text-align:center;">പാട്ട് പ്ലേ ചെയ്ത്, ഓരോ വരിയും പാടുന്ന കൃത്യസമയത്ത് പച്ച ബട്ടൺ അമർത്തുക.</p>
+      
+      <audio id="syncAudio" controls style="width: 100%; margin-top: 10px;"></audio>
+      
+      <div class="sync-maker-box">
+          <div id="syncPrev" class="sync-prev"></div>
+          <div id="syncCurrent" class="sync-current">വരികൾ ലോഡ് ചെയ്യുന്നു...</div>
+          <div id="syncNext" class="sync-next"></div>
+      </div>
+      
+      <button id="stampBtn" style="background: #10B981; color: white; padding: 20px; font-size: 18px; margin-top: 20px;">📌 ഈ വരിയുടെ സമയം സേവ് ചെയ്യുക</button>
+      
+      <div style="display: flex; gap: 10px; margin-top: 10px;">
+           <button id="syncCancelBtn" class="btn-outline" style="flex:1;">ക്യാൻസൽ</button>
+           <button id="syncSaveBtn" style="background: #3B82F6; color: white; flex:1;">സേവ് ചെയ്യുക</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Player View -->
   <div id="playerView" class="view">
     <div class="card">
       <div id="playerHeader">
@@ -159,16 +202,22 @@
 
 <script>
   const DB_NAME = 'ProKaraokeDB';
-  let db;
+  let db = null;
   let pendingFile = null;
+  let currentLyricsData = []; 
+
+  // LRC Maker Variables
+  let syncLines = [];
+  let syncedLRC = [];
+  let syncIndex = 0;
 
   function initDB() {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(DB_NAME, 1);
       request.onupgradeneeded = (e) => {
-        let db = e.target.result;
-        if (!db.objectStoreNames.contains('songs')) {
-          db.createObjectStore('songs', { keyPath: 'id' });
+        let database = e.target.result;
+        if (!database.objectStoreNames.contains('songs')) {
+          database.createObjectStore('songs', { keyPath: 'id' });
         }
       };
       request.onsuccess = (e) => { db = e.target.result; resolve(db); };
@@ -178,6 +227,7 @@
 
   function saveSongToDB(song) {
     return new Promise((resolve, reject) => {
+      if(!db) return reject(new Error("Database not initialized"));
       const tx = db.transaction('songs', 'readwrite');
       tx.objectStore('songs').put(song);
       tx.oncomplete = () => resolve();
@@ -187,6 +237,7 @@
 
   function getAllSongsFromDB() {
     return new Promise((resolve, reject) => {
+      if(!db) return resolve([]);
       const tx = db.transaction('songs', 'readonly');
       const request = tx.objectStore('songs').getAll();
       request.onsuccess = () => resolve(request.result);
@@ -196,6 +247,7 @@
 
   function getSongFromDB(id) {
     return new Promise((resolve, reject) => {
+      if(!db) return resolve(null);
       const tx = db.transaction('songs', 'readonly');
       const request = tx.objectStore('songs').get(id);
       request.onsuccess = () => resolve(request.result);
@@ -205,6 +257,7 @@
 
   function deleteSongFromDB(id) {
     return new Promise((resolve, reject) => {
+      if(!db) return resolve();
       try {
         const tx = db.transaction('songs', 'readwrite');
         const store = tx.objectStore('songs');
@@ -234,6 +287,7 @@
   }
 
   async function saveDraft() {
+    if(!db) return;
     const title = document.getElementById('songTitleInput').value.trim();
     const lyrics = document.getElementById('customLyrics').value.trim();
     if(!pendingFile && !title && !lyrics) return;
@@ -250,7 +304,7 @@
         document.getElementById('draftFileInfo').style.display = 'block';
         const titleInput = document.getElementById('songTitleInput');
         if(!titleInput.value) { titleInput.value = file.name.replace(/\.[^/.]+$/, ""); }
-        await saveDraft();
+        if(db) await saveDraft();
     }
   });
 
@@ -265,8 +319,8 @@
   }
 
   document.addEventListener('DOMContentLoaded', async () => {
-    await initDB();
     try {
+        await initDB();
         const draft = await getSongFromDB('DRAFT');
         if (draft && (draft.title || draft.audioBlob || draft.customLyrics)) {
             if (draft.title) document.getElementById('songTitleInput').value = draft.title;
@@ -278,7 +332,7 @@
             }
             showView('addView');
         } else { loadLibrary(); }
-    } catch(e) { loadLibrary(); }
+    } catch(e) { console.error(e); loadLibrary(); }
   });
 
   document.getElementById('showAddViewBtn').addEventListener('click', () => { showView('addView'); });
@@ -328,16 +382,84 @@
 
   window.deleteSong = async (id) => {
     if(confirm('ഈ പാട്ട് ഡിലീറ്റ് ചെയ്യണോ?')) {
-      try {
-        await deleteSongFromDB(Number(id)); 
-      } catch (e) {
-        console.error("Delete failed", e);
-      }
+      try { await deleteSongFromDB(Number(id)); } catch (e) { console.error("Delete failed", e); }
       loadLibrary();
     }
   }
 
-  // --- Iframe അടിസ്ഥാനമാക്കിയുള്ള ഷെയർ ഡിസൈൻ ---
+  // --- LRC / FRC Maker Logic ---
+  document.getElementById('openSyncMakerBtn').addEventListener('click', () => {
+      const rawLyrics = document.getElementById('customLyrics').value.trim();
+      const file = pendingFile || (document.getElementById('mediaFile').files.length > 0 ? document.getElementById('mediaFile').files[0] : null);
+      
+      if (!file) return alert('ആദ്യം ഒരു ഓഡിയോ/വീഡിയോ ഫയൽ തിരഞ്ഞെടുക്കുക!');
+      if (!rawLyrics) return alert('ആദ്യം സാധാരണ വരികൾ നൽകുക/പേസ്റ്റ് ചെയ്യുക!');
+
+      syncLines = rawLyrics.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      if(syncLines.some(l => l.match(/^\[\d{2}:\d{2}/))) {
+          if(!confirm('ഈ വരികളിൽ ഇതിനകം തന്നെ ടൈമിംഗ് സെറ്റ് ചെയ്തിട്ടുണ്ട്. വീണ്ടും സെറ്റ് ചെയ്യണോ?')) return;
+          syncLines = syncLines.map(l => l.replace(/^\[\d{2}:\d{2}(?:\.\d{1,3})?\]\s*/, ''));
+      }
+
+      syncedLRC = [];
+      syncIndex = 0;
+
+      const audioUrl = URL.createObjectURL(file);
+      const syncAudio = document.getElementById('syncAudio');
+      syncAudio.src = audioUrl;
+      
+      updateSyncDisplay();
+      showView('syncView');
+  });
+
+  function updateSyncDisplay() {
+      document.getElementById('syncPrev').innerText = syncIndex > 0 ? syncLines[syncIndex - 1] : '';
+      
+      if(syncIndex < syncLines.length) {
+          document.getElementById('syncCurrent').innerText = syncLines[syncIndex];
+          document.getElementById('syncCurrent').style.color = "var(--primary)";
+          document.getElementById('stampBtn').disabled = false;
+          document.getElementById('stampBtn').innerText = "📌 ഈ വരിയുടെ സമയം സേവ് ചെയ്യുക";
+          document.getElementById('syncNext').innerText = syncIndex + 1 < syncLines.length ? syncLines[syncIndex + 1] : '';
+      } else {
+          document.getElementById('syncCurrent').innerText = "പൂർത്തിയായി! 🎉";
+          document.getElementById('syncCurrent').style.color = "#10B981";
+          document.getElementById('stampBtn').disabled = true;
+          document.getElementById('stampBtn').innerText = "എല്ലാം സിങ്ക് ചെയ്തു";
+          document.getElementById('syncNext').innerText = '';
+      }
+  }
+
+  document.getElementById('stampBtn').addEventListener('click', () => {
+      if(syncIndex >= syncLines.length) return;
+      
+      const time = document.getElementById('syncAudio').currentTime;
+      let min = Math.floor(time / 60);
+      let sec = (time % 60).toFixed(2);
+      let timeStr = `[${min.toString().padStart(2, '0')}:${sec.padStart(5, '0')}]`;
+      
+      syncedLRC.push(`${timeStr} ${syncLines[syncIndex]}`);
+      syncIndex++;
+      updateSyncDisplay();
+  });
+
+  document.getElementById('syncCancelBtn').addEventListener('click', () => {
+      document.getElementById('syncAudio').pause();
+      showView('addView');
+  });
+
+  document.getElementById('syncSaveBtn').addEventListener('click', () => {
+      if(syncedLRC.length > 0) {
+          document.getElementById('customLyrics').value = syncedLRC.join('\n');
+          saveDraft();
+          alert('സമയക്രമം ചേർത്ത വരികൾ വിജയകരമായി സേവ് ചെയ്തു!');
+      }
+      document.getElementById('syncAudio').pause();
+      showView('addView');
+  });
+
+
+  // --- Export Logic ---
   window.exportSong = async (id) => {
     const song = await getSongFromDB(Number(id));
     if(!song) return alert('പാട്ട് കണ്ടെത്താനായില്ല.');
@@ -364,68 +486,39 @@
   <title>${song.title} - Play</title>
   <link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
-    body, html {
-      margin: 0; padding: 0; height: 100vh; background: #0F172A;
-      color: #fff; font-family: 'Anek Malayalam', system-ui, sans-serif;
-      overflow: hidden; -webkit-tap-highlight-color: transparent;
-    }
-    .bg-glow {
-      position: absolute; width: 150vw; height: 150vw; top: -25vw; left: -25vw;
-      background: radial-gradient(circle, rgba(56,189,248,0.15) 0%, rgba(0,0,0,1) 60%);
-      z-index: 1; animation: pulse 4s infinite alternate; pointer-events: none;
-    }
+    body, html { margin: 0; padding: 0; height: 100vh; background: #0F172A; color: #fff; font-family: 'Anek Malayalam', system-ui, sans-serif; overflow: hidden; }
+    .bg-glow { position: absolute; width: 150vw; height: 150vw; top: -25vw; left: -25vw; background: radial-gradient(circle, rgba(56,189,248,0.15) 0%, rgba(0,0,0,1) 60%); z-index: 1; animation: pulse 4s infinite alternate; pointer-events: none; }
     @keyframes pulse { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
-
-    #splash {
-      position: absolute; inset: 0; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; z-index: 20;
-      background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); transition: opacity 0.5s;
-    }
-    .play-btn-large {
-      width: 90px; height: 90px; background: #38BDF8; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center; margin-bottom: 25px;
-      box-shadow: 0 0 40px rgba(56,189,248,0.6); font-size: 38px; color: #000;
-      padding-left: 6px; cursor: pointer; transition: transform 0.2s;
-    }
+    #splash { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); transition: opacity 0.5s; }
+    .play-btn-large { width: 90px; height: 90px; background: #38BDF8; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 25px; box-shadow: 0 0 40px rgba(56,189,248,0.6); font-size: 38px; color: #000; padding-left: 6px; cursor: pointer; transition: transform 0.2s; }
     .play-btn-large:active { transform: scale(0.9); }
     h2 { font-size: 28px; margin: 0 0 10px 0; color: #F8FAFC; text-align: center; padding: 0 20px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-    p { color: #94A3B8; font-size: 16px; margin: 0; letter-spacing: 0.5px; }
-
+    p { color: #94A3B8; font-size: 16px; margin: 0; }
     #playerFrame { width: 100%; height: 100%; border: none; display: none; position: relative; z-index: 10; }
   </style>
 </head>
 <body>
   <div class="bg-glow" id="glow"></div>
-
-  <!-- ആദ്യത്തെ സ്ക്രീൻ (Tap to Play) -->
   <div id="splash" onclick="startApp()">
     <div class="play-btn-large">▶</div>
     <h2>${song.title}</h2>
     <p>പാട്ട് കേൾക്കാൻ സ്ക്രീനിൽ തൊടുക</p>
   </div>
-
   <iframe id="playerFrame" src="https://songslyrics.github.io/player/"></iframe>
-
   <script>
     const songData = ${songDataStr};
     const frame = document.getElementById('playerFrame');
     const splash = document.getElementById('splash');
     const glow = document.getElementById('glow');
-
     function startApp() {
       splash.style.opacity = '0';
       setTimeout(() => { 
-          splash.style.display = 'none'; 
-          glow.style.display = 'none';
-          frame.style.display = 'block';
+          splash.style.display = 'none'; glow.style.display = 'none'; frame.style.display = 'block';
           frame.contentWindow.postMessage({ type: 'PLAY_SONG', payload: songData }, "*");
       }, 500);
     }
-
     window.addEventListener('message', (e) => {
-      if (e.data === 'PLAYER_READY') {
-        frame.contentWindow.postMessage({ type: 'PLAY_SONG', payload: songData }, "*");
-      }
+      if (e.data === 'PLAYER_READY') { frame.contentWindow.postMessage({ type: 'PLAY_SONG', payload: songData }, "*"); }
     });
   <\/script>
 </body>
@@ -443,6 +536,7 @@
     };
   };
 
+  // --- Process & Save Logic ---
   function updateProgress(percent, text) {
     document.getElementById('progressBox').style.display = 'block';
     document.getElementById('progressBar').style.width = percent + '%';
@@ -451,29 +545,21 @@
   }
 
   document.getElementById('processBtn').addEventListener('click', async () => {
-    const file = pendingFile || document.getElementById('mediaFile').files[0];
+    const file = pendingFile || (document.getElementById('mediaFile').files.length > 0 ? document.getElementById('mediaFile').files[0] : null);
     const title = document.getElementById('songTitleInput').value.trim() || (file ? (file.name ? file.name.replace(/\.[^/.]+$/, "") : 'My Song') : 'My Song');
     let customLyricsText = document.getElementById('customLyrics').value.trim();
 
-    if(!customLyricsText) {
-        alert('ദയവായി വരികൾ നൽകുക/പേസ്റ്റ് ചെയ്യുക!');
-        return;
-    }
+    if(!customLyricsText) { alert('ദയവായി വരികൾ നൽകുക/പേസ്റ്റ് ചെയ്യുക!'); return; }
     if(!file) return alert('ഒരു ഓഡിയോ/വീഡിയോ ഫയൽ തിരഞ്ഞെടുക്കുക!');
 
     document.getElementById('processBtn').disabled = true;
-    document.getElementById('progressBox').style.display = 'block';
-    document.getElementById('progressStatus').innerText = 'വരികൾ സേവ് ചെയ്യുന്നു...';
-    
     updateProgress(50, 'പ്രോസസ്സ് ചെയ്യുന്നു...');
     
     try {
       const songData = { id: Date.now(), title: title, audioBlob: file, lyrics: customLyricsText };
       await saveSongToDB(songData);
-      
       await deleteSongFromDB('DRAFT');
       pendingFile = null;
-      
       updateProgress(100, 'പൂർത്തിയായി!');
       
       setTimeout(() => {
@@ -483,7 +569,6 @@
           document.getElementById('customLyrics').value = '';
           document.getElementById('draftFileInfo').style.display = 'none';
           document.getElementById('progressBox').style.display = 'none';
-          
           loadLibrary();
           showView('libraryView');
       }, 300);
@@ -496,21 +581,77 @@
     }
   });
 
+  function parseLRC(text) {
+      const lines = text.split('\n');
+      const parsedData = [];
+      const timeRegEx = /\[(\d{2}):(\d{2}(?:\.\d{1,3})?)\](.*)/; 
+      let isLRC = false;
+
+      lines.forEach(line => {
+          const match = line.match(timeRegEx);
+          if (match) {
+              isLRC = true;
+              const timeInSeconds = (parseInt(match[1], 10) * 60) + parseFloat(match[2]);
+              parsedData.push({ time: timeInSeconds, text: match[3].trim() });
+          }
+      });
+      return { isLRC, parsedData };
+  }
+
   window.playSavedSong = async (id) => {
     const song = await getSongFromDB(Number(id));
     if(!song) return alert('പാട്ട് കണ്ടെത്താനായില്ല.');
 
     document.getElementById('playerTitle').innerText = song.title;
-    
     const audioUrl = URL.createObjectURL(song.audioBlob);
     const audio = document.getElementById('audioPlayer');
     audio.src = audioUrl;
 
     const box = document.getElementById('lyricsBox');
-    box.innerHTML = `<div class="lyrics-display">${song.lyrics || 'വരികൾ ലഭ്യമല്ല.'}</div>`;
+    box.innerHTML = '';
+    
+    const { isLRC, parsedData } = parseLRC(song.lyrics || '');
 
+    if (isLRC && parsedData.length > 0) {
+        currentLyricsData = parsedData;
+        parsedData.forEach((line, index) => {
+            const div = document.createElement('div');
+            div.className = 'lyric-line';
+            div.id = 'line-' + index;
+            div.innerText = line.text === '' ? '\u00A0' : line.text; 
+            box.appendChild(div);
+        });
+        const paddingDiv = document.createElement('div');
+        paddingDiv.style.height = "50%";
+        box.appendChild(paddingDiv);
+    } else {
+        currentLyricsData = [];
+        box.innerHTML = `<div class="lyrics-display">${song.lyrics || 'വരികൾ ലഭ്യമല്ല.'}</div>`;
+    }
     showView('playerView');
   };
+
+  document.getElementById('audioPlayer').addEventListener('timeupdate', () => {
+      if (currentLyricsData.length === 0) return;
+      const time = document.getElementById('audioPlayer').currentTime;
+      let currentIndex = -1;
+
+      for (let i = 0; i < currentLyricsData.length; i++) {
+          if (time >= currentLyricsData[i].time) { currentIndex = i; } else { break; }
+      }
+
+      if (currentIndex !== -1) {
+          document.querySelectorAll('.lyric-line').forEach(el => el.classList.remove('active-lyric'));
+          const activeLine = document.getElementById('line-' + currentIndex);
+          if (activeLine && !activeLine.classList.contains('active-lyric')) {
+              activeLine.classList.add('active-lyric');
+              const box = document.getElementById('lyricsBox');
+              const scrollAmount = activeLine.offsetTop - box.offsetTop - (box.clientHeight / 2) + (activeLine.clientHeight / 2);
+              box.scrollTop = scrollAmount;
+          }
+      }
+  });
+
 </script>
 </body>
 </html>
