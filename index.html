@@ -1,657 +1,540 @@
 <!DOCTYPE html>
-<html lang="ml">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Pro Karaoke App - Sync Maker</title>
-<link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@400;600;800&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>Aiswarya's Sing-Along Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0F172A;
-    --surface: #1E293B;
-    --primary: #38BDF8;
-    --text: #F8FAFC;
-    --text-muted: #94A3B8;
-    --radius: 16px;
+    --bg: #0d0916;
+    --bg-soft: #161027;
+    --card: #1c1530;
+    --card-line: #2c2247;
+    --pink: #ff2e9a;
+    --cyan: #20e3d2;
+    --gold: #ffce54;
+    --text: #f3f0fb;
+    --text-dim: #a79ecb;
+    --radius: 18px;
+    --safe-b: env(safe-area-inset-bottom, 0px);
   }
-  body {
-    background-color: var(--bg);
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    margin: 0; padding: 0;
+    background: radial-gradient(1200px 600px at 15% -10%, rgba(255,46,154,0.20), transparent 60%),
+                radial-gradient(1000px 700px at 110% 10%, rgba(32,227,210,0.16), transparent 55%),
+                var(--bg);
     color: var(--text);
-    font-family: system-ui, -apple-system, sans-serif;
-    margin: 0;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    font-family: 'Inter', sans-serif;
     min-height: 100vh;
   }
-  .container { width: 100%; max-width: 500px; }
+
+  .app-shell { max-width: 820px; margin: 0 auto; padding: 20px 16px calc(28px + var(--safe-b)); }
+
+  header { text-align: center; padding: 10px 0 22px; }
+  .eq { display: flex; align-items: flex-end; justify-content: center; gap: 5px; height: 42px; margin: 0 auto 14px; }
+  .eq span { width: 6px; border-radius: 4px; background: linear-gradient(180deg, var(--cyan), var(--pink)); animation: bounce 1.1s ease-in-out infinite; }
+  .eq span:nth-child(1) { height: 16px; animation-delay: -0.9s; }
+  .eq span:nth-child(2) { height: 34px; animation-delay: -0.6s; }
+  .eq span:nth-child(3) { height: 22px; animation-delay: -1.1s; }
+  .eq span:nth-child(4) { height: 40px; animation-delay: -0.3s; }
+  .eq span:nth-child(5) { height: 18px; animation-delay: -0.8s; }
+  .eq span:nth-child(6) { height: 30px; animation-delay: -0.15s; }
+  .eq span:nth-child(7) { height: 14px; animation-delay: -0.5s; }
+  
+  @keyframes bounce { 0%, 100% { transform: scaleY(0.35); } 50% { transform: scaleY(1); } }
+
+  h1 {
+    font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: clamp(24px, 6vw, 34px); margin: 0;
+    background: linear-gradient(90deg, var(--cyan), var(--pink) 60%, var(--gold));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .subtitle { color: var(--text-dim); margin-top: 6px; font-size: clamp(13px, 3.4vw, 15px); }
+
   .card {
-    background: var(--surface);
-    padding: 24px;
-    border-radius: var(--radius);
-    margin-bottom: 20px;
-    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+    background: linear-gradient(180deg, var(--card), var(--bg-soft));
+    border: 1px solid var(--card-line); border-radius: var(--radius);
+    padding: 18px; margin-bottom: 16px; box-shadow: 0 12px 30px rgba(0,0,0,0.35);
   }
-  h1 { font-size: 22px; color: var(--primary); text-align: center; margin-top: 0; }
+  .card h3 { margin: 0 0 12px; font-family: 'Baloo 2', sans-serif; font-size: 15px; color: var(--text-dim); text-transform: uppercase; }
+
+  .upload-row { display: flex; flex-direction: column; gap: 10px; }
   
-  input[type="file"], input[type="text"], textarea {
-    width: 100%; padding: 14px; background: #0F172A; border: 1px solid #334155;
-    color: white; border-radius: 10px; margin-top: 8px; box-sizing: border-box;
-    font-family: inherit;
+  input[type="file"] {
+    background: var(--bg-soft); color: var(--text); border: 1.5px dashed var(--card-line);
+    border-radius: 12px; padding: 14px; width: 100%;
   }
-  
-  textarea { resize: vertical; min-height: 150px; }
 
   button {
-    width: 100%; padding: 14px; background: var(--primary); color: #000;
-    font-weight: bold; font-size: 16px; border: none; border-radius: 10px;
-    margin-top: 16px; cursor: pointer; transition: 0.2s;
+    border: none; border-radius: 12px; font-weight: 700; font-size: 15px;
+    padding: 14px 16px; min-height: 48px; cursor: pointer; color: #fff;
+    transition: transform 0.15s ease, filter 0.15s ease; width: 100%;
   }
   button:active { transform: scale(0.97); }
-  button:disabled { background: #334155; color: #94A3B8; cursor: not-allowed; }
-  .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+  button:hover { filter: brightness(1.08); }
 
-  .progress-container { display: none; margin-top: 16px; text-align: center; }
-  .progress-bar-bg { background: #334155; border-radius: 8px; height: 10px; width: 100%; overflow: hidden; margin-top: 8px; }
-  .progress-bar-fill { background: var(--primary); height: 100%; width: 0%; transition: width 0.3s; }
-  .progress-text { font-size: 14px; color: var(--primary); font-weight: bold; margin-top: 8px;}
+  .btn-primary { background: linear-gradient(135deg, var(--pink), #c3116f); box-shadow: 0 8px 20px rgba(255,46,154,0.28); }
+  .btn-action { background: linear-gradient(135deg, #2ed573, #1f9d55); }
+  .btn-video { background: linear-gradient(135deg, var(--gold), #e0a300); color: #241a00; }
+  button[disabled] { opacity: 0.55; cursor: not-allowed; }
 
-  .song-list { list-style: none; padding: 0; margin: 0; }
-  .song-item {
-    background: #0F172A; padding: 16px; border-radius: 10px; margin-bottom: 10px;
-    display: flex; justify-content: space-between; align-items: center; border: 1px solid #334155;
-    flex-wrap: wrap; gap: 10px;
-  }
-  .song-title { font-weight: bold; font-size: 15px; width: 100%; }
-  .song-actions { display: flex; gap: 5px; width: 100%; justify-content: flex-end; flex-wrap: wrap; }
-  .song-actions button { width: auto; padding: 8px 12px; margin: 0; font-size: 13px; flex: 1; min-width: 60px; }
+  #status { color: var(--gold); margin-top: 12px; font-size: 13.5px; text-align: center; min-height: 18px; }
+  audio#audioPlayer { width: 100%; margin-top: 14px; border-radius: 10px; background: var(--bg-soft); }
 
-  #playerHeader { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; }
-  #playerHeader button { width: auto; padding: 8px 12px; margin: 0; font-size: 13px; }
-  
-  audio { width: 100%; margin-top: 16px; border-radius: 8px; }
-  
-  .karaoke-container {
-    background: linear-gradient(145deg, #0f172a, #000000);
-    height: 400px; overflow-y: auto; border-radius: 12px;
-    padding: 30px 20px; text-align: center; margin-top: 16px; 
-    border: 1px solid #334155; box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
-    position: relative; scroll-behavior: smooth;
-    font-family: 'Anek Malayalam', sans-serif;
+  #lyricsContainer {
+    margin-top: 4px; font-family: 'Baloo 2', sans-serif; font-size: clamp(18px, 5.2vw, 30px);
+    line-height: 1.9; padding: 24px 14px; background: radial-gradient(circle at 50% 0%, #140c26, #060309 75%);
+    border-radius: 14px; min-height: 220px; text-align: center; overflow-y: auto; max-height: 400px; scroll-behavior: smooth;
   }
-  
-  .karaoke-container::-webkit-scrollbar { width: 5px; }
-  .karaoke-container::-webkit-scrollbar-thumb { background: #334155; border-radius: 5px; }
+  .lyric-line { display: block; margin-bottom: 10px; color: var(--text); transition: color 0.25s ease, transform 0.25s ease; }
+  .lyric-line.active { color: var(--gold); transform: scale(1.08); text-shadow: 0 0 14px rgba(255,206,84,0.5); }
 
-  .lyrics-display {
-    font-size: 24px; color: #F8FAFC; font-weight: 600; line-height: 2.4; white-space: pre-wrap;
-    text-shadow: 0px 2px 15px rgba(56, 189, 248, 0.5); padding-bottom: 50px;
-  }
+  .action-buttons { display: none; }
+  .action-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  progress.convert-bar { width: 100%; height: 10px; border-radius: 6px; margin-top: 10px; accent-color: var(--gold); display: none; }
+  
+  canvas { display: none; }
+  .footer-note { margin-top: 30px; text-align: center; font-family: 'Baloo 2', sans-serif; font-size: 18px; color: var(--pink); font-style: italic; }
 
-  .lyric-line {
-    padding: 10px 8px; font-size: 20px; color: #94A3B8; transition: all 0.3s ease; line-height: 1.8;
+  @media (min-width: 640px) {
+    .app-shell { padding-top: 34px; }
+    .upload-row { flex-direction: row; }
+    input[type="file"] { flex: 1; }
+    .upload-row button { width: auto; min-width: 230px; }
+    .action-grid { grid-template-columns: repeat(2, 1fr); }
   }
-  .active-lyric {
-    color: var(--primary); font-size: 28px; font-weight: 800; transform: scale(1.05);
-    text-shadow: 0px 2px 15px rgba(56, 189, 248, 0.8);
-  }
-  
-  #playerView:fullscreen { background: #000; padding: 20px; display: flex; flex-direction: column; justify-content: center; }
-  #playerView:fullscreen .card { box-shadow: none; border-radius: 0; background: transparent; height: 100%; display: flex; flex-direction: column;}
-  #playerView:fullscreen .karaoke-container { height: 100%; border: none; flex-grow: 1;}
-  #playerView:fullscreen .lyrics-display { font-size: 30px; line-height: 2.6; }
-  #playerView:fullscreen #playerHeader button { background: #334155; color: white; border: none; }
-  
-  .view { display: none; }
-  .view.active { display: block; }
-  
-  #draftFileInfo {
-    display: none; font-size: 13px; color: #10B981; margin-top: 8px; 
-    padding: 10px; background: #064E3B; border-radius: 8px; border: 1px solid #047857;
-  }
-
-  /* Sync Maker UI Styles */
-  .sync-maker-box { background: #0F172A; padding: 20px; border-radius: 12px; margin-top: 16px; text-align: center; border: 1px solid #334155; }
-  .sync-prev { color: #94A3B8; font-size: 14px; margin-bottom: 8px; min-height: 20px; }
-  .sync-current { color: var(--primary); font-size: 24px; font-weight: bold; min-height: 35px; margin-bottom: 8px; transition: 0.2s; }
-  .sync-next { color: #64748B; font-size: 16px; min-height: 24px; }
 </style>
 </head>
 <body>
 
-<div class="container">
+<div class="app-shell">
+  <header>
+    <div class="eq" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <h1>Aiswarya's Sing-Along Studio</h1>
+    <div class="subtitle">Personalised AI Karaoke Experience 🎤</div>
+  </header>
+
+  <div class="card" id="uploadCard">
+    <h3>1 · Upload a song</h3>
+    <div class="upload-row">
+      <input type="file" id="mediaFile" accept="audio/*, video/*">
+      <button class="btn-primary" onclick="processMedia()">✨ Generate Malayalam Lyrics</button>
+    </div>
+    <div id="status">Upload an MP3/MP4 to get started</div>
+  </div>
+
+  <div class="card">
+    <h3>2 · Play &amp; sing</h3>
+    <audio id="audioPlayer" controls></audio>
+    <div id="lyricsContainer">Your lyrics will appear here...</div>
+  </div>
+
+  <div class="card action-buttons" id="actionButtons">
+    <h3>3 · Actions</h3>
+    <div class="action-grid">
+      <button onclick="downloadLyrics()" class="btn-action">⬇️ Save Lyrics</button>
+      <button onclick="recordAndDownloadVideo()" id="videoBtn" class="btn-video">🎥 Save as MP4</button>
+    </div>
+    <progress class="convert-bar" id="convertBar" max="100" value="0"></progress>
+  </div>
   
-  <!-- Library View -->
-  <div id="libraryView" class="view active">
-    <div class="card">
-      <h1>🎵 പാട്ടുകളുടെ ശേഖരം</h1>
-      <ul class="song-list" id="savedSongsList"></ul>
-      <button id="showAddViewBtn" style="margin-top: 20px;">+ പുതിയ പാട്ട് ചേർക്കുക</button>
-    </div>
-  </div>
-
-  <!-- Add View -->
-  <div id="addView" class="view">
-    <div class="card">
-      <h1>പുതിയ പാട്ട് ചേർക്കുക</h1>
-      
-      <label style="font-size: 13px; color: var(--text-muted); display: block; margin-top: 16px;">MP3 / MP4 ഫയൽ തിരഞ്ഞെടുക്കുക</label>
-      <input type="file" id="mediaFile" accept="audio/*, video/mp4">
-      <div id="draftFileInfo"></div>
-      
-      <label style="font-size: 13px; color: var(--text-muted); margin-top: 16px; display: block;">പാട്ടിന്റെ പേര്</label>
-      <input type="text" id="songTitleInput" placeholder="ഉദാ: മാണിക്യ മലരായ...">
-      
-      <button type="button" onclick="searchLyrics()" class="btn-outline" style="margin-top: 8px; padding: 10px; font-size: 14px;">🔍 വരികൾ തിരയുക (Google)</button>
-      
-      <label style="font-size: 13px; color: var(--text-muted); display: block; margin-top: 16px;">വരികൾ പേസ്റ്റ് ചെയ്യുക</label>
-      <textarea id="customLyrics" placeholder="സാധാരണ വരികളോ അല്ലെങ്കിൽ സിങ്ക് ചെയ്ത വരികളോ പേസ്റ്റ് ചെയ്യാം..."></textarea>
-      
-      <!-- New Button for LRC Maker -->
-      <button type="button" id="openSyncMakerBtn" class="btn-outline" style="margin-top: 8px; padding: 10px; font-size: 14px; border-color: #10B981; color: #10B981;">⏱️ വരികൾ പാട്ടിനൊപ്പം സ്വയം സിങ്ക് ചെയ്യുക (LRC Maker)</button>
-      
-      <button id="processBtn">പാട്ടും വരികളും സേവ് ചെയ്യുക</button>
-      <button class="btn-outline" id="backToLibraryBtn">ക്യാൻസൽ</button>
-      
-      <div class="progress-container" id="progressBox">
-        <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div>
-        <div class="progress-text" id="progressText">0%</div>
-        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;" id="progressStatus">പ്രോസസ്സ് ചെയ്യുന്നു...</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Sync Maker View -->
-  <div id="syncView" class="view">
-    <div class="card">
-      <h1>⏱️ LRC Maker</h1>
-      <p style="font-size: 13px; color: var(--text-muted); text-align:center;">പാട്ട് പ്ലേ ചെയ്ത്, ഓരോ വരിയും പാടുന്ന കൃത്യസമയത്ത് പച്ച ബട്ടൺ അമർത്തുക.</p>
-      
-      <audio id="syncAudio" controls style="width: 100%; margin-top: 10px;"></audio>
-      
-      <div class="sync-maker-box">
-          <div id="syncPrev" class="sync-prev"></div>
-          <div id="syncCurrent" class="sync-current">വരികൾ ലോഡ് ചെയ്യുന്നു...</div>
-          <div id="syncNext" class="sync-next"></div>
-      </div>
-      
-      <button id="stampBtn" style="background: #10B981; color: white; padding: 20px; font-size: 18px; margin-top: 20px;">📌 ഈ വരിയുടെ സമയം സേവ് ചെയ്യുക</button>
-      
-      <div style="display: flex; gap: 10px; margin-top: 10px;">
-           <button id="syncCancelBtn" class="btn-outline" style="flex:1;">ക്യാൻസൽ</button>
-           <button id="syncSaveBtn" style="background: #3B82F6; color: white; flex:1;">സേവ് ചെയ്യുക</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Player View -->
-  <div id="playerView" class="view">
-    <div class="card">
-      <div id="playerHeader">
-        <button class="btn-outline" id="playerBackBtn">🔙 പുറകോട്ട്</button>
-        <button class="btn-outline" id="fullscreenBtn" onclick="toggleFullScreen()">🔲 Full Screen</button>
-      </div>
-      <h1 id="playerTitle">പാട്ട്</h1>
-      <audio id="audioPlayer" controls></audio>
-      <div class="karaoke-container" id="lyricsBox"></div>
-    </div>
-  </div>
-
+  <canvas id="videoCanvas" width="720" height="1280"></canvas>
+  <div class="footer-note">Dedicated to Aiswarya</div>
 </div>
 
+<script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
 <script>
-  const DB_NAME = 'ProKaraokeDB';
-  let db = null;
-  let pendingFile = null;
-  let currentLyricsData = []; 
+  let lyricsData = [];
+  let audioContext, sourceNode, destNodeOriginal;
+  let audioGraphReady = false;
+  let encodedApiKey = "QVEuQWI4Uk42SnFTNDY1TFl2VmFtRXExWkFrSlVJWGM5eEZWQTJPc0xvTU1fUmNWd0ppMFE=";
 
-  // LRC Maker Variables
-  let syncLines = [];
-  let syncedLRC = [];
-  let syncIndex = 0;
+  // --- Wake Lock (keeps screen ON while lyrics are being generated) ---
+  let wakeLock = null;
+  let wakeLockNeeded = false; // true while a lyrics-generation job is in progress
 
-  function initDB() {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(DB_NAME, 1);
-      request.onupgradeneeded = (e) => {
-        let database = e.target.result;
-        if (!database.objectStoreNames.contains('songs')) {
-          database.createObjectStore('songs', { keyPath: 'id' });
-        }
-      };
-      request.onsuccess = (e) => { db = e.target.result; resolve(db); };
-      request.onerror = (e) => reject(e);
-    });
+  async function requestWakeLock() {
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLock.addEventListener('release', () => { /* released by system, will re-acquire on visibilitychange if still needed */ });
+      }
+    } catch (err) {
+      console.warn('Wake Lock request failed:', err);
+    }
   }
 
-  function saveSongToDB(song) {
-    return new Promise((resolve, reject) => {
-      if(!db) return reject(new Error("Database not initialized"));
-      const tx = db.transaction('songs', 'readwrite');
-      tx.objectStore('songs').put(song);
-      tx.oncomplete = () => resolve();
-      tx.onerror = (e) => reject(e);
-    });
+  async function releaseWakeLock() {
+    try {
+      if (wakeLock) { await wakeLock.release(); wakeLock = null; }
+    } catch (err) { /* ignore */ }
   }
 
-  function getAllSongsFromDB() {
-    return new Promise((resolve, reject) => {
-      if(!db) return resolve([]);
-      const tx = db.transaction('songs', 'readonly');
-      const request = tx.objectStore('songs').getAll();
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = (e) => reject(e);
-    });
-  }
+  // Re-acquire the wake lock automatically if the tab regains visibility
+  // (browsers release it whenever the tab is hidden / app is switched away from)
+  document.addEventListener('visibilitychange', async () => {
+    if (wakeLockNeeded && document.visibilityState === 'visible' && wakeLock === null) {
+      await requestWakeLock();
+    }
+  });
 
-  function getSongFromDB(id) {
-    return new Promise((resolve, reject) => {
-      if(!db) return resolve(null);
-      const tx = db.transaction('songs', 'readonly');
-      const request = tx.objectStore('songs').get(id);
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = (e) => reject(e);
-    });
-  }
-
-  function deleteSongFromDB(id) {
-    return new Promise((resolve, reject) => {
-      if(!db) return resolve();
+  // --- Retry helper: keeps trying an async operation until it succeeds ---
+  // Used so that switching apps / flaky network / temporary API errors don't
+  // kill the job — it just keeps retrying quietly until it completes.
+  async function retryUntilSuccess(taskFn, onAttemptFail) {
+    let attempt = 0;
+    while (true) {
+      attempt++;
       try {
-        const tx = db.transaction('songs', 'readwrite');
-        const store = tx.objectStore('songs');
-        store.delete(id);
-        tx.oncomplete = () => resolve();
-        tx.onerror = (e) => reject(e);
-      } catch (error) {
-        reject(error);
+        return await taskFn(attempt);
+      } catch (err) {
+        console.error(`Attempt ${attempt} failed:`, err);
+        if (onAttemptFail) onAttemptFail(err, attempt);
+        // Exponential backoff, capped at 20s, so we don't hammer the API
+        const delay = Math.min(20000, 1500 * Math.pow(1.5, Math.min(attempt, 8)));
+        await new Promise(res => setTimeout(res, delay));
       }
-    });
-  }
-
-  function showView(viewId) {
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.getElementById(viewId).classList.add('active');
-  }
-
-  function toggleFullScreen() {
-    const playerView = document.getElementById('playerView');
-    if (!document.fullscreenElement) {
-        if (playerView.requestFullscreen) { playerView.requestFullscreen(); } 
-        else if (playerView.webkitRequestFullscreen) { playerView.webkitRequestFullscreen(); } 
-    } else {
-        if (document.exitFullscreen) { document.exitFullscreen(); } 
-        else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); } 
     }
   }
 
-  async function saveDraft() {
-    if(!db) return;
-    const title = document.getElementById('songTitleInput').value.trim();
-    const lyrics = document.getElementById('customLyrics').value.trim();
-    if(!pendingFile && !title && !lyrics) return;
+  const media = document.getElementById("audioPlayer");
+  const container = document.getElementById("lyricsContainer");
+  const statusText = document.getElementById("status");
+  const canvas = document.getElementById("videoCanvas");
+  const ctx = canvas.getContext("2d");
+  const convertBar = document.getElementById("convertBar");
+  const videoBtn = document.getElementById("videoBtn");
+  const actionBtns = document.getElementById("actionButtons");
+
+  document.getElementById("mediaFile").addEventListener("change", function(e) {
+    if(e.target.files[0]) media.src = URL.createObjectURL(e.target.files[0]);
+  });
+
+  function getApiKey() {
+    try { return atob(encodedApiKey); } catch (e) { return null; }
+  }
+  
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+    });
+  }
+
+  // Fills in any missing per-line timestamps by spreading them evenly across
+  // the audio's duration, so scrolling/highlighting always has a time to work
+  // with even if Gemini skipped a timestamp on some line.
+  function ensureLineTimes() {
+    if (!lyricsData.length) return;
+    const duration = (media.duration && isFinite(media.duration)) ? media.duration : 180;
+    const anyMissing = lyricsData.some(l => l.time == null || isNaN(l.time));
+    if (anyMissing) {
+      lyricsData.forEach((l, i) => {
+        if (l.time == null || isNaN(l.time)) l.time = (duration * i) / lyricsData.length;
+      });
+    }
+    // Keep times strictly ascending so scroll/interpolation math never breaks.
+    for (let i = 1; i < lyricsData.length; i++) {
+      if (lyricsData[i].time <= lyricsData[i - 1].time) lyricsData[i].time = lyricsData[i - 1].time + 0.4;
+    }
+  }
+
+  // Live sing-along: highlight + auto-scroll the currently-sung line as the
+  // song plays, synced to each line's vocal timestamp.
+  let lastActiveIdx = -1;
+  media.addEventListener("timeupdate", () => {
+    if (!lyricsData.length) return;
+    const t = media.currentTime;
+    let activeIdx = 0;
+    for (let i = 0; i < lyricsData.length; i++) {
+      if (lyricsData[i].time <= t) activeIdx = i; else break;
+    }
+    if (activeIdx !== lastActiveIdx) {
+      lastActiveIdx = activeIdx;
+      const prevEl = container.querySelector(".lyric-line.active");
+      if (prevEl) prevEl.classList.remove("active");
+      const activeEl = container.querySelector(`.lyric-line[data-idx="${activeIdx}"]`);
+      if (activeEl) {
+        activeEl.classList.add("active");
+        activeEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+  });
+  media.addEventListener("loadedmetadata", ensureLineTimes);
+
+  async function processMedia() {
+    const fileInput = document.getElementById("mediaFile").files[0];
+    const apiKey = getApiKey();
     
-    const draftData = { id: 'DRAFT', title: title, audioBlob: pendingFile, fileName: pendingFile ? (pendingFile.name || 'Audio') : '', customLyrics: lyrics };
-    await saveSongToDB(draftData);
-  }
+    if (!fileInput) return alert("Please select an audio or video file first.");
+    
+    statusText.innerText = "Analyzing media with Gemini... (Please wait)";
+    container.innerHTML = "<div class='lyric-line'>Processing...</div>";
+    actionBtns.style.display = "none";
 
-  document.getElementById('mediaFile').addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if(file) {
-        pendingFile = file;
-        document.getElementById('draftFileInfo').innerText = "✔️ തിരഞ്ഞെടുത്ത ഫയൽ: " + file.name;
-        document.getElementById('draftFileInfo').style.display = 'block';
-        const titleInput = document.getElementById('songTitleInput');
-        if(!titleInput.value) { titleInput.value = file.name.replace(/\.[^/.]+$/, ""); }
-        if(db) await saveDraft();
-    }
-  });
+    // Keep the screen awake and keep retrying, even if the user switches
+    // apps or the network hiccups, until the lyrics are fully generated.
+    wakeLockNeeded = true;
+    await requestWakeLock();
 
-  document.getElementById('songTitleInput').addEventListener('input', saveDraft);
-  document.getElementById('customLyrics').addEventListener('input', saveDraft);
-
-  function searchLyrics() {
-    let title = document.getElementById('songTitleInput').value.trim();
-    if(!title) { title = "malayalam movie song"; }
-    const query = encodeURIComponent(title + " lyrics malayalam");
-    window.open("https://www.google.com/search?q=" + query, "_blank");
-  }
-
-  document.addEventListener('DOMContentLoaded', async () => {
     try {
-        await initDB();
-        const draft = await getSongFromDB('DRAFT');
-        if (draft && (draft.title || draft.audioBlob || draft.customLyrics)) {
-            if (draft.title) document.getElementById('songTitleInput').value = draft.title;
-            if (draft.customLyrics) document.getElementById('customLyrics').value = draft.customLyrics;
-            if (draft.audioBlob) {
-                pendingFile = draft.audioBlob;
-                document.getElementById('draftFileInfo').innerText = "✔️ നേരത്തെ തിരഞ്ഞെടുത്ത ഫയൽ: " + draft.fileName;
-                document.getElementById('draftFileInfo').style.display = 'block';
-            }
-            showView('addView');
-        } else { loadLibrary(); }
-    } catch(e) { console.error(e); loadLibrary(); }
-  });
+      const base64Media = await fileToBase64(fileInput);
+      const requestBody = {
+        contents: [{
+          parts: [
+            { text: "Listen to this media carefully and transcribe the full song lyrics accurately, then translate/render them in Malayalam script. Break the song into short lyric lines exactly as they are actually sung. For EVERY line, give the approximate timestamp in seconds (decimals allowed, e.g. 12.4) marking exactly when that line STARTS being sung in the audio — this is critical, listen closely to the vocals for correct timing. Format EXACTLY as a JSON array of objects, ordered by increasing time, like: [{\"text\": \"...\", \"time\": 12.4}, {\"text\": \"...\", \"time\": 16.8}]. Return ONLY JSON, no markdown fences, no extra commentary." },
+            { inlineData: { mimeType: fileInput.type, data: base64Media.split(',')[1] } }
+          ]
+        }]
+      };
 
-  document.getElementById('showAddViewBtn').addEventListener('click', () => { showView('addView'); });
-  
-  document.getElementById('backToLibraryBtn').addEventListener('click', async () => {
-      await deleteSongFromDB('DRAFT');
-      pendingFile = null;
-      document.getElementById('songTitleInput').value = '';
-      document.getElementById('mediaFile').value = '';
-      document.getElementById('customLyrics').value = '';
-      document.getElementById('draftFileInfo').style.display = 'none';
-      loadLibrary();
-      showView('libraryView');
-  });
-  
-  document.getElementById('playerBackBtn').addEventListener('click', () => {
-    if (document.fullscreenElement) { document.exitFullscreen(); }
-    document.getElementById('audioPlayer').pause();
-    showView('libraryView');
-  });
+      const parsedLyrics = await retryUntilSuccess(
+        async (attempt) => {
+          if (attempt > 1) statusText.innerText = `Retrying (attempt ${attempt})... still working on it.`;
+          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
+            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(requestBody)
+          });
+          const data = await response.json();
+          if (data.error) throw new Error(data.error.message);
 
-  async function loadLibrary() {
-    const songs = await getAllSongsFromDB();
-    const list = document.getElementById('savedSongsList');
-    list.innerHTML = '';
-    const actualSongs = songs.filter(s => s.id !== 'DRAFT');
+          let rawJson = data.candidates[0].content.parts[0].text.replace(/```json/g, '').replace(/```/g, '').trim();
+          const parsed = JSON.parse(rawJson);
+          if (!Array.isArray(parsed) || parsed.length === 0) throw new Error("Empty or invalid lyrics response");
 
-    if(actualSongs.length === 0) {
-      list.innerHTML = '<p style="text-align:center; color:#94A3B8; font-size:14px;">ഇതുവരെ പാട്ടുകൾ സേവ് ചെയ്തിട്ടില്ല.</p>';
-      return;
-    }
+          // Normalize into {text, time} objects. Falls back gracefully if the
+          // model returns plain strings or omits a timestamp on some lines —
+          // ensureLineTimes() fills any gaps once the audio duration is known.
+          const normalized = parsed.map(item => {
+            if (typeof item === 'string') return { text: item, time: null };
+            const text = item.text || item.line || item.lyric || String(item);
+            const rawTime = (typeof item.time === 'number') ? item.time
+                           : (typeof item.start === 'number') ? item.start
+                           : (typeof item.timestamp === 'number') ? item.timestamp : null;
+            return { text, time: (rawTime != null && !isNaN(rawTime)) ? rawTime : null };
+          });
+          return normalized;
+        },
+        (err, attempt) => {
+          statusText.innerText = `Attempt ${attempt} failed (${err.message || 'network/API error'}). Retrying...`;
+        }
+      );
 
-    actualSongs.reverse().forEach(song => {
-      const li = document.createElement('li');
-      li.className = 'song-item';
-      li.innerHTML = `
-        <span class="song-title">${song.title}</span>
-        <div class="song-actions">
-          <button onclick="playSavedSong(${song.id})" style="background:#10B981; color:#fff;">Play</button>
-          <button onclick="exportSong(${song.id})" style="background:#3B82F6; color:#fff;">Share</button>
-          <button onclick="deleteSong('${song.id}')" style="background:#EF4444; color:#fff;">Del</button>
-        </div>
-      `;
-      list.appendChild(li);
-    });
-  }
+      lyricsData = parsedLyrics;
+      ensureLineTimes();
 
-  window.deleteSong = async (id) => {
-    if(confirm('ഈ പാട്ട് ഡിലീറ്റ് ചെയ്യണോ?')) {
-      try { await deleteSongFromDB(Number(id)); } catch (e) { console.error("Delete failed", e); }
-      loadLibrary();
-    }
-  }
-
-  // --- LRC / FRC Maker Logic ---
-  document.getElementById('openSyncMakerBtn').addEventListener('click', () => {
-      const rawLyrics = document.getElementById('customLyrics').value.trim();
-      const file = pendingFile || (document.getElementById('mediaFile').files.length > 0 ? document.getElementById('mediaFile').files[0] : null);
-      
-      if (!file) return alert('ആദ്യം ഒരു ഓഡിയോ/വീഡിയോ ഫയൽ തിരഞ്ഞെടുക്കുക!');
-      if (!rawLyrics) return alert('ആദ്യം സാധാരണ വരികൾ നൽകുക/പേസ്റ്റ് ചെയ്യുക!');
-
-      syncLines = rawLyrics.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-      if(syncLines.some(l => l.match(/^\[\d{2}:\d{2}/))) {
-          if(!confirm('ഈ വരികളിൽ ഇതിനകം തന്നെ ടൈമിംഗ് സെറ്റ് ചെയ്തിട്ടുണ്ട്. വീണ്ടും സെറ്റ് ചെയ്യണോ?')) return;
-          syncLines = syncLines.map(l => l.replace(/^\[\d{2}:\d{2}(?:\.\d{1,3})?\]\s*/, ''));
-      }
-
-      syncedLRC = [];
-      syncIndex = 0;
-
-      const audioUrl = URL.createObjectURL(file);
-      const syncAudio = document.getElementById('syncAudio');
-      syncAudio.src = audioUrl;
-      
-      updateSyncDisplay();
-      showView('syncView');
-  });
-
-  function updateSyncDisplay() {
-      document.getElementById('syncPrev').innerText = syncIndex > 0 ? syncLines[syncIndex - 1] : '';
-      
-      if(syncIndex < syncLines.length) {
-          document.getElementById('syncCurrent').innerText = syncLines[syncIndex];
-          document.getElementById('syncCurrent').style.color = "var(--primary)";
-          document.getElementById('stampBtn').disabled = false;
-          document.getElementById('stampBtn').innerText = "📌 ഈ വരിയുടെ സമയം സേവ് ചെയ്യുക";
-          document.getElementById('syncNext').innerText = syncIndex + 1 < syncLines.length ? syncLines[syncIndex + 1] : '';
-      } else {
-          document.getElementById('syncCurrent').innerText = "പൂർത്തിയായി! 🎉";
-          document.getElementById('syncCurrent').style.color = "#10B981";
-          document.getElementById('stampBtn').disabled = true;
-          document.getElementById('stampBtn').innerText = "എല്ലാം സിങ്ക് ചെയ്തു";
-          document.getElementById('syncNext').innerText = '';
-      }
-  }
-
-  document.getElementById('stampBtn').addEventListener('click', () => {
-      if(syncIndex >= syncLines.length) return;
-      
-      const time = document.getElementById('syncAudio').currentTime;
-      let min = Math.floor(time / 60);
-      let sec = (time % 60).toFixed(2);
-      let timeStr = `[${min.toString().padStart(2, '0')}:${sec.padStart(5, '0')}]`;
-      
-      syncedLRC.push(`${timeStr} ${syncLines[syncIndex]}`);
-      syncIndex++;
-      updateSyncDisplay();
-  });
-
-  document.getElementById('syncCancelBtn').addEventListener('click', () => {
-      document.getElementById('syncAudio').pause();
-      showView('addView');
-  });
-
-  document.getElementById('syncSaveBtn').addEventListener('click', () => {
-      if(syncedLRC.length > 0) {
-          document.getElementById('customLyrics').value = syncedLRC.join('\n');
-          saveDraft();
-          alert('സമയക്രമം ചേർത്ത വരികൾ വിജയകരമായി സേവ് ചെയ്തു!');
-      }
-      document.getElementById('syncAudio').pause();
-      showView('addView');
-  });
-
-
-  // --- Export Logic ---
-  window.exportSong = async (id) => {
-    const song = await getSongFromDB(Number(id));
-    if(!song) return alert('പാട്ട് കണ്ടെത്താനായില്ല.');
-
-    alert('ഏത് ഫോണിലും നേരിട്ട് പ്രവർത്തിക്കുന്ന ഫയൽ തയ്യാറാക്കുന്നു... അല്പം കാത്തിരിക്കുക.');
-
-    const reader = new FileReader();
-    reader.readAsDataURL(song.audioBlob);
-    reader.onloadend = () => {
-      const base64Audio = reader.result;
-      const escapedLyrics = (song.lyrics || 'വരികൾ ലഭ്യമല്ല.').replace(/`/g, '\\`').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      
-      const songDataStr = JSON.stringify({
-        title: song.title,
-        lyrics: escapedLyrics,
-        audio: base64Audio
+      container.innerHTML = "";
+      lyricsData.forEach((line, idx) => {
+        let div = document.createElement("div");
+        div.className = "lyric-line"; div.innerText = line.text;
+        div.dataset.time = line.time;
+        div.dataset.idx = idx;
+        container.appendChild(div);
       });
       
-      const htmlContent = `<!DOCTYPE html>
-<html lang="ml">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>${song.title} - Play</title>
-  <link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@400;600;800&display=swap" rel="stylesheet">
-  <style>
-    body, html { margin: 0; padding: 0; height: 100vh; background: #0F172A; color: #fff; font-family: 'Anek Malayalam', system-ui, sans-serif; overflow: hidden; }
-    .bg-glow { position: absolute; width: 150vw; height: 150vw; top: -25vw; left: -25vw; background: radial-gradient(circle, rgba(56,189,248,0.15) 0%, rgba(0,0,0,1) 60%); z-index: 1; animation: pulse 4s infinite alternate; pointer-events: none; }
-    @keyframes pulse { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
-    #splash { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); transition: opacity 0.5s; }
-    .play-btn-large { width: 90px; height: 90px; background: #38BDF8; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 25px; box-shadow: 0 0 40px rgba(56,189,248,0.6); font-size: 38px; color: #000; padding-left: 6px; cursor: pointer; transition: transform 0.2s; }
-    .play-btn-large:active { transform: scale(0.9); }
-    h2 { font-size: 28px; margin: 0 0 10px 0; color: #F8FAFC; text-align: center; padding: 0 20px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-    p { color: #94A3B8; font-size: 16px; margin: 0; }
-    #playerFrame { width: 100%; height: 100%; border: none; display: none; position: relative; z-index: 10; }
-  </style>
-</head>
-<body>
-  <div class="bg-glow" id="glow"></div>
-  <div id="splash" onclick="startApp()">
-    <div class="play-btn-large">▶</div>
-    <h2>${song.title}</h2>
-    <p>പാട്ട് കേൾക്കാൻ സ്ക്രീനിൽ തൊടുക</p>
-  </div>
-  <iframe id="playerFrame" src="https://songslyrics.github.io/player/"></iframe>
-  <script>
-    const songData = ${songDataStr};
-    const frame = document.getElementById('playerFrame');
-    const splash = document.getElementById('splash');
-    const glow = document.getElementById('glow');
-    function startApp() {
-      splash.style.opacity = '0';
-      setTimeout(() => { 
-          splash.style.display = 'none'; glow.style.display = 'none'; frame.style.display = 'block';
-          frame.contentWindow.postMessage({ type: 'PLAY_SONG', payload: songData }, "*");
-      }, 500);
-    }
-    window.addEventListener('message', (e) => {
-      if (e.data === 'PLAYER_READY') { frame.contentWindow.postMessage({ type: 'PLAY_SONG', payload: songData }, "*"); }
-    });
-  <\/script>
-</body>
-</html>`;
-      
-      const blob = new Blob([htmlContent], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = song.title.replace(/[^a-zA-Z0-9]/g, '_') + '.html';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    };
-  };
-
-  // --- Process & Save Logic ---
-  function updateProgress(percent, text) {
-    document.getElementById('progressBox').style.display = 'block';
-    document.getElementById('progressBar').style.width = percent + '%';
-    document.getElementById('progressText').innerText = percent + '%';
-    document.getElementById('progressStatus').innerText = text;
-  }
-
-  document.getElementById('processBtn').addEventListener('click', async () => {
-    const file = pendingFile || (document.getElementById('mediaFile').files.length > 0 ? document.getElementById('mediaFile').files[0] : null);
-    const title = document.getElementById('songTitleInput').value.trim() || (file ? (file.name ? file.name.replace(/\.[^/.]+$/, "") : 'My Song') : 'My Song');
-    let customLyricsText = document.getElementById('customLyrics').value.trim();
-
-    if(!customLyricsText) { alert('ദയവായി വരികൾ നൽകുക/പേസ്റ്റ് ചെയ്യുക!'); return; }
-    if(!file) return alert('ഒരു ഓഡിയോ/വീഡിയോ ഫയൽ തിരഞ്ഞെടുക്കുക!');
-
-    document.getElementById('processBtn').disabled = true;
-    updateProgress(50, 'പ്രോസസ്സ് ചെയ്യുന്നു...');
-    
-    try {
-      const songData = { id: Date.now(), title: title, audioBlob: file, lyrics: customLyricsText };
-      await saveSongToDB(songData);
-      await deleteSongFromDB('DRAFT');
-      pendingFile = null;
-      updateProgress(100, 'പൂർത്തിയായി!');
-      
-      setTimeout(() => {
-          alert('പാട്ട് വിജയകരമായി ചേർത്തു!');
-          document.getElementById('songTitleInput').value = '';
-          document.getElementById('mediaFile').value = '';
-          document.getElementById('customLyrics').value = '';
-          document.getElementById('draftFileInfo').style.display = 'none';
-          document.getElementById('progressBox').style.display = 'none';
-          loadLibrary();
-          showView('libraryView');
-      }, 300);
-
+      actionBtns.style.display = "block";
+      statusText.innerText = "Karaoke is ready! Play the song.";
     } catch (error) {
-      alert("പിഴവ്: " + error.message);
-      document.getElementById('progressBox').style.display = 'none';
+      // Only reached for genuinely unrecoverable errors (e.g. no file selected upstream).
+      console.error(error);
+      statusText.innerText = "Error: Could not generate lyrics.";
+      container.innerHTML = "<div class='lyric-line'>Failed to load lyrics.</div>";
     } finally {
-      document.getElementById('processBtn').disabled = false;
+      wakeLockNeeded = false;
+      await releaseWakeLock();
     }
-  });
-
-  function parseLRC(text) {
-      const lines = text.split('\n');
-      const parsedData = [];
-      const timeRegEx = /\[(\d{2}):(\d{2}(?:\.\d{1,3})?)\](.*)/; 
-      let isLRC = false;
-
-      lines.forEach(line => {
-          const match = line.match(timeRegEx);
-          if (match) {
-              isLRC = true;
-              const timeInSeconds = (parseInt(match[1], 10) * 60) + parseFloat(match[2]);
-              parsedData.push({ time: timeInSeconds, text: match[3].trim() });
-          }
-      });
-      return { isLRC, parsedData };
   }
 
-  window.playSavedSong = async (id) => {
-    const song = await getSongFromDB(Number(id));
-    if(!song) return alert('പാട്ട് കണ്ടെത്താനായില്ല.');
+  function setupAudioGraph() {
+    if (audioGraphReady) return;
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    sourceNode = audioContext.createMediaElementSource(media);
+    destNodeOriginal = audioContext.createMediaStreamDestination();
+    sourceNode.connect(destNodeOriginal);
+    sourceNode.connect(audioContext.destination);
+    audioGraphReady = true;
+  }
 
-    document.getElementById('playerTitle').innerText = song.title;
-    const audioUrl = URL.createObjectURL(song.audioBlob);
-    const audio = document.getElementById('audioPlayer');
-    audio.src = audioUrl;
+  function downloadLyrics() {
+    if(lyricsData.length === 0) return alert("No lyrics to save yet!");
+    let textContent = "Malayalam Lyrics\n\n" + lyricsData.map(l => l.text).join("\n");
+    const blob = new Blob([textContent], { type: "text/plain" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "Malayalam_Lyrics.txt";
+    link.click();
+  }
 
-    const box = document.getElementById('lyricsBox');
-    box.innerHTML = '';
+  let ffmpegInstance = null;
+  async function getFFmpeg() {
+    if (ffmpegInstance) return ffmpegInstance;
+    const { createFFmpeg } = FFmpeg;
+    ffmpegInstance = createFFmpeg({
+      log: false, corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js',
+      progress: ({ ratio }) => {
+        if (ratio >= 0 && ratio <= 1) {
+          convertBar.value = Math.round(ratio * 100);
+          statusText.innerText = `Converting to MP4... ${Math.round(ratio * 100)}%`;
+        }
+      }
+    });
+    await ffmpegInstance.load();
+    return ffmpegInstance;
+  }
+
+  function pickRecorderMimeType() {
+    const candidates = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+    for (const type of candidates) { if (MediaRecorder.isTypeSupported(type)) return type; }
+    return '';
+  }
+
+  function recordAndDownloadVideo() {
+    if(lyricsData.length === 0) return alert("Please generate lyrics first.");
+    ensureLineTimes();
+    setupAudioGraph();
+    videoBtn.disabled = true;
+    convertBar.style.display = 'block'; convertBar.value = 0;
+    statusText.innerText = "Recording video... please wait until the song finishes.";
+
+    wakeLockNeeded = true;
+    requestWakeLock();
     
-    const { isLRC, parsedData } = parseLRC(song.lyrics || '');
+    media.currentTime = 0; media.play();
+    if (audioContext.state === 'suspended') audioContext.resume();
 
-    if (isLRC && parsedData.length > 0) {
-        currentLyricsData = parsedData;
-        parsedData.forEach((line, index) => {
-            const div = document.createElement('div');
-            div.className = 'lyric-line';
-            div.id = 'line-' + index;
-            div.innerText = line.text === '' ? '\u00A0' : line.text; 
-            box.appendChild(div);
-        });
-        const paddingDiv = document.createElement('div');
-        paddingDiv.style.height = "50%";
-        box.appendChild(paddingDiv);
-    } else {
-        currentLyricsData = [];
-        box.innerHTML = `<div class="lyrics-display">${song.lyrics || 'വരികൾ ലഭ്യമല്ല.'}</div>`;
+    const videoStream = canvas.captureStream(30);
+    const audioStream = destNodeOriginal.stream;
+    const combinedStream = new MediaStream([...videoStream.getTracks(), ...audioStream.getTracks()]);
+    const mimeType = pickRecorderMimeType();
+    const recorder = new MediaRecorder(combinedStream, mimeType ? { mimeType } : undefined);
+    const chunks = [];
+
+    recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+    recorder.onstop = async () => {
+      stopDrawLoop();
+      clearInterval(watchdogTimer);
+      const webmBlob = new Blob(chunks, { type: 'video/webm' });
+      try {
+        statusText.innerText = "Loading MP4 converter...";
+        const { fetchFile } = FFmpeg;
+        const ffmpeg = await getFFmpeg();
+        ffmpeg.FS('writeFile', 'input.webm', await fetchFile(webmBlob));
+        statusText.innerText = "Converting to MP4... 0%";
+        await ffmpeg.run('-i', 'input.webm', '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '23', '-c:a', 'aac', '-pix_fmt', 'yuv420p', 'output.mp4');
+        const data = ffmpeg.FS('readFile', 'output.mp4');
+        const mp4Blob = new Blob([data.buffer], { type: 'video/mp4' });
+        const link = document.createElement("a"); link.href = URL.createObjectURL(mp4Blob); link.download = "Karaoke_Video.mp4"; link.click();
+        statusText.innerText = "MP4 downloaded successfully! 🎉";
+      } catch (err) {
+        console.error(err);
+        const link = document.createElement("a"); link.href = URL.createObjectURL(webmBlob); link.download = "Karaoke_Video.webm"; link.click();
+        statusText.innerText = "MP4 conversion failed — downloaded as WebM instead.";
+      } finally {
+        videoBtn.disabled = false; convertBar.style.display = 'none'; convertBar.value = 0;
+        wakeLockNeeded = false;
+        releaseWakeLock();
+      }
+    };
+
+    recorder.start();
+
+    // --- Build wrapped rows, and give each wrapped row a "virtual" vocal
+    // timestamp so the storyboard scroll speed matches how fast the lines
+    // are actually sung, instead of just a straight-line duration ratio. ---
+    const maxWidth = canvas.width - 80;
+    const lineHeight = 58;
+    ctx.font = "bold 40px 'Baloo 2', Arial";
+    let fullRows = [];
+    let rowTimes = [];
+    lyricsData.forEach((lineObj, lineIdx) => {
+      const lineStart = lineObj.time;
+      const lineEnd = (lineIdx < lyricsData.length - 1) ? lyricsData[lineIdx + 1].time : (media.duration || lineStart + 3);
+      let words = lineObj.text.split(" "); let row = "";
+      let rowsForThisLine = [];
+      words.forEach(w => {
+        let test = row ? row + " " + w : w;
+        if (ctx.measureText(test).width > maxWidth && row) { rowsForThisLine.push(row); row = w; } 
+        else { row = test; }
+      });
+      if (row) rowsForThisLine.push(row);
+      // Spread this line's wrapped sub-rows evenly across its vocal time span.
+      rowsForThisLine.forEach((r, subIdx) => {
+        fullRows.push(r);
+        const frac = rowsForThisLine.length > 1 ? subIdx / rowsForThisLine.length : 0;
+        rowTimes.push(lineStart + frac * Math.max(0, lineEnd - lineStart));
+      });
+    });
+    
+    const ANCHOR_Y = canvas.height * 0.42; // fixed screen position where the "currently sung" row sits
+    const rowNaturalY = fullRows.map((_, i) => 130 + i * lineHeight);
+    const blockHeight = fullRows.length * lineHeight;
+    const maxOffset = Math.max(0, blockHeight - canvas.height + 260);
+
+    function getScrollOffset(t) {
+      if (fullRows.length === 0) return 0;
+      let idx = 0;
+      for (let i = 0; i < rowTimes.length; i++) {
+        if (rowTimes[i] <= t) idx = i; else break;
+      }
+      let interpY = rowNaturalY[idx];
+      if (idx < rowTimes.length - 1) {
+        const span = rowTimes[idx + 1] - rowTimes[idx];
+        const frac = span > 0 ? Math.min(1, (t - rowTimes[idx]) / span) : 0;
+        interpY = rowNaturalY[idx] + frac * (rowNaturalY[idx + 1] - rowNaturalY[idx]);
+      }
+      let offset = interpY - ANCHOR_Y;
+      return Math.max(0, Math.min(maxOffset, offset));
     }
-    showView('playerView');
-  };
 
-  document.getElementById('audioPlayer').addEventListener('timeupdate', () => {
-      if (currentLyricsData.length === 0) return;
-      const time = document.getElementById('audioPlayer').currentTime;
-      let currentIndex = -1;
+    function drawFrame() {
+      ctx.fillStyle = "#0d0916"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const grad = ctx.createRadialGradient(canvas.width/2, canvas.height*0.35, 50, canvas.width/2, canvas.height*0.35, canvas.width*0.7);
+      grad.addColorStop(0, "rgba(255,46,154,0.18)"); grad.addColorStop(1, "rgba(13,9,22,0)");
+      ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.shadowBlur = 0;
 
-      for (let i = 0; i < currentLyricsData.length; i++) {
-          if (time >= currentLyricsData[i].time) { currentIndex = i; } else { break; }
+      const offsetY = getScrollOffset(media.currentTime);
+      ctx.font = "bold 40px 'Baloo 2', Arial";
+      
+      fullRows.forEach((row, i) => {
+        const y = rowNaturalY[i] - offsetY;
+        if (y > -lineHeight && y < canvas.height + lineHeight) {
+          ctx.fillStyle = (y > ANCHOR_Y - lineHeight/2 && y < ANCHOR_Y + lineHeight/2) ? "#ffce54" : "#f3f0fb";
+          ctx.fillText(row, canvas.width / 2, y);
+        }
+      });
+
+      ctx.font = "italic 26px 'Baloo 2', Arial"; ctx.fillStyle = "#ff2e9a";
+      ctx.fillText("Dedicated to Aiswarya", canvas.width / 2, canvas.height - 50);
+    }
+
+    // A setInterval-driven loop keeps rendering frames even if the tab is
+    // backgrounded or briefly throttled (requestAnimationFrame stops
+    // completely when hidden, which would freeze the recorded video).
+    // Wake Lock (requested above) is the primary defence against the
+    // screen actually sleeping during this process.
+    let drawTimer = setInterval(drawFrame, 1000 / 30);
+    function stopDrawLoop() { clearInterval(drawTimer); }
+
+    // Watchdog: if playback unexpectedly pauses mid-recording (some browsers
+    // suspend background media), resume it automatically so the job still
+    // runs to completion instead of stalling silently.
+    let watchdogTimer = setInterval(() => {
+      if (!media.ended && media.paused && recorder.state === 'recording') {
+        media.play().catch(() => {});
+        if (audioContext && audioContext.state === 'suspended') audioContext.resume().catch(() => {});
       }
+    }, 1000);
 
-      if (currentIndex !== -1) {
-          document.querySelectorAll('.lyric-line').forEach(el => el.classList.remove('active-lyric'));
-          const activeLine = document.getElementById('line-' + currentIndex);
-          if (activeLine && !activeLine.classList.contains('active-lyric')) {
-              activeLine.classList.add('active-lyric');
-              const box = document.getElementById('lyricsBox');
-              const scrollAmount = activeLine.offsetTop - box.offsetTop - (box.clientHeight / 2) + (activeLine.clientHeight / 2);
-              box.scrollTop = scrollAmount;
-          }
-      }
-  });
-
+    media.onended = () => { recorder.stop(); media.onended = null; };
+  }
 </script>
 </body>
 </html>
+
