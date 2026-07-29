@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pro Lyrics Video Maker</title>
+<link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@400;600&family=Manjari:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0F172A; --panel: #1E293B; --accent: #38BDF8; --text: #F8FAFC; --muted: #94A3B8;
+  }
+  * { box-sizing: border-box; }
+  body, html { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Anek Malayalam', sans-serif; }
+  
+  .container { max-width: 500px; margin: 0 auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; }
+  h1 { font-size: 20px; text-align: center; margin: 5px 0; color: var(--accent); }
+  
+  .input-group { display: flex; flex-direction: column; gap: 5px; }
+  label { font-size: 14px; color: var(--muted); display: flex; justify-content: space-between; }
+  
+  input[type="file"], textarea {
+    width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
+    background: var(--panel); color: var(--text); font-family: inherit; font-size: 14px;
+  }
+  textarea { height: 80px; resize: none; }
+  
+  .meter-box {
+    background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .meter-row { display: flex; align-items: center; gap: 10px; margin-top: 5px; }
+  .meter-row button {
+    background: var(--panel); border: 1px solid rgba(255,255,255,0.2); color: white;
+    width: 40px; height: 35px; border-radius: 5px; font-size: 20px; cursor: pointer;
+  }
+  .meter-row button:active { background: rgba(255,255,255,0.1); }
+  input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--accent); }
+  .speed-val { color: var(--accent); font-weight: bold; font-size: 16px; background: #000; padding: 2px 8px; border-radius: 4px;}
+  
+  .btn-pause {
+    background: #475569; color: white; font-weight: 600; border: none; padding: 10px; 
+    border-radius: 8px; font-size: 14px; cursor: pointer; transition: 0.2s; margin-top: 5px;
+  }
+  .btn-pause.paused { background: #F59E0B; color: #000; }
+  
+  .canvas-wrapper {
+    position: relative; width: 100%; aspect-ratio: 9/16; background: #000; border-radius: 12px; overflow: hidden;
+    border: 2px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  }
+  canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; outline: none; }
+  canvas:active { cursor: grabbing; }
+  
+  .btn {
+    background: var(--accent); color: #000; font-weight: 700; border: none; padding: 14px; border-radius: 8px;
+    font-size: 16px; cursor: pointer; transition: 0.2s;
+  }
+  .btn:active { transform: scale(0.98); }
+  
+  .status { text-align: center; font-size: 14px; color: #10B981; display: none; }
+  .recording-indicator { color: #EF4444; font-weight: bold; text-align: center; display: none; animation: blink 1s infinite; }
+  
+  @keyframes blink { 50% { opacity: 0.4; } }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Lyrics Video Maker</h1>
+  
+  <div class="input-group">
+    <label>1. പാട്ട് (Audio) തിരഞ്ഞെടുക്കുക</label>
+    <input type="file" id="audioInput" accept="audio/*">
+  </div>
+  
+  <div class="input-group">
+    <label>2. വരികൾ (Lyrics) നൽകുക</label>
+    <textarea id="lyricsInput" placeholder="വരികൾ ഇവിടെ പേസ്റ്റ് ചെയ്യുക..."></textarea>
+  </div>
+  
+  <div class="meter-box">
+    <label>3. സ്ക്രോളിംഗ് സ്പീഡ് മീറ്റർ <span class="speed-val" id="speedValue">40</span></label>
+    <div class="meter-row">
+      <button id="btnSlow">-</button>
+      <input type="range" id="speedSlider" min="0" max="150" value="40">
+      <button id="btnFast">+</button>
+    </div>
+    <button id="pauseScrollBtn" class="btn-pause">⏸ മ്യൂസിക് വരുമ്പോൾ സ്ക്രോൾ നിർത്തുക</button>
+  </div>
+  
+  <div class="canvas-wrapper">
+    <canvas id="videoCanvas" width="720" height="1280" tabindex="0"></canvas>
+  </div>
+  
+  <button id="recordBtn" class="btn">🔴 റെക്കോർഡിംഗ് തുടങ്ങുക</button>
+  <button id="stopBtn" class="btn" style="display:none; background:#EF4444; color:#fff;">⏹ റെക്കോർഡിംഗ് നിർത്തുക</button>
+  
+  <div id="recordingStatus" class="recording-indicator">റെക്കോർഡ് ചെയ്യുന്നു...</div>
+  <div id="saveStatus" class="status">വീഡിയോ സേവ് ആയി! ഡൗൺലോഡ് പരിശോധിക്കുക.</div>
+  
+  <audio id="audioPlayer" crossOrigin="anonymous" controls style="width: 100%; margin-top: 5px; height: 35px;"></audio>
+</div>
+
+<script>
+  const audioInput = document.getElementById('audioInput');
+  const lyricsInput = document.getElementById('lyricsInput');
+  const speedSlider = document.getElementById('speedSlider');
+  const speedValue = document.getElementById('speedValue');
+  const btnSlow = document.getElementById('btnSlow');
+  const btnFast = document.getElementById('btnFast');
+  const pauseScrollBtn = document.getElementById('pauseScrollBtn');
+  const canvas = document.getElementById('videoCanvas');
+  const ctx = canvas.getContext('2d');
+  const recordBtn = document.getElementById('recordBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const audioPlayer = document.getElementById('audioPlayer');
+  const recordingStatus = document.getElementById('recordingStatus');
+  const saveStatus = document.getElementById('saveStatus');
+
+  let mediaRecorder;
+  let recordedChunks = [];
+  let audioCtx, source, dest;
+  let lines = [];
+  
+  let scrollSpeed = parseInt(speedSlider.value);
+  let manualOffset = 0; 
+  let autoScrollY = 0; 
+  let lastTime = performance.now();
+  
+  let isDragging = false;
+  let startY = 0;
+  let initialOffset = 0;
+  let isScrollPaused = false;
+
+  function updateSpeed(val) {
+    scrollSpeed = Math.max(0, Math.min(150, val));
+    speedSlider.value = scrollSpeed;
+    speedValue.textContent = scrollSpeed;
+  }
+  
+  speedSlider.addEventListener('input', (e) => updateSpeed(parseInt(e.target.value)));
+  btnSlow.addEventListener('click', () => updateSpeed(scrollSpeed - 2));
+  btnFast.addEventListener('click', () => updateSpeed(scrollSpeed + 2));
+
+  pauseScrollBtn.addEventListener('click', () => {
+    isScrollPaused = !isScrollPaused;
+    if (isScrollPaused) {
+      pauseScrollBtn.textContent = '▶ സ്ക്രോളിംഗ് തുടരുക (Resume)';
+      pauseScrollBtn.classList.add('paused');
+    } else {
+      pauseScrollBtn.textContent = '⏸ മ്യൂസിക് വരുമ്പോൾ സ്ക്രോൾ നിർത്തുക';
+      pauseScrollBtn.classList.remove('paused');
+    }
+  });
+
+  audioInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      audioPlayer.src = URL.createObjectURL(file);
+    }
+  });
+
+  function updateLines() {
+    ctx.font = "bold 55px 'Manjari', sans-serif"; 
+    const rawLines = lyricsInput.value.split('\n');
+    lines = [];
+    const maxWidth = canvas.width - 80; 
+    
+    rawLines.forEach(text => {
+      if (text.trim() === '') {
+        lines.push('');
+        return;
+      }
+      let words = text.split(' ');
+      let currentLine = words[0] || '';
+      for (let i = 1; i < words.length; i++) {
+        let word = words[i];
+        let width = ctx.measureText(currentLine + " " + word).width;
+        if (width < maxWidth) {
+          currentLine += " " + word;
+        } else {
+          lines.push(currentLine); 
+          currentLine = word; 
+        }
+      }
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+    });
+  }
+
+  lyricsInput.addEventListener('input', updateLines);
+
+  function getEventY(e) { return e.touches ? e.touches[0].clientY : e.clientY; }
+
+  function onDragStart(e) {
+    isDragging = true;
+    startY = getEventY(e);
+    initialOffset = manualOffset;
+    canvas.focus(); 
+  }
+
+  function onDragMove(e) {
+    if (!isDragging) return;
+    let dy = getEventY(e) - startY;
+    let scale = canvas.height / canvas.clientHeight; 
+    manualOffset = initialOffset + (dy * scale);
+  }
+
+  function onDragEnd() { isDragging = false; }
+
+  canvas.addEventListener('mousedown', onDragStart);
+  canvas.addEventListener('mousemove', onDragMove);
+  window.addEventListener('mouseup', onDragEnd);
+  canvas.addEventListener('mouseleave', () => { isDragging = false; });
+  
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    let scale = canvas.height / canvas.clientHeight;
+    manualOffset -= (e.deltaY * scale * 1.5);
+  }, { passive: false });
+
+  canvas.addEventListener('touchstart', onDragStart, { passive: true });
+  canvas.addEventListener('touchmove', onDragMove, { passive: true });
+  window.addEventListener('touchend', onDragEnd);
+  window.addEventListener('touchcancel', onDragEnd);
+
+  recordBtn.addEventListener('click', async () => {
+    if (!audioPlayer.src) {
+      alert("ആദ്യം ഒരു പാട്ട് അപ്‌ലോഡ് ചെയ്യുക!");
+      return;
+    }
+    
+    updateLines(); 
+    manualOffset = 0; 
+    autoScrollY = 0;
+    lastTime = performance.now();
+    isScrollPaused = false;
+    pauseScrollBtn.textContent = '⏸ മ്യൂസിക് വരുമ്പോൾ സ്ക്രോൾ നിർത്തുക';
+    pauseScrollBtn.classList.remove('paused');
+    canvas.focus(); 
+    
+    try {
+        await audioPlayer.play();
+    } catch (err) {
+        console.error("Audio play failed:", err);
+    }
+    
+    let audioTracks = [];
+    if (audioPlayer.captureStream || audioPlayer.mozCaptureStream) {
+        const aStream = audioPlayer.captureStream ? audioPlayer.captureStream() : audioPlayer.mozCaptureStream();
+        audioTracks = aStream.getAudioTracks();
+    }
+    
+    if (audioTracks.length === 0) {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          source = audioCtx.createMediaElementSource(audioPlayer);
+          dest = audioCtx.createMediaStreamDestination();
+          source.connect(dest);
+          source.connect(audioCtx.destination);
+        }
+        await audioCtx.resume();
+        audioTracks = dest.stream.getAudioTracks();
+    }
+    
+    audioPlayer.currentTime = 0; 
+    
+    const canvasStream = canvas.captureStream(30); 
+    const combinedStream = new MediaStream([
+      ...canvasStream.getVideoTracks(),
+      ...audioTracks
+    ]);
+    
+    let mimeType = 'video/webm;codecs=vp8,opus';
+    if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = MediaRecorder.isTypeSupported('video/mp4') ? 'video/mp4' : 'video/webm';
+    }
+    
+    mediaRecorder = new MediaRecorder(combinedStream, { mimeType: mimeType });
+    recordedChunks = [];
+    
+    mediaRecorder.ondataavailable = e => {
+      if (e.data.size > 0) recordedChunks.push(e.data);
+    };
+    
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(recordedChunks, { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Lyrics-Video-${Date.now()}.${mimeType.includes('mp4') ? 'mp4' : 'webm'}`;
+      a.click();
+      
+      recordBtn.style.display = 'block';
+      stopBtn.style.display = 'none';
+      recordingStatus.style.display = 'none';
+      saveStatus.style.display = 'block';
+      setTimeout(() => saveStatus.style.display = 'none', 4000);
+    };
+    
+    recordBtn.style.display = 'none';
+    stopBtn.style.display = 'block';
+    recordingStatus.style.display = 'block';
+    saveStatus.style.display = 'none';
+    
+    mediaRecorder.start();
+  });
+
+  stopBtn.addEventListener('click', () => {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      mediaRecorder.stop();
+      audioPlayer.pause();
+    }
+  });
+
+  audioPlayer.addEventListener('ended', () => {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      stopBtn.click();
+    }
+  });
+
+  function drawFrame() {
+    const now = performance.now();
+    const deltaTime = (now - lastTime) / 1000; 
+    lastTime = now;
+
+    if (!audioPlayer.paused && !isScrollPaused) {
+      autoScrollY += (scrollSpeed * deltaTime * 1.5); 
+    }
+
+    ctx.fillStyle = "#0A0F1C"; 
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    const startYPos = canvas.height * 0.7; 
+    const lineSpacing = 100; 
+    
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    
+    lines.forEach((line, index) => {
+      const lineY = startYPos + (index * lineSpacing) - autoScrollY + manualOffset;
+      
+      if (lineY < -100 || lineY > canvas.height + 100) return;
+      
+      const centerDist = Math.abs((canvas.height / 2) - lineY);
+      
+      // അറ്റത്തേക്ക് പോകുന്തോറും നേരിയ മങ്ങൽ (Fade effect) നൽകുന്നു
+      let opacity = Math.max(0.1, 1 - (centerDist / 800));
+      
+      // എല്ലാ വരികൾക്കും ഒരേ വലിപ്പത്തിലുള്ള ഫോണ്ട് (No Highlight)
+      ctx.font = "bold 55px 'Manjari', sans-serif";
+      ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`; 
+      
+      // എല്ലാ വരികൾക്കും മനോഹരമായ ഗ്ലോ ഇഫക്റ്റ്
+      ctx.shadowColor = `rgba(56, 189, 248, ${opacity * 0.8})`; // ഇളം നീല തിളക്കം
+      ctx.shadowBlur = 15;
+      
+      ctx.fillText(line, canvas.width / 2, lineY);
+      
+      // തിളക്കം റീസെറ്റ് ചെയ്യുന്നു
+      ctx.shadowBlur = 0;
+    });
+    
+    // മുകളിലും താഴെയും ഒതുങ്ങിനിൽക്കാൻ Fade Effect
+    let topFade = ctx.createLinearGradient(0, 0, 0, 250);
+    topFade.addColorStop(0, "#0A0F1C");
+    topFade.addColorStop(1, "transparent");
+    ctx.fillStyle = topFade;
+    ctx.fillRect(0, 0, canvas.width, 250);
+    
+    let bottomFade = ctx.createLinearGradient(0, canvas.height - 250, 0, canvas.height);
+    bottomFade.addColorStop(0, "transparent");
+    bottomFade.addColorStop(1, "#0A0F1C");
+    ctx.fillStyle = bottomFade;
+    ctx.fillRect(0, canvas.height - 250, canvas.width, 250);
+    
+    requestAnimationFrame(drawFrame);
+  }
+
+  drawFrame();
+</script>
+
+</body>
+</html>
