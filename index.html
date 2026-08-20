@@ -196,43 +196,59 @@
     }
   });
 
+  const topSection = document.querySelector('.top-section');
+  let songReady = false, lyricsReady = false;
+
+  function checkHideInputs() {
+    if (songReady && lyricsReady) {
+      topSection.style.transition = 'opacity 0.5s, max-height 0.5s';
+      topSection.style.opacity = '0';
+      topSection.style.maxHeight = '0';
+      topSection.style.overflow = 'hidden';
+      topSection.style.padding = '0';
+    }
+  }
+
   audioInput.addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
       audioPlayer.src = URL.createObjectURL(file);
+      songReady = true;
+      checkHideInputs();
     }
   });
 
+  lyricsInput.addEventListener('input', function() {
+    lyricsReady = this.value.trim().length > 0;
+    checkHideInputs();
+    updateLines();
+  });
+
+  // Canvas 720px wide displayed ~500px on screen → scale 1.44
+  // 16px on screen * 1.44 = ~23px canvas. Use 28px for bold clarity.
+  const FONT_SIZE = 28;
+  const FONT = "bold " + FONT_SIZE + "px 'Manjari', sans-serif";
+  const LINE_SPACING = Math.round(FONT_SIZE * 1.9);
+
   function updateLines() {
-    ctx.font = "bold 55px 'Manjari', sans-serif"; 
+    ctx.font = FONT;
     const rawLines = lyricsInput.value.split('\n');
     lines = [];
-    const maxWidth = canvas.width - 80; 
-    
+    const maxWidth = canvas.width - 60;
     rawLines.forEach(text => {
-      if (text.trim() === '') {
-        lines.push('');
-        return;
-      }
-      let words = text.split(' ');
-      let currentLine = words[0] || '';
+      if (text.trim() === '') { lines.push(''); return; }
+      const words = text.split(' ');
+      let cur = words[0] || '';
       for (let i = 1; i < words.length; i++) {
-        let word = words[i];
-        let width = ctx.measureText(currentLine + " " + word).width;
-        if (width < maxWidth) {
-          currentLine += " " + word;
-        } else {
-          lines.push(currentLine); 
-          currentLine = word; 
-        }
+        const test = cur + ' ' + words[i];
+        if (ctx.measureText(test).width < maxWidth) { cur = test; }
+        else { lines.push(cur); cur = words[i]; }
       }
-      if (currentLine) {
-        lines.push(currentLine);
-      }
+      if (cur) lines.push(cur);
     });
   }
 
-  lyricsInput.addEventListener('input', updateLines);
+
 
   function getEventY(e) { return e.touches ? e.touches[0].clientY : e.clientY; }
 
@@ -363,56 +379,139 @@
     }
   });
 
+  // ===== ANIMATED BACKGROUND PARTICLES =====
+  const PARTICLE_COUNT = 55;
+  const particles = Array.from({ length: PARTICLE_COUNT }, () => ({
+    x: Math.random() * 720,
+    y: Math.random() * 1280,
+    r: Math.random() * 2.2 + 0.4,
+    speed: Math.random() * 0.4 + 0.1,
+    opacity: Math.random() * 0.5 + 0.1,
+    drift: (Math.random() - 0.5) * 0.3
+  }));
+
+  // Color palette for gradient bg — cycles through 3 moods
+  const BG_PALETTES = [
+    ['#0d0221', '#1a0533', '#0a1045', '#041230'],  // deep violet-navy
+    ['#0f2027', '#203a43', '#2c5364', '#0d1b2a'],  // teal-dark
+    ['#1a0000', '#2d0a2e', '#0a001f', '#0d1a00'],  // maroon-purple
+  ];
+  let palIdx = 0, palT = 0;
+
+  function lerpColor(a, b, t) {
+    const ah = parseInt(a.slice(1), 16);
+    const bh = parseInt(b.slice(1), 16);
+    const ar = (ah >> 16) & 0xff, ag = (ah >> 8) & 0xff, ab = ah & 0xff;
+    const br = (bh >> 16) & 0xff, bg = (bh >> 8) & 0xff, bb = bh & 0xff;
+    const rr = Math.round(ar + (br - ar) * t);
+    const rg = Math.round(ag + (bg - ag) * t);
+    const rb = Math.round(ab + (bb - ab) * t);
+    return `rgb(${rr},${rg},${rb})`;
+  }
+
+  function drawAnimatedBg(t) {
+    const w = canvas.width, h = canvas.height;
+    // Slowly cycle palette
+    palT += 0.0008;
+    if (palT >= 1) { palT = 0; palIdx = (palIdx + 1) % BG_PALETTES.length; }
+    const nextIdx = (palIdx + 1) % BG_PALETTES.length;
+    const pal = BG_PALETTES[palIdx].map((c, i) => lerpColor(c, BG_PALETTES[nextIdx][i], palT));
+
+    // Main gradient
+    const grad = ctx.createLinearGradient(0, 0, w, h);
+    grad.addColorStop(0,    pal[0]);
+    grad.addColorStop(0.35, pal[1]);
+    grad.addColorStop(0.65, pal[2]);
+    grad.addColorStop(1,    pal[3]);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Animated radial glow blobs
+    const blobs = [
+      { cx: w * (0.5 + 0.35 * Math.sin(t * 0.0004)), cy: h * (0.3 + 0.15 * Math.cos(t * 0.0003)), r: 320, c: 'rgba(120,60,200,0.13)' },
+      { cx: w * (0.5 + 0.3  * Math.cos(t * 0.0005)), cy: h * (0.7 + 0.12 * Math.sin(t * 0.0004)), r: 280, c: 'rgba(30,180,220,0.10)' },
+      { cx: w * (0.5 - 0.2  * Math.sin(t * 0.0003)), cy: h * 0.5,                                   r: 350, c: 'rgba(255,80,120,0.07)' },
+    ];
+    blobs.forEach(b => {
+      const rg = ctx.createRadialGradient(b.cx, b.cy, 0, b.cx, b.cy, b.r);
+      rg.addColorStop(0, b.c);
+      rg.addColorStop(1, 'transparent');
+      ctx.fillStyle = rg;
+      ctx.fillRect(0, 0, w, h);
+    });
+
+    // Particles (floating stars)
+    particles.forEach(p => {
+      p.y -= p.speed;
+      p.x += p.drift;
+      if (p.y < -5) { p.y = h + 5; p.x = Math.random() * w; }
+      if (p.x < 0 || p.x > w) p.x = Math.random() * w;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${p.opacity})`;
+      ctx.fill();
+    });
+  }
+
   function drawFrame() {
     const now = performance.now();
-    const deltaTime = (now - lastTime) / 1000; 
+    const deltaTime = (now - lastTime) / 1000;
     lastTime = now;
 
     if (!audioPlayer.paused && !isScrollPaused) {
-      autoScrollY += (scrollSpeed * deltaTime * 1.5); 
+      autoScrollY += scrollSpeed * deltaTime * 1.5;
     }
 
-    ctx.fillStyle = "#0A0F1C"; 
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    const startYPos = canvas.height * 0.7; 
-    const lineSpacing = 100; 
-    
+    // Draw animated background
+    drawAnimatedBg(now);
+
+    const startYPos = canvas.height * 0.65;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    
+
     lines.forEach((line, index) => {
-      const lineY = startYPos + (index * lineSpacing) - autoScrollY + manualOffset;
-      
-      if (lineY < -100 || lineY > canvas.height + 100) return;
-      
-      const centerDist = Math.abs((canvas.height / 2) - lineY);
-      
-      let opacity = Math.max(0.1, 1 - (centerDist / 800));
-      
-      ctx.font = "bold 55px 'Manjari', sans-serif";
-      ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`; 
-      
-      ctx.shadowColor = `rgba(56, 189, 248, ${opacity * 0.8})`; 
-      ctx.shadowBlur = 15;
-      
+      const lineY = startYPos + index * LINE_SPACING - autoScrollY + manualOffset;
+      if (lineY < -60 || lineY > canvas.height + 60) return;
+
+      const centerDist = Math.abs(canvas.height / 2 - lineY);
+      const opacity = Math.max(0.08, 1 - centerDist / 700);
+      const isCenter = centerDist < LINE_SPACING * 1.2;
+
+      ctx.font = FONT;
+
+      if (isCenter) {
+        // Highlight line — golden glow
+        ctx.shadowColor = 'rgba(255,220,80,0.9)';
+        ctx.shadowBlur = 18;
+        ctx.fillStyle = `rgba(255,240,160,${opacity})`;
+      } else {
+        ctx.shadowColor = `rgba(100,180,255,${opacity * 0.6})`;
+        ctx.shadowBlur = 8;
+        ctx.fillStyle = `rgba(255,255,255,${opacity})`;
+      }
+
+      // Subtle text stroke for depth
+      ctx.strokeStyle = `rgba(0,0,0,${opacity * 0.5})`;
+      ctx.lineWidth = 2;
+      ctx.strokeText(line, canvas.width / 2, lineY);
       ctx.fillText(line, canvas.width / 2, lineY);
-      
       ctx.shadowBlur = 0;
     });
-    
-    let topFade = ctx.createLinearGradient(0, 0, 0, 250);
-    topFade.addColorStop(0, "#0A0F1C");
-    topFade.addColorStop(1, "transparent");
-    ctx.fillStyle = topFade;
-    ctx.fillRect(0, 0, canvas.width, 250);
-    
-    let bottomFade = ctx.createLinearGradient(0, canvas.height - 250, 0, canvas.height);
-    bottomFade.addColorStop(0, "transparent");
-    bottomFade.addColorStop(1, "#0A0F1C");
-    ctx.fillStyle = bottomFade;
-    ctx.fillRect(0, canvas.height - 250, canvas.width, 250);
-    
+
+    // Top & bottom fade masks
+    const fadeH = 200;
+    let tFade = ctx.createLinearGradient(0, 0, 0, fadeH);
+    tFade.addColorStop(0, 'rgba(0,0,0,0.95)');
+    tFade.addColorStop(1, 'transparent');
+    ctx.fillStyle = tFade;
+    ctx.fillRect(0, 0, canvas.width, fadeH);
+
+    let bFade = ctx.createLinearGradient(0, canvas.height - fadeH, 0, canvas.height);
+    bFade.addColorStop(0, 'transparent');
+    bFade.addColorStop(1, 'rgba(0,0,0,0.95)');
+    ctx.fillStyle = bFade;
+    ctx.fillRect(0, canvas.height - fadeH, canvas.width, fadeH);
+
     requestAnimationFrame(drawFrame);
   }
 
