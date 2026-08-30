@@ -390,6 +390,121 @@
     drift: (Math.random() - 0.5) * 0.3
   }));
 
+  // ===== FALLING FLOWER PETALS (red / yellow / white, drifting like wind) =====
+  const FLOWER_COLORS = ['#e63946', '#ffd60a', '#ffffff']; // red, yellow, white
+  const FLOWER_COUNT = 14;
+  const flowers = Array.from({ length: FLOWER_COUNT }, () => makeFlower());
+
+  function makeFlower(startAtTop) {
+    return {
+      x: Math.random() * 720,
+      y: startAtTop ? -Math.random() * 200 : Math.random() * 1280,
+      size: Math.random() * 6 + 7,
+      color: FLOWER_COLORS[Math.floor(Math.random() * FLOWER_COLORS.length)],
+      speedY: Math.random() * 0.5 + 0.35,
+      swayAmp: Math.random() * 18 + 8,
+      swayFreq: Math.random() * 0.0009 + 0.0004,
+      swayPhase: Math.random() * Math.PI * 2,
+      rot: Math.random() * Math.PI * 2,
+      rotSpeed: (Math.random() - 0.5) * 0.02,
+      opacity: Math.random() * 0.35 + 0.35
+    };
+  }
+
+  function drawFlowerShape(f) {
+    ctx.save();
+    ctx.translate(f.x, f.y);
+    ctx.rotate(f.rot);
+    ctx.globalAlpha = f.opacity;
+    // 5 petals
+    for (let i = 0; i < 5; i++) {
+      ctx.rotate((Math.PI * 2) / 5);
+      ctx.beginPath();
+      ctx.ellipse(0, -f.size * 0.6, f.size * 0.42, f.size * 0.62, 0, 0, Math.PI * 2);
+      ctx.fillStyle = f.color;
+      ctx.fill();
+    }
+    // center
+    ctx.beginPath();
+    ctx.arc(0, 0, f.size * 0.28, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffe066';
+    ctx.fill();
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
+  function updateAndDrawFlowers(t) {
+    flowers.forEach(f => {
+      f.y += f.speedY;
+      f.x += Math.sin(t * f.swayFreq + f.swayPhase) * 0.6;
+      f.rot += f.rotSpeed;
+      if (f.y > 1280 + 30) {
+        Object.assign(f, makeFlower(true));
+      }
+      drawFlowerShape(f);
+    });
+  }
+
+  // ===== SPECIAL NAME-DROP EVENT: "Aiswarya" letters fall one by one every 2 min =====
+  const NAME_LETTERS = ['A', 'i', 's', 'w', 'a', 'r', 'y', 'a'];
+  const NAME_LETTER_COLORS = ['#ffe066', '#ff6b9d', '#6bcbff', '#9dff6b', '#ff9d6b', '#c06bff', '#ffffff', '#ff4d6d'];
+  const NAME_DROP_INTERVAL = 120000; // 2 minutes
+  const NAME_LETTER_GAP = 700; // ms between each letter drop
+  let nameDropTimer = 0;
+  let activeLetters = []; // currently falling name letters
+  let firstDropDone = false;
+  const FIRST_DROP_DELAY = 10000; // show one 10s after load, so it's visible without waiting 2 min
+
+  function spawnLetterSequence() {
+    NAME_LETTERS.forEach((ch, i) => {
+      setTimeout(() => {
+        activeLetters.push({
+          ch,
+          color: NAME_LETTER_COLORS[i % NAME_LETTER_COLORS.length],
+          x: 120 + Math.random() * 480,
+          y: -40,
+          size: 34,
+          speedY: Math.random() * 0.15 + 0.12,
+          swayAmp: Math.random() * 30 + 25,
+          swayFreq: Math.random() * 0.0006 + 0.0004,
+          swayPhase: Math.random() * Math.PI * 2,
+          driftX: (Math.random() - 0.5) * 0.15,
+          rot: (Math.random() - 0.5) * 0.3,
+          rotSpeed: (Math.random() - 0.5) * 0.006,
+          opacity: 0
+        });
+      }, i * NAME_LETTER_GAP);
+    });
+  }
+
+  function updateAndDrawNameLetters(t, deltaTime) {
+    for (let i = activeLetters.length - 1; i >= 0; i--) {
+      const l = activeLetters[i];
+      l.y += l.speedY;
+      l.x += Math.sin(t * l.swayFreq + l.swayPhase) * 0.9 + l.driftX;
+      l.rot += l.rotSpeed;
+      l.opacity = Math.min(0.95, l.opacity + deltaTime * 0.8);
+      if (l.y > 1280 + 60) { activeLetters.splice(i, 1); continue; }
+
+      ctx.save();
+      ctx.translate(l.x, l.y);
+      ctx.rotate(l.rot);
+      ctx.globalAlpha = l.opacity;
+      ctx.font = "bold 40px 'Manjari', sans-serif";
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = l.color;
+      ctx.shadowBlur = 20;
+      ctx.fillStyle = l.color;
+      ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+      ctx.lineWidth = 2;
+      ctx.strokeText(l.ch, 0, 0);
+      ctx.fillText(l.ch, 0, 0);
+      ctx.restore();
+      ctx.globalAlpha = 1;
+    }
+  }
+
   // Color palette for gradient bg — cycles through 3 moods
   const BG_PALETTES = [
     ['#0d0221', '#1a0533', '#0a1045', '#041230'],  // deep violet-navy
@@ -464,6 +579,22 @@
 
     // Draw animated background
     drawAnimatedBg(now);
+
+    // Falling flower petals (red/yellow/white, drifting in wind)
+    updateAndDrawFlowers(now);
+
+    // Every 2 minutes, drop the letters of "Aiswarya" one by one
+    // (first one fires early at 10s so it's visible without waiting)
+    nameDropTimer += deltaTime * 1000;
+    if (!firstDropDone && nameDropTimer >= FIRST_DROP_DELAY) {
+      firstDropDone = true;
+      nameDropTimer = 0;
+      spawnLetterSequence();
+    } else if (firstDropDone && nameDropTimer >= NAME_DROP_INTERVAL) {
+      nameDropTimer = 0;
+      spawnLetterSequence();
+    }
+    updateAndDrawNameLetters(now, deltaTime);
 
     const startYPos = canvas.height * 0.65;
     ctx.textAlign = "center";
