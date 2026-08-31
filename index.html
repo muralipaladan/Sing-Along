@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Pro Lyrics Video Maker</title>
-<link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@400;600&family=Manjari:wght@400;700&family=Noto+Sans+Devanagari:wght@400;700&family=Noto+Sans+Tamil:wght@400;700&family=Noto+Sans+Arabic:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@400;600&family=Manjari:wght@400;700&family=Noto+Sans+Devanagari:wght@700&family=Noto+Sans+Tamil:wght@700&family=Noto+Sans+Arabic:wght@700&family=Poppins:wght@700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0F172A; --panel: #1E293B; --accent: #38BDF8; --text: #F8FAFC; --muted: #94A3B8;
@@ -92,7 +92,6 @@
 </head>
 <body>
 
-<!-- ===== TOP: File + Lyrics inputs ===== -->
 <div class="top-section">
   <h1>🎵 Lyrics Video Maker</h1>
 
@@ -107,10 +106,7 @@
   </div>
 </div>
 
-<!-- ===== STICKY CONTROL BAR ===== -->
 <div class="ctrl-bar">
-
-  <!-- Speed row -->
   <div class="speed-row">
     <span class="speed-label">സ്പീഡ്</span>
     <button class="ico-btn" id="btnSlow">−</button>
@@ -119,27 +115,22 @@
     <span class="speed-val" id="speedValue">40</span>
   </div>
 
-  <!-- Audio player row -->
   <div class="audio-row">
     <audio id="audioPlayer" crossOrigin="anonymous" controls></audio>
   </div>
 
-  <!-- Action buttons row -->
   <div class="action-row">
     <button id="pauseScrollBtn" class="btn-pause">⏸ സ്ക്രോൾ നിർത്തുക</button>
     <button id="recordBtn" class="btn-rec">🔴 Record</button>
     <button id="stopBtn" class="btn-stop">⏹ Stop</button>
   </div>
 
-  <!-- Status row -->
   <div class="status-row">
     <span id="recordingStatus" class="recording-indicator">● റെക്കോർഡ് ചെയ്യുന്നു...</span>
     <span id="saveStatus" class="status">✅ വീഡിയോ സേവ് ആയി! ഡൗൺലോഡ് നോക്കുക.</span>
   </div>
-
 </div>
 
-<!-- ===== CANVAS ===== -->
 <div class="canvas-wrapper">
   <canvas id="videoCanvas" width="720" height="1280" tabindex="0"></canvas>
 </div>
@@ -224,8 +215,6 @@
     updateLines();
   });
 
-  // Canvas 720px wide displayed ~500px on screen → scale 1.44
-  // 16px on screen * 1.44 = ~23px canvas. Use 28px for bold clarity.
   const FONT_SIZE = 30;
   const FONT = "bold " + FONT_SIZE + "px 'Manjari', sans-serif";
   const LINE_SPACING = Math.round(FONT_SIZE * 1.9);
@@ -247,8 +236,6 @@
       if (cur) lines.push(cur);
     });
   }
-
-
 
   function getEventY(e) { return e.touches ? e.touches[0].clientY : e.clientY; }
 
@@ -379,35 +366,74 @@
     }
   });
 
-  // ===== ANIMATED BACKGROUND PARTICLES =====
-  const PARTICLE_COUNT = 55;
-  const particles = Array.from({ length: PARTICLE_COUNT }, () => ({
+  // =========================================================================
+  // ⚙️ SEPARATE SPEED CONTROLLERS (വേഗങ്ങൾ ഇവിടെ പ്രത്യേകം മാറ്റാം)
+  // =========================================================================
+  const SNOW_SETTINGS = {
+    speedY_min: 0.12,    // മഞ്ഞ് താഴേക്ക് വീഴുന്ന കുറഞ്ഞ സ്പീഡ് (വളരെ കുറവ്)
+    speedY_max: 0.35,    // മഞ്ഞ് താഴേക്ക് വീഴുന്ന കൂടിയ സ്പീഡ്
+    driftX: 0.15         // വശങ്ങളിലേക്കുള്ള കാറ്റിന്റെ സ്പീഡ്
+  };
+
+  const FLOWER_SETTINGS = {
+    speedY_min: 0.20,    // പൂക്കൾ താഴേക്ക് വരുന്ന കുറഞ്ഞ സ്പീഡ്
+    speedY_max: 0.45,    // പൂക്കൾ താഴേക്ക് വരുന്ന കൂടിയ സ്പീഡ്
+    rotSpeed: 0.008,     // പൂക്കളുടെ കറങ്ങൽ വേഗത (വളരെ സ്മൂത്ത്)
+    swaySpeed: 0.35      // വശങ്ങളിലേക്ക് ആടുന്ന വേഗത
+  };
+
+  const NAME_SETTINGS = {
+    driftX: 0.12,        // അക്ഷരങ്ങളുടെ തിരശ്ചീന ചലന വേഗത
+    driftY: 0.08,        // അക്ഷരങ്ങൾ മുകളിലേക്കോ താഴേക്കോ പൊങ്ങുന്ന വേഗത
+    spawnInterval: 650   // പുതിയ അക്ഷരങ്ങൾ വരുന്ന ഇടവേള (മില്ലിസെക്കൻഡ്)
+  };
+
+  // ===== 1. SNOW PARTICLES (മഞ്ഞുകണങ്ങൾ - വേഗത കുറച്ചത്) =====
+  const SNOW_COUNT = 45;
+  const snowParticles = Array.from({ length: SNOW_COUNT }, () => ({
     x: Math.random() * 720,
     y: Math.random() * 1280,
-    r: Math.random() * 2.2 + 0.4,
-    speed: Math.random() * 0.4 + 0.1,
-    opacity: Math.random() * 0.5 + 0.1,
-    drift: (Math.random() - 0.5) * 0.3
+    r: Math.random() * 2.2 + 0.6,
+    speedY: Math.random() * (SNOW_SETTINGS.speedY_max - SNOW_SETTINGS.speedY_min) + SNOW_SETTINGS.speedY_min,
+    speedX: (Math.random() - 0.5) * SNOW_SETTINGS.driftX,
+    opacity: Math.random() * 0.6 + 0.3
   }));
 
-  // ===== FALLING FLOWER PETALS (red / yellow / white, drifting like wind) =====
-  const FLOWER_COLORS = ['#e63946', '#ffd60a', '#ffffff']; // red, yellow, white
+  function updateAndDrawSnow() {
+    snowParticles.forEach(p => {
+      p.y += p.speedY;
+      p.x += p.speedX;
+      if (p.y > 1280) { p.y = -5; p.x = Math.random() * 720; }
+      if (p.x < 0) p.x = 720;
+      if (p.x > 720) p.x = 0;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity})`;
+      ctx.shadowBlur = 5;
+      ctx.shadowColor = '#ffffff';
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    });
+  }
+
+  // ===== 2. RED, YELLOW, BLUE, GREEN FLOWERS (പൂക്കൾ - വേഗത കുറച്ചത്) =====
+  const FLOWER_COLORS = ['#EF4444', '#FBBF24', '#38BDF8', '#10B981']; 
   const FLOWER_COUNT = 14;
   const flowers = Array.from({ length: FLOWER_COUNT }, () => makeFlower());
 
   function makeFlower(startAtTop) {
     return {
       x: Math.random() * 720,
-      y: startAtTop ? -Math.random() * 200 : Math.random() * 1280,
+      y: startAtTop ? -30 - Math.random() * 200 : Math.random() * 1280,
       size: Math.random() * 6 + 7,
       color: FLOWER_COLORS[Math.floor(Math.random() * FLOWER_COLORS.length)],
-      speedY: Math.random() * 0.5 + 0.35,
+      speedY: Math.random() * (FLOWER_SETTINGS.speedY_max - FLOWER_SETTINGS.speedY_min) + FLOWER_SETTINGS.speedY_min,
       swayAmp: Math.random() * 18 + 8,
-      swayFreq: Math.random() * 0.0009 + 0.0004,
+      swayFreq: Math.random() * 0.0007 + 0.0003,
       swayPhase: Math.random() * Math.PI * 2,
       rot: Math.random() * Math.PI * 2,
-      rotSpeed: (Math.random() - 0.5) * 0.02,
-      opacity: Math.random() * 0.35 + 0.35
+      rotSpeed: (Math.random() - 0.5) * FLOWER_SETTINGS.rotSpeed,
+      opacity: Math.random() * 0.4 + 0.45
     };
   }
 
@@ -416,27 +442,28 @@
     ctx.translate(f.x, f.y);
     ctx.rotate(f.rot);
     ctx.globalAlpha = f.opacity;
-    // 5 petals
     for (let i = 0; i < 5; i++) {
       ctx.rotate((Math.PI * 2) / 5);
       ctx.beginPath();
       ctx.ellipse(0, -f.size * 0.6, f.size * 0.42, f.size * 0.62, 0, 0, Math.PI * 2);
       ctx.fillStyle = f.color;
+      ctx.shadowBlur = 7;
+      ctx.shadowColor = f.color;
       ctx.fill();
     }
-    // center
     ctx.beginPath();
-    ctx.arc(0, 0, f.size * 0.28, 0, Math.PI * 2);
-    ctx.fillStyle = '#ffe066';
+    ctx.arc(0, 0, f.size * 0.3, 0, Math.PI * 2);
+    ctx.fillStyle = '#FFFFFF';
     ctx.fill();
     ctx.restore();
     ctx.globalAlpha = 1;
+    ctx.shadowBlur = 0;
   }
 
   function updateAndDrawFlowers(t) {
     flowers.forEach(f => {
       f.y += f.speedY;
-      f.x += Math.sin(t * f.swayFreq + f.swayPhase) * 0.6;
+      f.x += Math.sin(t * f.swayFreq + f.swayPhase) * FLOWER_SETTINGS.swaySpeed;
       f.rot += f.rotSpeed;
       if (f.y > 1280 + 30) {
         Object.assign(f, makeFlower(true));
@@ -445,83 +472,90 @@
     });
   }
 
-  // ===== CONTINUOUS FIREFLY NAME GLOW: "Aiswarya" drifting like snow, in multiple scripts =====
-  // Each script's name split into its natural letter/cluster units so conjuncts stay intact.
-  const NAME_SCRIPTS = [
-    { chars: ['A', 'i', 's', 'w', 'a', 'r', 'y', 'a'], font: "'Manjari', sans-serif" },          // English
-    { chars: ['ഐ', 'ശ്വ', 'ര്യ'],                       font: "'Anek Malayalam', sans-serif" },   // Malayalam
-    { chars: ['ऐ', 'श्व', 'र्या'],                       font: "'Noto Sans Devanagari', sans-serif" }, // Hindi
-    { chars: ['ஐ', 'ஸ்வ', 'ர்யா'],                       font: "'Noto Sans Tamil', sans-serif" },      // Tamil
-    { chars: ['أ', 'ي', 'ش', 'و', 'ا', 'ر', 'ي', 'ا'],   font: "'Noto Sans Arabic', sans-serif" }      // Arabic
+  // ===== 3. SEPARATED GLOWING LETTERS (അക്ഷരങ്ങൾ - വേഗത കുറച്ച് സ്മൂത്താക്കിയത്) =====
+  const MULTI_LANG_CHARS = [
+    { ch: 'A', font: "'Poppins', sans-serif" },
+    { ch: 'i', font: "'Poppins', sans-serif" },
+    { ch: 's', font: "'Poppins', sans-serif" },
+    { ch: 'w', font: "'Poppins', sans-serif" },
+    { ch: 'a', font: "'Poppins', sans-serif" },
+    { ch: 'r', font: "'Poppins', sans-serif" },
+    { ch: 'y', font: "'Poppins', sans-serif" },
+    { ch: 'a', font: "'Poppins', sans-serif" },
+    { ch: 'أ', font: "'Noto Sans Arabic', sans-serif" },
+    { ch: 'ي', font: "'Noto Sans Arabic', sans-serif" },
+    { ch: 'ش', font: "'Noto Sans Arabic', sans-serif" },
+    { ch: 'و', font: "'Noto Sans Arabic', sans-serif" },
+    { ch: 'ا', font: "'Noto Sans Arabic', sans-serif" },
+    { ch: 'ر', font: "'Noto Sans Arabic', sans-serif" },
+    { ch: 'ي', font: "'Noto Sans Arabic', sans-serif" },
+    { ch: 'ا', font: "'Noto Sans Arabic', sans-serif" },
+    { ch: 'ஐ', font: "'Noto Sans Tamil', sans-serif" },
+    { ch: 'ஸ்', font: "'Noto Sans Tamil', sans-serif" },
+    { ch: 'வ', font: "'Noto Sans Tamil', sans-serif" },
+    { ch: 'ർ', font: "'Noto Sans Tamil', sans-serif" },
+    { ch: 'யா', font: "'Noto Sans Tamil', sans-serif" },
+    { ch: 'ऐ', font: "'Noto Sans Devanagari', sans-serif" },
+    { ch: 'श्व', font: "'Noto Sans Devanagari', sans-serif" },
+    { ch: 'र्या', font: "'Noto Sans Devanagari', sans-serif" }
   ];
-  const NAME_LETTER_COLORS = ['#ffe066', '#ff6b9d', '#6bcbff', '#9dff6b', '#ff9d6b', '#c06bff', '#ffffff', '#ff4d6d', '#7dffb3', '#ffb37d'];
 
-  // Flatten into one continuous master sequence so every script gets its turn, on repeat, forever.
-  const NAME_MASTER_SEQUENCE = [];
-  NAME_SCRIPTS.forEach(s => s.chars.forEach(ch => NAME_MASTER_SEQUENCE.push({ ch, font: s.font })));
+  const GLOW_COLORS = ['#38BDF8', '#F472B6', '#FBBF24', '#34D399', '#A78BFA', '#FB7185', '#2DD4BF', '#FFFFFF'];
+  let charSpawnTimer = 0;
+  const activeFloatingLetters = [];
 
-  const NAME_LETTER_GAP = 500; // ms between each new glowing letter joining the float
-  let nameSeqIndex = 0;
-  let nameSpawnTimer = 0;
-  let activeLetters = []; // currently glowing/drifting name letters
-
-  function spawnNextNameLetter() {
-    const item = NAME_MASTER_SEQUENCE[nameSeqIndex % NAME_MASTER_SEQUENCE.length];
-    nameSeqIndex++;
-    activeLetters.push({
+  function spawnFloatingLetter() {
+    const item = MULTI_LANG_CHARS[Math.floor(Math.random() * MULTI_LANG_CHARS.length)];
+    activeFloatingLetters.push({
       ch: item.ch,
       font: item.font,
-      color: NAME_LETTER_COLORS[Math.floor(Math.random() * NAME_LETTER_COLORS.length)],
+      color: GLOW_COLORS[Math.floor(Math.random() * GLOW_COLORS.length)],
       x: 60 + Math.random() * 600,
-      y: 100 + Math.random() * 900,            // start already floating somewhere in the frame
-      baseY: 0,                                 // set on first frame below
-      driftX: (Math.random() - 0.5) * 0.25,     // very slow overall horizontal drift (wind)
-      swayFreq: Math.random() * 0.0009 + 0.0004,
+      y: 100 + Math.random() * 1050,
+      baseY: 0,
+      driftX: (Math.random() - 0.5) * NAME_SETTINGS.driftX,
+      driftY: (Math.random() - 0.5) * NAME_SETTINGS.driftY,
+      swayFreq: Math.random() * 0.0010 + 0.0004,
       swayPhase: Math.random() * Math.PI * 2,
-      swayAmp: 35 + Math.random() * 45,         // wide, airy side-to-side swirl
-      bobFreq: Math.random() * 0.0011 + 0.0006,
-      bobPhase: Math.random() * Math.PI * 2,
-      bobAmp: 20 + Math.random() * 25,          // gentle up-down float, not a straight fall
-      fallSpeed: 0.08 + Math.random() * 0.1,    // barely drifts downward — mostly hovering
+      swayAmp: 25 + Math.random() * 25,
+      pulseFreq: Math.random() * 0.0018 + 0.0009,
       pulsePhase: Math.random() * Math.PI * 2,
-      pulseFreq: Math.random() * 0.0018 + 0.0012,
       age: 0,
-      life: 16000 + Math.random() * 8000,       // long, slow float ~16-24s
-      opacity: 0,
+      life: 14000 + Math.random() * 6000,
+      fontSize: Math.floor(Math.random() * 8) + 30,
       inited: false
     });
   }
 
-  function updateAndDrawNameLetters(t, deltaTime) {
-    for (let i = activeLetters.length - 1; i >= 0; i--) {
-      const l = activeLetters[i];
+  function updateAndDrawLetters(t, deltaTime) {
+    for (let i = activeFloatingLetters.length - 1; i >= 0; i--) {
+      const l = activeFloatingLetters[i];
       l.age += deltaTime * 1000;
 
       if (!l.inited) { l.baseY = l.y; l.inited = true; }
 
-      // Floating like snow + firefly combined: slow downward drift, wide horizontal swirl,
-      // gentle vertical bob — so it feels like it's hovering in the air, not just falling.
-      l.baseY += l.fallSpeed;
-      l.x += l.driftX + Math.sin(t * l.swayFreq + l.swayPhase) * (l.swayAmp * 0.01);
-      const bobRamp = Math.min(1, l.age / 3000);
-      const y = l.baseY + Math.sin(t * l.bobFreq + l.bobPhase) * l.bobAmp * bobRamp;
+      l.baseY += l.driftY;
+      l.x += l.driftX + Math.sin(t * l.swayFreq + l.swayPhase) * (l.swayAmp * 0.008);
+      const y = l.baseY + Math.cos(t * l.swayFreq * 0.6 + l.swayPhase) * 8;
 
-      // Fade in, hold, fade out over its lifetime, with a soft firefly pulse
-      const fadeIn = Math.min(1, l.age / 1500);
+      const fadeIn = Math.min(1, l.age / 1400);
       const fadeOut = Math.min(1, Math.max(0, (l.life - l.age) / 2000));
-      const pulse = 0.65 + 0.35 * Math.sin(t * l.pulseFreq + l.pulsePhase);
-      l.opacity = fadeIn * fadeOut * pulse;
+      const pulse = 0.7 + 0.3 * Math.sin(t * l.pulseFreq + l.pulsePhase);
+      const opacity = fadeIn * fadeOut * pulse * 0.75;
 
-      if (l.age >= l.life || l.baseY > canvas.height + 100) { activeLetters.splice(i, 1); continue; }
+      if (l.age >= l.life) {
+        activeFloatingLetters.splice(i, 1);
+        continue;
+      }
 
       ctx.save();
       ctx.translate(l.x, y);
-      ctx.globalAlpha = l.opacity;
-      ctx.font = `bold 36px ${l.font}`;
+      ctx.globalAlpha = opacity;
+      ctx.font = `bold ${l.fontSize}px ${l.font}`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.shadowColor = l.color;
-      ctx.shadowBlur = 30 * pulse;
+      ctx.shadowBlur = 22 * pulse;
       ctx.fillStyle = l.color;
       ctx.fillText(l.ch, 0, 0);
       ctx.restore();
@@ -529,11 +563,12 @@
     }
   }
 
-  // Color palette for gradient bg — cycles through 3 moods
+  // ===== 4. DYNAMIC GLOWING & DARK BACKGROUND =====
   const BG_PALETTES = [
-    ['#0d0221', '#1a0533', '#0a1045', '#041230'],  // deep violet-navy
-    ['#0f2027', '#203a43', '#2c5364', '#0d1b2a'],  // teal-dark
-    ['#1a0000', '#2d0a2e', '#0a001f', '#0d1a00'],  // maroon-purple
+    ['#070a14', '#0d1b2a', '#1b263b', '#030712'],
+    ['#150524', '#2d0a4e', '#4c1d95', '#090214'],
+    ['#021c1e', '#00363a', '#006064', '#011014'],
+    ['#1c040f', '#3b0724', '#701a40', '#0f0208']
   ];
   let palIdx = 0, palT = 0;
 
@@ -550,13 +585,11 @@
 
   function drawAnimatedBg(t) {
     const w = canvas.width, h = canvas.height;
-    // Slowly cycle palette
-    palT += 0.0008;
+    palT += 0.0004; // വളരെ പതുക്കെയുള്ള ബാക്ക്ഗ്രൗണ്ട് കളർ മാറ്റം
     if (palT >= 1) { palT = 0; palIdx = (palIdx + 1) % BG_PALETTES.length; }
     const nextIdx = (palIdx + 1) % BG_PALETTES.length;
     const pal = BG_PALETTES[palIdx].map((c, i) => lerpColor(c, BG_PALETTES[nextIdx][i], palT));
 
-    // Main gradient
     const grad = ctx.createLinearGradient(0, 0, w, h);
     grad.addColorStop(0,    pal[0]);
     grad.addColorStop(0.35, pal[1]);
@@ -565,30 +598,17 @@
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
 
-    // Animated radial glow blobs
-    const blobs = [
-      { cx: w * (0.5 + 0.35 * Math.sin(t * 0.0004)), cy: h * (0.3 + 0.15 * Math.cos(t * 0.0003)), r: 320, c: 'rgba(120,60,200,0.13)' },
-      { cx: w * (0.5 + 0.3  * Math.cos(t * 0.0005)), cy: h * (0.7 + 0.12 * Math.sin(t * 0.0004)), r: 280, c: 'rgba(30,180,220,0.10)' },
-      { cx: w * (0.5 - 0.2  * Math.sin(t * 0.0003)), cy: h * 0.5,                                   r: 350, c: 'rgba(255,80,120,0.07)' },
+    const flares = [
+      { cx: w * (0.5 + 0.35 * Math.sin(t * 0.0003)), cy: h * (0.3 + 0.15 * Math.cos(t * 0.0002)), r: 350, c: 'rgba(56,189,248,0.12)' },
+      { cx: w * (0.5 + 0.3  * Math.cos(t * 0.0004)), cy: h * (0.7 + 0.12 * Math.sin(t * 0.0003)), r: 300, c: 'rgba(244,114,182,0.10)' },
+      { cx: w * (0.5 - 0.2  * Math.sin(t * 0.0002)), cy: h * 0.5,                                   r: 380, c: 'rgba(52,211,153,0.08)' },
     ];
-    blobs.forEach(b => {
+    flares.forEach(b => {
       const rg = ctx.createRadialGradient(b.cx, b.cy, 0, b.cx, b.cy, b.r);
       rg.addColorStop(0, b.c);
       rg.addColorStop(1, 'transparent');
       ctx.fillStyle = rg;
       ctx.fillRect(0, 0, w, h);
-    });
-
-    // Particles (floating stars)
-    particles.forEach(p => {
-      p.y -= p.speed;
-      p.x += p.drift;
-      if (p.y < -5) { p.y = h + 5; p.x = Math.random() * w; }
-      if (p.x < 0 || p.x > w) p.x = Math.random() * w;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,${p.opacity})`;
-      ctx.fill();
     });
   }
 
@@ -601,21 +621,18 @@
       autoScrollY += scrollSpeed * deltaTime * 1.5;
     }
 
-    // Draw animated background
     drawAnimatedBg(now);
-
-    // Falling flower petals (red/yellow/white, drifting in wind)
+    updateAndDrawSnow();
     updateAndDrawFlowers(now);
 
-    // Continuously glow "Aiswarya" letters across all scripts, one new one joining every ~650ms,
-    // drifting down slowly like snow — never stops, cycles through every language on repeat.
-    nameSpawnTimer += deltaTime * 1000;
-    if (nameSpawnTimer >= NAME_LETTER_GAP) {
-      nameSpawnTimer = 0;
-      spawnNextNameLetter();
+    charSpawnTimer += deltaTime * 1000;
+    if (charSpawnTimer >= NAME_SETTINGS.spawnInterval) {
+      charSpawnTimer = 0;
+      spawnFloatingLetter();
     }
-    updateAndDrawNameLetters(now, deltaTime);
+    updateAndDrawLetters(now, deltaTime);
 
+    // Lyrics Rendering
     const startYPos = canvas.height * 0.65;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -628,21 +645,17 @@
       const opacity = Math.max(0.08, 1 - centerDist / 700);
 
       ctx.font = FONT;
-
-      // No highlight — every line rendered the same way, scroll only
-      ctx.shadowColor = `rgba(100,180,255,${opacity * 0.6})`;
-      ctx.shadowBlur = 8;
+      ctx.shadowColor = `rgba(56,189,248,${opacity * 0.7})`;
+      ctx.shadowBlur = 10;
       ctx.fillStyle = `rgba(255,255,255,${opacity})`;
 
-      // Subtle text stroke for depth
-      ctx.strokeStyle = `rgba(0,0,0,${opacity * 0.5})`;
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = `rgba(0,0,0,${opacity * 0.6})`;
+      ctx.lineWidth = 2.5;
       ctx.strokeText(line, canvas.width / 2, lineY);
       ctx.fillText(line, canvas.width / 2, lineY);
       ctx.shadowBlur = 0;
     });
 
-    // Top & bottom fade masks
     const fadeH = 200;
     let tFade = ctx.createLinearGradient(0, 0, 0, fadeH);
     tFade.addColorStop(0, 'rgba(0,0,0,0.95)');
