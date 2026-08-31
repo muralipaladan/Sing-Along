@@ -10,7 +10,7 @@
     --bg: #0F172A; --panel: #1E293B; --accent: #38BDF8; --text: #F8FAFC; --muted: #94A3B8;
   }
   * { box-sizing: border-box; }
-  body, html { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Anek Malayalam', sans-serif; height: 100%; }
+  body, html { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Anek Malayalam', sans-serif; min-height: 100%; }
 
   /* ===== TOP SECTION: inputs ===== */
   .top-section { max-width: 500px; margin: 0 auto; padding: 10px 12px 0; display: flex; flex-direction: column; gap: 8px; }
@@ -19,7 +19,7 @@
   .input-group { display: flex; flex-direction: column; gap: 4px; }
   label { font-size: 12px; color: var(--muted); }
 
-  input[type="file"], textarea {
+  input[type="file"], input[type="text"], select, textarea {
     width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
     background: var(--panel); color: var(--text); font-family: inherit; font-size: 13px;
   }
@@ -35,10 +35,7 @@
     max-width: 500px; margin: 0 auto;
   }
 
-  /* Row 1: speed */
-  .speed-row {
-    display: flex; align-items: center; gap: 6px;
-  }
+  .speed-row { display: flex; align-items: center; gap: 6px; }
   .speed-label { font-size: 11px; color: var(--muted); white-space: nowrap; }
   .speed-val { color: var(--accent); font-weight: bold; font-size: 13px; background: #000; padding: 1px 6px; border-radius: 4px; min-width: 32px; text-align: center; }
   .ico-btn {
@@ -49,13 +46,9 @@
   .ico-btn:active { background: rgba(255,255,255,0.15); }
   input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--accent); height: 18px; }
 
-  /* Row 2: action buttons */
-  .action-row {
-    display: flex; align-items: center; gap: 6px;
-  }
+  .action-row { display: flex; align-items: center; gap: 6px; }
   .btn-pause {
-    flex: 1;
-    background: #374151; color: white; font-weight: 600; border: none; padding: 6px 8px;
+    flex: 1; background: #374151; color: white; font-weight: 600; border: none; padding: 6px 8px;
     border-radius: 7px; font-size: 12px; cursor: pointer; transition: 0.2s; white-space: nowrap;
   }
   .btn-pause.paused { background: #F59E0B; color: #000; }
@@ -70,12 +63,8 @@
     border-radius: 7px; font-size: 13px; cursor: pointer; white-space: nowrap; flex-shrink: 0; display: none;
   }
 
-  /* Row 3: audio player */
-  .audio-row audio {
-    width: 100%; height: 32px;
-  }
+  .audio-row audio { width: 100%; height: 32px; }
 
-  /* status */
   .status-row { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 16px; }
   .recording-indicator { color: #EF4444; font-weight: bold; font-size: 12px; display: none; animation: blink 1s infinite; }
   .status { font-size: 12px; color: #10B981; display: none; }
@@ -88,6 +77,18 @@
   }
   canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; outline: none; }
   canvas:active { cursor: grabbing; }
+
+  /* ===== BOTTOM SPECIAL ANIMATION CONTROL WINDOW ===== */
+  .custom-anim-panel {
+    max-width: 500px; margin: 15px auto 40px; padding: 14px;
+    background: #1E293B; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.25);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 10px;
+  }
+  .panel-title {
+    font-size: 14px; font-weight: 700; color: var(--accent); margin: 0;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 </style>
 </head>
 <body>
@@ -135,6 +136,38 @@
   <canvas id="videoCanvas" width="720" height="1280" tabindex="0"></canvas>
 </div>
 
+<!-- ===== SPECIAL ANIMATION CONTROLS (CUSTOM ELEMENTS) ===== -->
+<div class="custom-anim-panel">
+  <h2 class="panel-title">✨ Special Animation Elements</h2>
+
+  <div class="grid-2">
+    <div class="input-group">
+      <label>1. Emojis (സ്പേസ് ഇട്ട് നൽകാം)</label>
+      <input type="text" id="customEmojisInput" value="✨ 💖 🌸 🦋 💫">
+    </div>
+    <div class="input-group">
+      <label>2. Custom Name / Letters</label>
+      <input type="text" id="customNameInput" placeholder="Aiswarya / പേരുകൾ...">
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="input-group">
+      <label>3. Flower Theme</label>
+      <select id="flowerThemeSelect">
+        <option value="multi">Mix (Red, Yellow, Blue, Green)</option>
+        <option value="rose">Red & Pink Roses</option>
+        <option value="golden">Golden Sparkle</option>
+        <option value="sakura">Sakura Pink</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <label>4. Photo Float (PNG / JPG)</label>
+      <input type="file" id="photoInput" accept="image/*">
+    </div>
+  </div>
+</div>
+
 <script>
   const audioInput = document.getElementById('audioInput');
   const lyricsInput = document.getElementById('lyricsInput');
@@ -150,6 +183,12 @@
   const audioPlayer = document.getElementById('audioPlayer');
   const recordingStatus = document.getElementById('recordingStatus');
   const saveStatus = document.getElementById('saveStatus');
+
+  // Custom Controls Elements
+  const customEmojisInput = document.getElementById('customEmojisInput');
+  const customNameInput = document.getElementById('customNameInput');
+  const flowerThemeSelect = document.getElementById('flowerThemeSelect');
+  const photoInput = document.getElementById('photoInput');
 
   let mediaRecorder;
   let recordedChunks = [];
@@ -367,28 +406,13 @@
   });
 
   // =========================================================================
-  // ⚙️ SEPARATE SPEED CONTROLLERS (വേഗങ്ങൾ ഇവിടെ പ്രത്യേകം മാറ്റാം)
+  // ⚙️ ANIMATION SPEED & ELEMENT CONTROLS
   // =========================================================================
-  const SNOW_SETTINGS = {
-    speedY_min: 0.12,    // മഞ്ഞ് താഴേക്ക് വീഴുന്ന കുറഞ്ഞ സ്പീഡ് (വളരെ കുറവ്)
-    speedY_max: 0.35,    // മഞ്ഞ് താഴേക്ക് വീഴുന്ന കൂടിയ സ്പീഡ്
-    driftX: 0.15         // വശങ്ങളിലേക്കുള്ള കാറ്റിന്റെ സ്പീഡ്
-  };
+  const SNOW_SETTINGS = { speedY_min: 0.12, speedY_max: 0.35, driftX: 0.15 };
+  const FLOWER_SETTINGS = { speedY_min: 0.20, speedY_max: 0.45, rotSpeed: 0.008, swaySpeed: 0.35 };
+  const NAME_SETTINGS = { driftX: 0.12, driftY: 0.08, spawnInterval: 650 };
 
-  const FLOWER_SETTINGS = {
-    speedY_min: 0.20,    // പൂക്കൾ താഴേക്ക് വരുന്ന കുറഞ്ഞ സ്പീഡ്
-    speedY_max: 0.45,    // പൂക്കൾ താഴേക്ക് വരുന്ന കൂടിയ സ്പീഡ്
-    rotSpeed: 0.008,     // പൂക്കളുടെ കറങ്ങൽ വേഗത (വളരെ സ്മൂത്ത്)
-    swaySpeed: 0.35      // വശങ്ങളിലേക്ക് ആടുന്ന വേഗത
-  };
-
-  const NAME_SETTINGS = {
-    driftX: 0.12,        // അക്ഷരങ്ങളുടെ തിരശ്ചീന ചലന വേഗത
-    driftY: 0.08,        // അക്ഷരങ്ങൾ മുകളിലേക്കോ താഴേക്കോ പൊങ്ങുന്ന വേഗത
-    spawnInterval: 650   // പുതിയ അക്ഷരങ്ങൾ വരുന്ന ഇടവേള (മില്ലിസെക്കൻഡ്)
-  };
-
-  // ===== 1. SNOW PARTICLES (മഞ്ഞുകണങ്ങൾ - വേഗത കുറച്ചത്) =====
+  // ===== 1. SNOW PARTICLES =====
   const SNOW_COUNT = 45;
   const snowParticles = Array.from({ length: SNOW_COUNT }, () => ({
     x: Math.random() * 720,
@@ -416,17 +440,24 @@
     });
   }
 
-  // ===== 2. RED, YELLOW, BLUE, GREEN FLOWERS (പൂക്കൾ - വേഗത കുറച്ചത്) =====
-  const FLOWER_COLORS = ['#EF4444', '#FBBF24', '#38BDF8', '#10B981']; 
+  // ===== 2. FLOWERS THEMES =====
+  const THEME_PALETTES = {
+    multi: ['#EF4444', '#FBBF24', '#38BDF8', '#10B981'],
+    rose: ['#E11D48', '#FB7185', '#F43F5E', '#FDA4AF'],
+    golden: ['#F59E0B', '#FBBF24', '#FCD34D', '#FEF08A'],
+    sakura: ['#F472B6', '#FBCFE8', '#F9A8D4', '#FFFFFF']
+  };
+
   const FLOWER_COUNT = 14;
   const flowers = Array.from({ length: FLOWER_COUNT }, () => makeFlower());
 
   function makeFlower(startAtTop) {
+    const palette = THEME_PALETTES[flowerThemeSelect.value] || THEME_PALETTES.multi;
     return {
       x: Math.random() * 720,
       y: startAtTop ? -30 - Math.random() * 200 : Math.random() * 1280,
       size: Math.random() * 6 + 7,
-      color: FLOWER_COLORS[Math.floor(Math.random() * FLOWER_COLORS.length)],
+      color: palette[Math.floor(Math.random() * palette.length)],
       speedY: Math.random() * (FLOWER_SETTINGS.speedY_max - FLOWER_SETTINGS.speedY_min) + FLOWER_SETTINGS.speedY_min,
       swayAmp: Math.random() * 18 + 8,
       swayFreq: Math.random() * 0.0007 + 0.0003,
@@ -472,32 +503,19 @@
     });
   }
 
-  // ===== 3. SEPARATED GLOWING LETTERS (അക്ഷരങ്ങൾ - വേഗത കുറച്ച് സ്മൂത്താക്കിയത്) =====
-  const MULTI_LANG_CHARS = [
-    { ch: 'A', font: "'Poppins', sans-serif" },
-    { ch: 'i', font: "'Poppins', sans-serif" },
-    { ch: 's', font: "'Poppins', sans-serif" },
-    { ch: 'w', font: "'Poppins', sans-serif" },
-    { ch: 'a', font: "'Poppins', sans-serif" },
-    { ch: 'r', font: "'Poppins', sans-serif" },
-    { ch: 'y', font: "'Poppins', sans-serif" },
-    { ch: 'a', font: "'Poppins', sans-serif" },
-    { ch: 'أ', font: "'Noto Sans Arabic', sans-serif" },
-    { ch: 'ي', font: "'Noto Sans Arabic', sans-serif" },
-    { ch: 'ش', font: "'Noto Sans Arabic', sans-serif" },
-    { ch: 'و', font: "'Noto Sans Arabic', sans-serif" },
-    { ch: 'ا', font: "'Noto Sans Arabic', sans-serif" },
-    { ch: 'ر', font: "'Noto Sans Arabic', sans-serif" },
-    { ch: 'ي', font: "'Noto Sans Arabic', sans-serif" },
-    { ch: 'ا', font: "'Noto Sans Arabic', sans-serif" },
-    { ch: 'ஐ', font: "'Noto Sans Tamil', sans-serif" },
-    { ch: 'ஸ்', font: "'Noto Sans Tamil', sans-serif" },
-    { ch: 'வ', font: "'Noto Sans Tamil', sans-serif" },
-    { ch: 'ർ', font: "'Noto Sans Tamil', sans-serif" },
-    { ch: 'யா', font: "'Noto Sans Tamil', sans-serif" },
-    { ch: 'ऐ', font: "'Noto Sans Devanagari', sans-serif" },
-    { ch: 'श्व', font: "'Noto Sans Devanagari', sans-serif" },
-    { ch: 'र्या', font: "'Noto Sans Devanagari', sans-serif" }
+  // ===== 3. SEPARATED GLOWING LETTERS (CUSTOM NAME / AISWARYA) =====
+  const DEFAULT_CHARS = [
+    { ch: 'A', font: "'Poppins', sans-serif" }, { ch: 'i', font: "'Poppins', sans-serif" },
+    { ch: 's', font: "'Poppins', sans-serif" }, { ch: 'w', font: "'Poppins', sans-serif" },
+    { ch: 'a', font: "'Poppins', sans-serif" }, { ch: 'r', font: "'Poppins', sans-serif" },
+    { ch: 'y', font: "'Poppins', sans-serif" }, { ch: 'a', font: "'Poppins', sans-serif" },
+    { ch: 'أ', font: "'Noto Sans Arabic', sans-serif" }, { ch: 'ي', font: "'Noto Sans Arabic', sans-serif" },
+    { ch: 'ش', font: "'Noto Sans Arabic', sans-serif" }, { ch: 'و', font: "'Noto Sans Arabic', sans-serif" },
+    { ch: 'ا', font: "'Noto Sans Arabic', sans-serif" }, { ch: 'ر', font: "'Noto Sans Arabic', sans-serif" },
+    { ch: 'ஐ', font: "'Noto Sans Tamil', sans-serif" }, { ch: 'ஸ்', font: "'Noto Sans Tamil', sans-serif" },
+    { ch: 'வ', font: "'Noto Sans Tamil', sans-serif" }, { ch: 'ர்', font: "'Noto Sans Tamil', sans-serif" },
+    { ch: 'யா', font: "'Noto Sans Tamil', sans-serif" }, { ch: 'ऐ', font: "'Noto Sans Devanagari', sans-serif" },
+    { ch: 'श्व', font: "'Noto Sans Devanagari', sans-serif" }, { ch: 'र्या', font: "'Noto Sans Devanagari', sans-serif" }
   ];
 
   const GLOW_COLORS = ['#38BDF8', '#F472B6', '#FBBF24', '#34D399', '#A78BFA', '#FB7185', '#2DD4BF', '#FFFFFF'];
@@ -505,7 +523,14 @@
   const activeFloatingLetters = [];
 
   function spawnFloatingLetter() {
-    const item = MULTI_LANG_CHARS[Math.floor(Math.random() * MULTI_LANG_CHARS.length)];
+    let pool = DEFAULT_CHARS;
+    const customTxt = customNameInput.value.trim();
+    if (customTxt.length > 0) {
+      const splitChars = customTxt.replace(/\s+/g, '').split('');
+      pool = splitChars.map(c => ({ ch: c, font: "'Poppins', sans-serif" }));
+    }
+
+    const item = pool[Math.floor(Math.random() * pool.length)];
     activeFloatingLetters.push({
       ch: item.ch,
       font: item.font,
@@ -563,7 +588,109 @@
     }
   }
 
-  // ===== 4. DYNAMIC GLOWING & DARK BACKGROUND =====
+  // ===== 4. FLOATING EMOJIS & CUSTOM PHOTO =====
+  let emojiSpawnTimer = 0;
+  const activeEmojis = [];
+
+  function spawnEmoji() {
+    const rawVal = customEmojisInput.value.trim();
+    if (!rawVal) return;
+    const emojis = rawVal.split(/\s+/);
+    const em = emojis[Math.floor(Math.random() * emojis.length)];
+
+    activeEmojis.push({
+      emoji: em,
+      x: 50 + Math.random() * 620,
+      y: 100 + Math.random() * 1050,
+      baseY: 0,
+      driftX: (Math.random() - 0.5) * 0.15,
+      driftY: - (0.15 + Math.random() * 0.2), // gentle upwards float
+      swayFreq: Math.random() * 0.0012 + 0.0005,
+      swayPhase: Math.random() * Math.PI * 2,
+      swayAmp: 20 + Math.random() * 20,
+      age: 0,
+      life: 12000 + Math.random() * 5000,
+      size: Math.floor(Math.random() * 10) + 26,
+      inited: false
+    });
+  }
+
+  function updateAndDrawEmojis(t, deltaTime) {
+    for (let i = activeEmojis.length - 1; i >= 0; i--) {
+      const e = activeEmojis[i];
+      e.age += deltaTime * 1000;
+      if (!e.inited) { e.baseY = e.y; e.inited = true; }
+
+      e.baseY += e.driftY;
+      e.x += e.driftX + Math.sin(t * e.swayFreq + e.swayPhase) * (e.swayAmp * 0.01);
+      const y = e.baseY;
+
+      const fadeIn = Math.min(1, e.age / 1200);
+      const fadeOut = Math.min(1, Math.max(0, (e.life - e.age) / 1800));
+      const opacity = fadeIn * fadeOut * 0.85;
+
+      if (e.age >= e.life || y < -40) {
+        activeEmojis.splice(i, 1);
+        continue;
+      }
+
+      ctx.save();
+      ctx.translate(e.x, y);
+      ctx.globalAlpha = opacity;
+      ctx.font = `${e.size}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = '#FFD700';
+      ctx.fillText(e.emoji, 0, 0);
+      ctx.restore();
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // Floating Photo Object
+  let customPhotoImg = null;
+  let photoFloatX = 360, photoFloatY = 220;
+
+  photoInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      img.onload = () => { customPhotoImg = img; };
+    }
+  });
+
+  function drawFloatingPhoto(t) {
+    if (!customPhotoImg) return;
+    const px = photoFloatX + Math.sin(t * 0.0008) * 45;
+    const py = photoFloatY + Math.cos(t * 0.0006) * 35;
+    const size = 110;
+
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.beginPath();
+    ctx.arc(0, 0, size / 2, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+
+    ctx.drawImage(customPhotoImg, -size / 2, -size / 2, size, size);
+    ctx.restore();
+
+    // Glowing circle border
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.beginPath();
+    ctx.arc(0, 0, size / 2 + 2, 0, Math.PI * 2);
+    ctx.strokeStyle = '#38BDF8';
+    ctx.lineWidth = 3;
+    ctx.shadowColor = '#38BDF8';
+    ctx.shadowBlur = 18;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // ===== 5. DYNAMIC GLOWING BACKGROUND =====
   const BG_PALETTES = [
     ['#070a14', '#0d1b2a', '#1b263b', '#030712'],
     ['#150524', '#2d0a4e', '#4c1d95', '#090214'],
@@ -585,7 +712,7 @@
 
   function drawAnimatedBg(t) {
     const w = canvas.width, h = canvas.height;
-    palT += 0.0004; // വളരെ പതുക്കെയുള്ള ബാക്ക്ഗ്രൗണ്ട് കളർ മാറ്റം
+    palT += 0.0004;
     if (palT >= 1) { palT = 0; palIdx = (palIdx + 1) % BG_PALETTES.length; }
     const nextIdx = (palIdx + 1) % BG_PALETTES.length;
     const pal = BG_PALETTES[palIdx].map((c, i) => lerpColor(c, BG_PALETTES[nextIdx][i], palT));
@@ -625,12 +752,24 @@
     updateAndDrawSnow();
     updateAndDrawFlowers(now);
 
+    // Emojis Spawn
+    emojiSpawnTimer += deltaTime * 1000;
+    if (emojiSpawnTimer >= 1400) {
+      emojiSpawnTimer = 0;
+      spawnEmoji();
+    }
+    updateAndDrawEmojis(now, deltaTime);
+
+    // Single Glowing Letters Spawn
     charSpawnTimer += deltaTime * 1000;
     if (charSpawnTimer >= NAME_SETTINGS.spawnInterval) {
       charSpawnTimer = 0;
       spawnFloatingLetter();
     }
     updateAndDrawLetters(now, deltaTime);
+
+    // Custom Photo Float
+    drawFloatingPhoto(now);
 
     // Lyrics Rendering
     const startYPos = canvas.height * 0.65;
