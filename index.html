@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Pro Lyrics Video Maker</title>
-<link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@400;600&family=Manjari:wght@400;700&family=Noto+Sans+Devanagari:wght@700&family=Noto+Sans+Tamil:wght@700&family=Noto+Sans+Arabic:wght@700&family=Poppins:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@400;600&family=Manjari:wght@400;700&family=Noto+Sans+Devanagari:wght@600&family=Noto+Sans+Tamil:wght@600&family=Noto+Sans+Arabic:wght@600&family=Poppins:wght@600&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0F172A; --panel: #1E293B; --accent: #38BDF8; --text: #F8FAFC; --muted: #94A3B8;
@@ -78,7 +78,7 @@
   canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; outline: none; }
   canvas:active { cursor: grabbing; }
 
-  /* ===== BOTTOM SPECIAL ANIMATION CONTROL WINDOW ===== */
+  /* ===== SPECIAL ANIMATION CONTROL WINDOW ===== */
   .custom-anim-panel {
     max-width: 500px; margin: 15px auto 40px; padding: 14px;
     background: #1E293B; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.25);
@@ -136,7 +136,7 @@
   <canvas id="videoCanvas" width="720" height="1280" tabindex="0"></canvas>
 </div>
 
-<!-- ===== SPECIAL ANIMATION CONTROLS (CUSTOM ELEMENTS) ===== -->
+<!-- ===== SPECIAL ANIMATION CONTROLS ===== -->
 <div class="custom-anim-panel">
   <h2 class="panel-title">✨ Special Animation Elements</h2>
 
@@ -184,7 +184,6 @@
   const recordingStatus = document.getElementById('recordingStatus');
   const saveStatus = document.getElementById('saveStatus');
 
-  // Custom Controls Elements
   const customEmojisInput = document.getElementById('customEmojisInput');
   const customNameInput = document.getElementById('customNameInput');
   const flowerThemeSelect = document.getElementById('flowerThemeSelect');
@@ -254,7 +253,8 @@
     updateLines();
   });
 
-  const FONT_SIZE = 30;
+  // Medium Font Size for clean readability
+  const FONT_SIZE = 26;
   const FONT = "bold " + FONT_SIZE + "px 'Manjari', sans-serif";
   const LINE_SPACING = Math.round(FONT_SIZE * 1.9);
 
@@ -406,7 +406,7 @@
   });
 
   // =========================================================================
-  // ⚙️ ANIMATION SPEED & ELEMENT CONTROLS
+  // ⚙️ ANIMATION SPEED & ELEMENT SETTINGS
   // =========================================================================
   const SNOW_SETTINGS = { speedY_min: 0.12, speedY_max: 0.35, driftX: 0.15 };
   const FLOWER_SETTINGS = { speedY_min: 0.20, speedY_max: 0.45, rotSpeed: 0.008, swaySpeed: 0.35 };
@@ -503,7 +503,7 @@
     });
   }
 
-  // ===== 3. SEPARATED GLOWING LETTERS (CUSTOM NAME / AISWARYA) =====
+  // ===== 3. SEPARATED GLOWING LETTERS (MEDIUM SIZE) =====
   const DEFAULT_CHARS = [
     { ch: 'A', font: "'Poppins', sans-serif" }, { ch: 'i', font: "'Poppins', sans-serif" },
     { ch: 's', font: "'Poppins', sans-serif" }, { ch: 'w', font: "'Poppins', sans-serif" },
@@ -513,7 +513,7 @@
     { ch: 'ش', font: "'Noto Sans Arabic', sans-serif" }, { ch: 'و', font: "'Noto Sans Arabic', sans-serif" },
     { ch: 'ا', font: "'Noto Sans Arabic', sans-serif" }, { ch: 'ر', font: "'Noto Sans Arabic', sans-serif" },
     { ch: 'ஐ', font: "'Noto Sans Tamil', sans-serif" }, { ch: 'ஸ்', font: "'Noto Sans Tamil', sans-serif" },
-    { ch: 'வ', font: "'Noto Sans Tamil', sans-serif" }, { ch: 'ர்', font: "'Noto Sans Tamil', sans-serif" },
+    { ch: 'வ', font: "'Noto Sans Tamil', sans-serif" }, { ch: 'ർ', font: "'Noto Sans Tamil', sans-serif" },
     { ch: 'யா', font: "'Noto Sans Tamil', sans-serif" }, { ch: 'ऐ', font: "'Noto Sans Devanagari', sans-serif" },
     { ch: 'श्व', font: "'Noto Sans Devanagari', sans-serif" }, { ch: 'र्या', font: "'Noto Sans Devanagari', sans-serif" }
   ];
@@ -547,7 +547,7 @@
       pulsePhase: Math.random() * Math.PI * 2,
       age: 0,
       life: 14000 + Math.random() * 6000,
-      fontSize: Math.floor(Math.random() * 8) + 30,
+      fontSize: 24, // Medium font size
       inited: false
     });
   }
@@ -576,11 +576,11 @@
       ctx.save();
       ctx.translate(l.x, y);
       ctx.globalAlpha = opacity;
-      ctx.font = `bold ${l.fontSize}px ${l.font}`;
+      ctx.font = `600 ${l.fontSize}px ${l.font}`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.shadowColor = l.color;
-      ctx.shadowBlur = 22 * pulse;
+      ctx.shadowBlur = 18 * pulse;
       ctx.fillStyle = l.color;
       ctx.fillText(l.ch, 0, 0);
       ctx.restore();
@@ -588,7 +588,7 @@
     }
   }
 
-  // ===== 4. FLOATING EMOJIS & CUSTOM PHOTO =====
+  // ===== 4. FLOATING EMOJIS =====
   let emojiSpawnTimer = 0;
   const activeEmojis = [];
 
@@ -604,13 +604,13 @@
       y: 100 + Math.random() * 1050,
       baseY: 0,
       driftX: (Math.random() - 0.5) * 0.15,
-      driftY: - (0.15 + Math.random() * 0.2), // gentle upwards float
+      driftY: - (0.15 + Math.random() * 0.2),
       swayFreq: Math.random() * 0.0012 + 0.0005,
       swayPhase: Math.random() * Math.PI * 2,
       swayAmp: 20 + Math.random() * 20,
       age: 0,
       life: 12000 + Math.random() * 5000,
-      size: Math.floor(Math.random() * 10) + 26,
+      size: 24, // Medium size
       inited: false
     });
   }
@@ -627,7 +627,7 @@
 
       const fadeIn = Math.min(1, e.age / 1200);
       const fadeOut = Math.min(1, Math.max(0, (e.life - e.age) / 1800));
-      const opacity = fadeIn * fadeOut * 0.85;
+      const opacity = fadeIn * fadeOut * 0.8;
 
       if (e.age >= e.life || y < -40) {
         activeEmojis.splice(i, 1);
@@ -648,26 +648,39 @@
     }
   }
 
-  // Floating Photo Object
+  // ===== 5. FLOATING PHOTO (DOWNWARD DRIFT & 50% TRANSPARENCY) =====
   let customPhotoImg = null;
-  let photoFloatX = 360, photoFloatY = 220;
+  let photoY = -120;
+  let photoBaseX = 360;
 
   photoInput.addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
       const img = new Image();
       img.src = URL.createObjectURL(file);
-      img.onload = () => { customPhotoImg = img; };
+      img.onload = () => { 
+        customPhotoImg = img; 
+        photoY = -120;
+      };
     }
   });
 
-  function drawFloatingPhoto(t) {
+  function updateAndDrawFloatingPhoto(t, deltaTime) {
     if (!customPhotoImg) return;
-    const px = photoFloatX + Math.sin(t * 0.0008) * 45;
-    const py = photoFloatY + Math.cos(t * 0.0006) * 35;
+    
+    // Move photo downwards gently
+    photoY += 0.35;
+    if (photoY > 1280 + 120) {
+      photoY = -120; // Loop back from top
+    }
+
+    const px = photoBaseX + Math.sin(t * 0.0006) * 35;
+    const py = photoY;
     const size = 110;
 
+    // 50% Transparent Photo
     ctx.save();
+    ctx.globalAlpha = 0.50; // 50% transparency
     ctx.translate(px, py);
     ctx.beginPath();
     ctx.arc(0, 0, size / 2, 0, Math.PI * 2);
@@ -677,20 +690,22 @@
     ctx.drawImage(customPhotoImg, -size / 2, -size / 2, size, size);
     ctx.restore();
 
-    // Glowing circle border
+    // 50% Transparent Glowing Border
     ctx.save();
+    ctx.globalAlpha = 0.50; // 50% transparency
     ctx.translate(px, py);
     ctx.beginPath();
     ctx.arc(0, 0, size / 2 + 2, 0, Math.PI * 2);
     ctx.strokeStyle = '#38BDF8';
     ctx.lineWidth = 3;
     ctx.shadowColor = '#38BDF8';
-    ctx.shadowBlur = 18;
+    ctx.shadowBlur = 15;
     ctx.stroke();
     ctx.restore();
+    ctx.globalAlpha = 1;
   }
 
-  // ===== 5. DYNAMIC GLOWING BACKGROUND =====
+  // ===== 6. DYNAMIC GLOWING BACKGROUND =====
   const BG_PALETTES = [
     ['#070a14', '#0d1b2a', '#1b263b', '#030712'],
     ['#150524', '#2d0a4e', '#4c1d95', '#090214'],
@@ -760,7 +775,7 @@
     }
     updateAndDrawEmojis(now, deltaTime);
 
-    // Single Glowing Letters Spawn
+    // Single Glowing Letters Spawn (Medium size)
     charSpawnTimer += deltaTime * 1000;
     if (charSpawnTimer >= NAME_SETTINGS.spawnInterval) {
       charSpawnTimer = 0;
@@ -768,8 +783,8 @@
     }
     updateAndDrawLetters(now, deltaTime);
 
-    // Custom Photo Float
-    drawFloatingPhoto(now);
+    // Downward Floating Photo with 50% Transparency
+    updateAndDrawFloatingPhoto(now, deltaTime);
 
     // Lyrics Rendering
     const startYPos = canvas.height * 0.65;
