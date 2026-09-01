@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Pro Lyrics Video Maker</title>
-<link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@400;600&family=Manjari:wght@400;700&family=Noto+Sans+Devanagari:wght@600&family=Noto+Sans+Tamil:wght@600&family=Noto+Sans+Arabic:wght@600&family=Poppins:wght@600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@400;600&family=Manjari:wght@400;700&family=Noto+Sans+Devanagari:wght@600&family=Noto+Sans+Tamil:wght@600&family=Noto+Sans+Arabic:wght@600&family=Poppins:wght@600;800&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0F172A; --panel: #1E293B; --accent: #38BDF8; --text: #F8FAFC; --muted: #94A3B8;
@@ -12,20 +12,18 @@
   * { box-sizing: border-box; }
   body, html { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Anek Malayalam', sans-serif; min-height: 100%; }
 
-  /* ===== TOP SECTION: inputs ===== */
   .top-section { max-width: 500px; margin: 0 auto; padding: 10px 12px 0; display: flex; flex-direction: column; gap: 8px; }
   h1 { font-size: 18px; text-align: center; margin: 4px 0; color: var(--accent); }
 
   .input-group { display: flex; flex-direction: column; gap: 4px; }
   label { font-size: 12px; color: var(--muted); }
 
-  input[type="file"], input[type="text"], select, textarea {
+  input[type="file"], input[type="text"], select, textarea, input[type="number"] {
     width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
     background: var(--panel); color: var(--text); font-family: inherit; font-size: 13px;
   }
   textarea { height: 70px; resize: none; }
 
-  /* ===== STICKY CONTROL BAR ===== */
   .ctrl-bar {
     position: sticky; top: 0; z-index: 100;
     background: #111827;
@@ -70,7 +68,6 @@
   .status { font-size: 12px; color: #10B981; display: none; }
   @keyframes blink { 50% { opacity: 0.4; } }
 
-  /* ===== CANVAS ===== */
   .canvas-wrapper {
     width: 100%; max-width: 500px; margin: 0 auto;
     aspect-ratio: 9/16; background: #000; overflow: hidden;
@@ -78,7 +75,6 @@
   canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; outline: none; }
   canvas:active { cursor: grabbing; }
 
-  /* ===== SPECIAL ANIMATION CONTROL WINDOW ===== */
   .custom-anim-panel {
     max-width: 500px; margin: 15px auto 40px; padding: 14px;
     background: #1E293B; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.25);
@@ -97,7 +93,7 @@
   <h1>🎵 Lyrics Video Maker</h1>
 
   <div class="input-group">
-    <label>പാട്ട് (MP3, MP4, WebM, M4A, Opus)</label>
+    <label>പാട്ട് (Audio File)</label>
     <input type="file" id="audioInput" accept="audio/*,video/*,.mp3,.mp4,.webm,.m4a,.opus">
   </div>
 
@@ -109,7 +105,7 @@
 
 <div class="ctrl-bar">
   <div class="speed-row">
-    <span class="speed-label">സ്പീഡ്</span>
+    <span class="speed-label">ലിറിക്സ് സ്പീഡ്</span>
     <button class="ico-btn" id="btnSlow">−</button>
     <input type="range" id="speedSlider" min="0" max="150" value="40">
     <button class="ico-btn" id="btnFast">+</button>
@@ -128,7 +124,7 @@
 
   <div class="status-row">
     <span id="recordingStatus" class="recording-indicator">● റെക്കോർഡ് ചെയ്യുന്നു...</span>
-    <span id="saveStatus" class="status">✅ വീഡിയോ സേവ് ആയി! ഡൗൺലോഡ് നോക്കുക.</span>
+    <span id="saveStatus" class="status">✅ വീഡിയോ സേവ് ആയി!</span>
   </div>
 </div>
 
@@ -136,24 +132,42 @@
   <canvas id="videoCanvas" width="720" height="1280" tabindex="0"></canvas>
 </div>
 
-<!-- ===== SPECIAL ANIMATION CONTROLS ===== -->
 <div class="custom-anim-panel">
-  <h2 class="panel-title">✨ Special Animation Elements</h2>
+  <h2 class="panel-title">✨ സ്പെഷ്യൽ ഇഫക്റ്റ് & സൈസ് കൺട്രോളുകൾ</h2>
 
   <div class="grid-2">
     <div class="input-group">
-      <label>1. Emojis (സ്പേസ് ഇട്ട് നൽകാം)</label>
-      <input type="text" id="customEmojisInput" value="✨ 💖 🌸 🦋 💫">
+      <label>1. Lyrics Font Size (px)</label>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <input type="range" id="fontSizeSlider" min="16" max="60" value="26">
+        <span id="fontSizeDisplay" class="speed-val">26px</span>
+      </div>
     </div>
     <div class="input-group">
-      <label>2. Custom Name / Letters</label>
+      <label>2. ആനിമേഷൻ സ്പീഡ് (Multiplier)</label>
+      <input type="number" id="animSpeedFactor" min="0.2" max="3.0" step="0.1" value="1.0">
+    </div>
+  </div>
+
+  <div class="input-group">
+    <label>3. Birthday Wishes / Title Banner</label>
+    <input type="text" id="birthdayWishInput" placeholder="ഉദാ: Happy Birthday Dear Aiswarya 🎉">
+  </div>
+
+  <div class="grid-2">
+    <div class="input-group">
+      <label>4. Emojis (സ്പേസ് നൽകുക)</label>
+      <input type="text" id="customEmojisInput" value="✨ 💖 🌸 🦋 💫 🎂 🎈">
+    </div>
+    <div class="input-group">
+      <label>5. Custom Name / Letters</label>
       <input type="text" id="customNameInput" placeholder="Aiswarya / പേരുകൾ...">
     </div>
   </div>
 
   <div class="grid-2">
     <div class="input-group">
-      <label>3. Flower Theme</label>
+      <label>6. Flower Theme</label>
       <select id="flowerThemeSelect">
         <option value="multi">Mix (Red, Yellow, Blue, Green)</option>
         <option value="rose">Red & Pink Roses</option>
@@ -162,7 +176,7 @@
       </select>
     </div>
     <div class="input-group">
-      <label>4. Photo Float (PNG / JPG)</label>
+      <label>7. Floating Photos (Circle)</label>
       <input type="file" id="photoInput" accept="image/*">
     </div>
   </div>
@@ -188,6 +202,10 @@
   const customNameInput = document.getElementById('customNameInput');
   const flowerThemeSelect = document.getElementById('flowerThemeSelect');
   const photoInput = document.getElementById('photoInput');
+  const fontSizeSlider = document.getElementById('fontSizeSlider');
+  const fontSizeDisplay = document.getElementById('fontSizeDisplay');
+  const animSpeedFactor = document.getElementById('animSpeedFactor');
+  const birthdayWishInput = document.getElementById('birthdayWishInput');
 
   let mediaRecorder;
   let recordedChunks = [];
@@ -204,6 +222,19 @@
   let initialOffset = 0;
   let isScrollPaused = false;
 
+  // Font Size Settings
+  let currentFontSize = parseInt(fontSizeSlider.value);
+  let FONT = `bold ${currentFontSize}px 'Manjari', sans-serif`;
+  let LINE_SPACING = Math.round(currentFontSize * 1.9);
+
+  fontSizeSlider.addEventListener('input', (e) => {
+    currentFontSize = parseInt(e.target.value);
+    fontSizeDisplay.textContent = `${currentFontSize}px`;
+    FONT = `bold ${currentFontSize}px 'Manjari', sans-serif`;
+    LINE_SPACING = Math.round(currentFontSize * 1.9);
+    updateLines();
+  });
+
   function updateSpeed(val) {
     scrollSpeed = Math.max(0, Math.min(150, val));
     speedSlider.value = scrollSpeed;
@@ -217,10 +248,10 @@
   pauseScrollBtn.addEventListener('click', () => {
     isScrollPaused = !isScrollPaused;
     if (isScrollPaused) {
-      pauseScrollBtn.textContent = '▶ സ്ക്രോളിംഗ് തുടരുക (Resume)';
+      pauseScrollBtn.textContent = '▶ സ്ക്രോളിംഗ് തുടരുക';
       pauseScrollBtn.classList.add('paused');
     } else {
-      pauseScrollBtn.textContent = '⏸ മ്യൂസിക് വരുമ്പോൾ സ്ക്രോൾ നിർത്തുക';
+      pauseScrollBtn.textContent = '⏸ സ്ക്രോൾ നിർത്തുക';
       pauseScrollBtn.classList.remove('paused');
     }
   });
@@ -252,11 +283,6 @@
     checkHideInputs();
     updateLines();
   });
-
-  // Medium Font Size for clean readability
-  const FONT_SIZE = 26;
-  const FONT = "bold " + FONT_SIZE + "px 'Manjari', sans-serif";
-  const LINE_SPACING = Math.round(FONT_SIZE * 1.9);
 
   function updateLines() {
     ctx.font = FONT;
@@ -321,7 +347,7 @@
     autoScrollY = 0;
     lastTime = performance.now();
     isScrollPaused = false;
-    pauseScrollBtn.textContent = '⏸ മ്യൂസിക് വരുമ്പോൾ സ്ക്രോൾ നിർത്തുക';
+    pauseScrollBtn.textContent = '⏸ സ്ക്രോൾ നിർത്തുക';
     pauseScrollBtn.classList.remove('paused');
     canvas.focus(); 
     
@@ -405,42 +431,31 @@
     }
   });
 
-  // =========================================================================
-  // ⚙️ ANIMATION SPEED & ELEMENT SETTINGS
-  // =========================================================================
-  const SNOW_SETTINGS = { speedY_min: 0.12, speedY_max: 0.35, driftX: 0.15 };
-  const FLOWER_SETTINGS = { speedY_min: 0.20, speedY_max: 0.45, rotSpeed: 0.008, swaySpeed: 0.35 };
-  const NAME_SETTINGS = { driftX: 0.12, driftY: 0.08, spawnInterval: 650 };
-
-  // ===== 1. SNOW PARTICLES =====
+  // ===== 1. PARTICLES & FLOWERS =====
   const SNOW_COUNT = 45;
   const snowParticles = Array.from({ length: SNOW_COUNT }, () => ({
     x: Math.random() * 720,
     y: Math.random() * 1280,
     r: Math.random() * 2.2 + 0.6,
-    speedY: Math.random() * (SNOW_SETTINGS.speedY_max - SNOW_SETTINGS.speedY_min) + SNOW_SETTINGS.speedY_min,
-    speedX: (Math.random() - 0.5) * SNOW_SETTINGS.driftX,
+    speedY: Math.random() * 0.23 + 0.12,
+    speedX: (Math.random() - 0.5) * 0.15,
     opacity: Math.random() * 0.6 + 0.3
   }));
 
-  function updateAndDrawSnow() {
+  function updateAndDrawSnow(speedFactor) {
     snowParticles.forEach(p => {
-      p.y += p.speedY;
-      p.x += p.speedX;
+      p.y += p.speedY * speedFactor;
+      p.x += p.speedX * speedFactor;
       if (p.y > 1280) { p.y = -5; p.x = Math.random() * 720; }
       if (p.x < 0) p.x = 720;
       if (p.x > 720) p.x = 0;
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity})`;
-      ctx.shadowBlur = 5;
-      ctx.shadowColor = '#ffffff';
       ctx.fill();
-      ctx.shadowBlur = 0;
     });
   }
 
-  // ===== 2. FLOWERS THEMES =====
   const THEME_PALETTES = {
     multi: ['#EF4444', '#FBBF24', '#38BDF8', '#10B981'],
     rose: ['#E11D48', '#FB7185', '#F43F5E', '#FDA4AF'],
@@ -458,12 +473,11 @@
       y: startAtTop ? -30 - Math.random() * 200 : Math.random() * 1280,
       size: Math.random() * 6 + 7,
       color: palette[Math.floor(Math.random() * palette.length)],
-      speedY: Math.random() * (FLOWER_SETTINGS.speedY_max - FLOWER_SETTINGS.speedY_min) + FLOWER_SETTINGS.speedY_min,
-      swayAmp: Math.random() * 18 + 8,
+      speedY: Math.random() * 0.25 + 0.20,
       swayFreq: Math.random() * 0.0007 + 0.0003,
       swayPhase: Math.random() * Math.PI * 2,
       rot: Math.random() * Math.PI * 2,
-      rotSpeed: (Math.random() - 0.5) * FLOWER_SETTINGS.rotSpeed,
+      rotSpeed: (Math.random() - 0.5) * 0.008,
       opacity: Math.random() * 0.4 + 0.45
     };
   }
@@ -491,11 +505,11 @@
     ctx.shadowBlur = 0;
   }
 
-  function updateAndDrawFlowers(t) {
+  function updateAndDrawFlowers(t, speedFactor) {
     flowers.forEach(f => {
-      f.y += f.speedY;
-      f.x += Math.sin(t * f.swayFreq + f.swayPhase) * FLOWER_SETTINGS.swaySpeed;
-      f.rot += f.rotSpeed;
+      f.y += f.speedY * speedFactor;
+      f.x += Math.sin(t * f.swayFreq + f.swayPhase) * (0.35 * speedFactor);
+      f.rot += f.rotSpeed * speedFactor;
       if (f.y > 1280 + 30) {
         Object.assign(f, makeFlower(true));
       }
@@ -503,22 +517,16 @@
     });
   }
 
-  // ===== 3. SEPARATED GLOWING LETTERS (MEDIUM SIZE) =====
+  // ===== 2. FLOATING NAME LETTERS =====
   const DEFAULT_CHARS = [
     { ch: 'A', font: "'Poppins', sans-serif" }, { ch: 'i', font: "'Poppins', sans-serif" },
     { ch: 's', font: "'Poppins', sans-serif" }, { ch: 'w', font: "'Poppins', sans-serif" },
     { ch: 'a', font: "'Poppins', sans-serif" }, { ch: 'r', font: "'Poppins', sans-serif" },
     { ch: 'y', font: "'Poppins', sans-serif" }, { ch: 'a', font: "'Poppins', sans-serif" },
-    { ch: 'أ', font: "'Noto Sans Arabic', sans-serif" }, { ch: 'ي', font: "'Noto Sans Arabic', sans-serif" },
-    { ch: 'ش', font: "'Noto Sans Arabic', sans-serif" }, { ch: 'و', font: "'Noto Sans Arabic', sans-serif" },
-    { ch: 'ا', font: "'Noto Sans Arabic', sans-serif" }, { ch: 'ر', font: "'Noto Sans Arabic', sans-serif" },
-    { ch: 'ஐ', font: "'Noto Sans Tamil', sans-serif" }, { ch: 'ஸ்', font: "'Noto Sans Tamil', sans-serif" },
-    { ch: 'வ', font: "'Noto Sans Tamil', sans-serif" }, { ch: 'ർ', font: "'Noto Sans Tamil', sans-serif" },
-    { ch: 'யா', font: "'Noto Sans Tamil', sans-serif" }, { ch: 'ऐ', font: "'Noto Sans Devanagari', sans-serif" },
-    { ch: 'श्व', font: "'Noto Sans Devanagari', sans-serif" }, { ch: 'र्या', font: "'Noto Sans Devanagari', sans-serif" }
+    { ch: '💖', font: "sans-serif" }, { ch: '✨', font: "sans-serif" }
   ];
 
-  const GLOW_COLORS = ['#38BDF8', '#F472B6', '#FBBF24', '#34D399', '#A78BFA', '#FB7185', '#2DD4BF', '#FFFFFF'];
+  const GLOW_COLORS = ['#38BDF8', '#F472B6', '#FBBF24', '#34D399', '#A78BFA', '#FB7185', '#FFFFFF'];
   let charSpawnTimer = 0;
   const activeFloatingLetters = [];
 
@@ -538,8 +546,8 @@
       x: 60 + Math.random() * 600,
       y: 100 + Math.random() * 1050,
       baseY: 0,
-      driftX: (Math.random() - 0.5) * NAME_SETTINGS.driftX,
-      driftY: (Math.random() - 0.5) * NAME_SETTINGS.driftY,
+      driftX: (Math.random() - 0.5) * 0.12,
+      driftY: (Math.random() - 0.5) * 0.08,
       swayFreq: Math.random() * 0.0010 + 0.0004,
       swayPhase: Math.random() * Math.PI * 2,
       swayAmp: 25 + Math.random() * 25,
@@ -547,20 +555,20 @@
       pulsePhase: Math.random() * Math.PI * 2,
       age: 0,
       life: 14000 + Math.random() * 6000,
-      fontSize: 24, // Medium font size
+      fontSize: 24,
       inited: false
     });
   }
 
-  function updateAndDrawLetters(t, deltaTime) {
+  function updateAndDrawLetters(t, deltaTime, speedFactor) {
     for (let i = activeFloatingLetters.length - 1; i >= 0; i--) {
       const l = activeFloatingLetters[i];
-      l.age += deltaTime * 1000;
+      l.age += deltaTime * 1000 * speedFactor;
 
       if (!l.inited) { l.baseY = l.y; l.inited = true; }
 
-      l.baseY += l.driftY;
-      l.x += l.driftX + Math.sin(t * l.swayFreq + l.swayPhase) * (l.swayAmp * 0.008);
+      l.baseY += l.driftY * speedFactor;
+      l.x += (l.driftX + Math.sin(t * l.swayFreq + l.swayPhase) * (l.swayAmp * 0.008)) * speedFactor;
       const y = l.baseY + Math.cos(t * l.swayFreq * 0.6 + l.swayPhase) * 8;
 
       const fadeIn = Math.min(1, l.age / 1400);
@@ -588,7 +596,7 @@
     }
   }
 
-  // ===== 4. FLOATING EMOJIS =====
+  // ===== 3. FLOATING EMOJIS =====
   let emojiSpawnTimer = 0;
   const activeEmojis = [];
 
@@ -610,19 +618,19 @@
       swayAmp: 20 + Math.random() * 20,
       age: 0,
       life: 12000 + Math.random() * 5000,
-      size: 24, // Medium size
+      size: 24,
       inited: false
     });
   }
 
-  function updateAndDrawEmojis(t, deltaTime) {
+  function updateAndDrawEmojis(t, deltaTime, speedFactor) {
     for (let i = activeEmojis.length - 1; i >= 0; i--) {
       const e = activeEmojis[i];
-      e.age += deltaTime * 1000;
+      e.age += deltaTime * 1000 * speedFactor;
       if (!e.inited) { e.baseY = e.y; e.inited = true; }
 
-      e.baseY += e.driftY;
-      e.x += e.driftX + Math.sin(t * e.swayFreq + e.swayPhase) * (e.swayAmp * 0.01);
+      e.baseY += e.driftY * speedFactor;
+      e.x += (e.driftX + Math.sin(t * e.swayFreq + e.swayPhase) * (e.swayAmp * 0.01)) * speedFactor;
       const y = e.baseY;
 
       const fadeIn = Math.min(1, e.age / 1200);
@@ -648,10 +656,9 @@
     }
   }
 
-  // ===== 5. FLOATING PHOTO (DOWNWARD DRIFT & 50% TRANSPARENCY) =====
+  // ===== 4. MULTI-CIRCLE FLOATING PHOTOS =====
   let customPhotoImg = null;
-  let photoY = -120;
-  let photoBaseX = 360;
+  const floatingPhotos = [];
 
   photoInput.addEventListener('change', function(e) {
     const file = e.target.files[0];
@@ -660,52 +667,102 @@
       img.src = URL.createObjectURL(file);
       img.onload = () => { 
         customPhotoImg = img; 
-        photoY = -120;
+        initFloatingPhotos();
       };
     }
   });
 
-  function updateAndDrawFloatingPhoto(t, deltaTime) {
-    if (!customPhotoImg) return;
-    
-    // Move photo downwards gently
-    photoY += 0.35;
-    if (photoY > 1280 + 120) {
-      photoY = -120; // Loop back from top
+  function initFloatingPhotos() {
+    floatingPhotos.length = 0;
+    const sizes = [120, 90, 70, 55, 45]; // വിവിധ വലിപ്പങ്ങൾ
+    for (let i = 0; i < 7; i++) {
+      floatingPhotos.push({
+        x: Math.random() * 600 + 60,
+        y: Math.random() * 1280,
+        size: sizes[i % sizes.length],
+        speedY: (Math.random() * 0.25 + 0.15),
+        driftX: (Math.random() - 0.5) * 0.2,
+        swayFreq: Math.random() * 0.0008 + 0.0003,
+        swayPhase: Math.random() * Math.PI * 2,
+        opacity: Math.random() * 0.25 + 0.45 // 45% - 70% Transparency
+      });
     }
-
-    const px = photoBaseX + Math.sin(t * 0.0006) * 35;
-    const py = photoY;
-    const size = 110;
-
-    // 50% Transparent Photo
-    ctx.save();
-    ctx.globalAlpha = 0.50; // 50% transparency
-    ctx.translate(px, py);
-    ctx.beginPath();
-    ctx.arc(0, 0, size / 2, 0, Math.PI * 2);
-    ctx.closePath();
-    ctx.clip();
-
-    ctx.drawImage(customPhotoImg, -size / 2, -size / 2, size, size);
-    ctx.restore();
-
-    // 50% Transparent Glowing Border
-    ctx.save();
-    ctx.globalAlpha = 0.50; // 50% transparency
-    ctx.translate(px, py);
-    ctx.beginPath();
-    ctx.arc(0, 0, size / 2 + 2, 0, Math.PI * 2);
-    ctx.strokeStyle = '#38BDF8';
-    ctx.lineWidth = 3;
-    ctx.shadowColor = '#38BDF8';
-    ctx.shadowBlur = 15;
-    ctx.stroke();
-    ctx.restore();
-    ctx.globalAlpha = 1;
   }
 
-  // ===== 6. DYNAMIC GLOWING BACKGROUND =====
+  function updateAndDrawFloatingPhotos(t, speedFactor) {
+    if (!customPhotoImg) return;
+    
+    floatingPhotos.forEach(p => {
+      p.y += p.speedY * speedFactor;
+      if (p.y > 1280 + p.size) {
+        p.y = -p.size;
+        p.x = Math.random() * 600 + 60;
+      }
+
+      const px = p.x + Math.sin(t * p.swayFreq + p.swayPhase) * 35;
+      const py = p.y;
+      const r = p.size / 2;
+
+      ctx.save();
+      ctx.globalAlpha = p.opacity;
+      ctx.translate(px, py);
+
+      // സർക്കിൾ ക്ലിപ്പ്
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.clip();
+
+      ctx.drawImage(customPhotoImg, -r, -r, p.size, p.size);
+      ctx.restore();
+
+      // ഗ്ലോയിംഗ് ബോർഡർ
+      ctx.save();
+      ctx.globalAlpha = p.opacity;
+      ctx.translate(px, py);
+      ctx.beginPath();
+      ctx.arc(0, 0, r + 2, 0, Math.PI * 2);
+      ctx.strokeStyle = '#38BDF8';
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = '#38BDF8';
+      ctx.shadowBlur = 12;
+      ctx.stroke();
+      ctx.restore();
+      ctx.globalAlpha = 1;
+    });
+  }
+
+  // ===== 5. HAPPY BIRTHDAY BANNER / WISHES =====
+  function drawBirthdayWishes(t) {
+    const text = birthdayWishInput.value.trim();
+    if (!text) return;
+
+    ctx.save();
+    const pulse = 1 + 0.05 * Math.sin(t * 0.003);
+    ctx.translate(canvas.width / 2, 120);
+    ctx.scale(pulse, pulse);
+
+    // ബാക്ക്ഗ്രൗണ്ട് റിബൺ ഗ്ലോ
+    ctx.fillStyle = 'rgba(245, 158, 11, 0.15)';
+    ctx.beginPath();
+    ctx.roundRect(-260, -25, 520, 50, 25);
+    ctx.fill();
+
+    ctx.font = "bold 28px 'Dancing Script', 'Manjari', cursive";
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = '#F59E0B';
+    ctx.shadowBlur = 20;
+    ctx.fillStyle = '#FEF08A';
+    ctx.fillText(text, 0, 0);
+
+    ctx.strokeStyle = '#D97706';
+    ctx.lineWidth = 1.2;
+    ctx.strokeText(text, 0, 0);
+    ctx.restore();
+  }
+
+  // ===== 6. BACKGROUND ANIMATION =====
   const BG_PALETTES = [
     ['#070a14', '#0d1b2a', '#1b263b', '#030712'],
     ['#150524', '#2d0a4e', '#4c1d95', '#090214'],
@@ -715,14 +772,10 @@
   let palIdx = 0, palT = 0;
 
   function lerpColor(a, b, t) {
-    const ah = parseInt(a.slice(1), 16);
-    const bh = parseInt(b.slice(1), 16);
+    const ah = parseInt(a.slice(1), 16), bh = parseInt(b.slice(1), 16);
     const ar = (ah >> 16) & 0xff, ag = (ah >> 8) & 0xff, ab = ah & 0xff;
     const br = (bh >> 16) & 0xff, bg = (bh >> 8) & 0xff, bb = bh & 0xff;
-    const rr = Math.round(ar + (br - ar) * t);
-    const rg = Math.round(ag + (bg - ag) * t);
-    const rb = Math.round(ab + (bb - ab) * t);
-    return `rgb(${rr},${rg},${rb})`;
+    return `rgb(${Math.round(ar + (br - ar) * t)},${Math.round(ag + (bg - ag) * t)},${Math.round(ab + (bb - ab) * t)})`;
   }
 
   function drawAnimatedBg(t) {
@@ -754,37 +807,42 @@
     });
   }
 
+  // ===== MAIN RENDER LOOP =====
   function drawFrame() {
     const now = performance.now();
     const deltaTime = (now - lastTime) / 1000;
     lastTime = now;
+    const speedFactor = parseFloat(animSpeedFactor.value) || 1.0;
 
     if (!audioPlayer.paused && !isScrollPaused) {
       autoScrollY += scrollSpeed * deltaTime * 1.5;
     }
 
     drawAnimatedBg(now);
-    updateAndDrawSnow();
-    updateAndDrawFlowers(now);
+    updateAndDrawSnow(speedFactor);
+    updateAndDrawFlowers(now, speedFactor);
 
-    // Emojis Spawn
-    emojiSpawnTimer += deltaTime * 1000;
+    // Emojis
+    emojiSpawnTimer += deltaTime * 1000 * speedFactor;
     if (emojiSpawnTimer >= 1400) {
       emojiSpawnTimer = 0;
       spawnEmoji();
     }
-    updateAndDrawEmojis(now, deltaTime);
+    updateAndDrawEmojis(now, deltaTime, speedFactor);
 
-    // Single Glowing Letters Spawn (Medium size)
-    charSpawnTimer += deltaTime * 1000;
-    if (charSpawnTimer >= NAME_SETTINGS.spawnInterval) {
+    // Glowing Letters
+    charSpawnTimer += deltaTime * 1000 * speedFactor;
+    if (charSpawnTimer >= 650) {
       charSpawnTimer = 0;
       spawnFloatingLetter();
     }
-    updateAndDrawLetters(now, deltaTime);
+    updateAndDrawLetters(now, deltaTime, speedFactor);
 
-    // Downward Floating Photo with 50% Transparency
-    updateAndDrawFloatingPhoto(now, deltaTime);
+    // Multi Floating Photos
+    updateAndDrawFloatingPhotos(now, speedFactor);
+
+    // Birthday Wishes Title
+    drawBirthdayWishes(now);
 
     // Lyrics Rendering
     const startYPos = canvas.height * 0.65;
@@ -810,16 +868,17 @@
       ctx.shadowBlur = 0;
     });
 
-    const fadeH = 200;
+    // Top & Bottom Faders
+    const fadeH = 180;
     let tFade = ctx.createLinearGradient(0, 0, 0, fadeH);
-    tFade.addColorStop(0, 'rgba(0,0,0,0.95)');
+    tFade.addColorStop(0, 'rgba(0,0,0,0.85)');
     tFade.addColorStop(1, 'transparent');
     ctx.fillStyle = tFade;
     ctx.fillRect(0, 0, canvas.width, fadeH);
 
     let bFade = ctx.createLinearGradient(0, canvas.height - fadeH, 0, canvas.height);
     bFade.addColorStop(0, 'transparent');
-    bFade.addColorStop(1, 'rgba(0,0,0,0.95)');
+    bFade.addColorStop(1, 'rgba(0,0,0,0.9)');
     ctx.fillStyle = bFade;
     ctx.fillRect(0, canvas.height - fadeH, canvas.width, fadeH);
 
