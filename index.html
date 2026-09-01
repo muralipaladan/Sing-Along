@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Pro Lyrics Video Maker</title>
-<link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@400;600&family=Manjari:wght@400;700&family=Noto+Sans+Devanagari:wght@600&family=Noto+Sans+Tamil:wght@600&family=Noto+Sans+Arabic:wght@600&family=Poppins:wght@600;800&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+<title>Birthday Fullscreen Lyrics Video Maker</title>
+<link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@400;600&family=Manjari:wght@400;700&family=Poppins:wght@600;800&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0F172A; --panel: #1E293B; --accent: #38BDF8; --text: #F8FAFC; --muted: #94A3B8;
@@ -22,7 +22,7 @@
     width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
     background: var(--panel); color: var(--text); font-family: inherit; font-size: 13px;
   }
-  textarea { height: 70px; resize: none; }
+  textarea { height: 60px; resize: none; }
 
   .ctrl-bar {
     position: sticky; top: 0; z-index: 100;
@@ -90,15 +90,20 @@
 <body>
 
 <div class="top-section">
-  <h1>🎵 Lyrics Video Maker</h1>
+  <h1>🎂 Birthday Lyrics Video Maker</h1>
 
   <div class="input-group">
-    <label>പാട്ട് (Audio File)</label>
+    <label>📸 Birthday Person Photo (Full Screen & Bubbles)</label>
+    <input type="file" id="mainPhotoInput" accept="image/*">
+  </div>
+
+  <div class="input-group">
+    <label>🎵 പാട്ട് (Audio / Video)</label>
     <input type="file" id="audioInput" accept="audio/*,video/*,.mp3,.mp4,.webm,.m4a,.opus">
   </div>
 
   <div class="input-group">
-    <label>വരികൾ (Lyrics)</label>
+    <label>📝 വരികൾ (Lyrics)</label>
     <textarea id="lyricsInput" placeholder="വരികൾ ഇവിടെ പേസ്റ്റ് ചെയ്യുക..."></textarea>
   </div>
 </div>
@@ -132,57 +137,71 @@
   <canvas id="videoCanvas" width="720" height="1280" tabindex="0"></canvas>
 </div>
 
+<!-- ഇഫക്റ്റ് & ആനിമേഷൻ സെറ്റിംഗ്സ് -->
 <div class="custom-anim-panel">
-  <h2 class="panel-title">✨ സ്പെഷ്യൽ ഇഫക്റ്റ് & സൈസ് കൺട്രോളുകൾ</h2>
+  <h2 class="panel-title">✨ ആനിമേഷൻ & ബാക്ക്‌ഗ്രൗണ്ട് കൺട്രോളുകൾ</h2>
 
+  <!-- ബാക്ക്‌ഗ്രൗണ്ട് ഫോട്ടോ തെളിച്ചം & വലിപ്പം -->
   <div class="grid-2">
     <div class="input-group">
-      <label>1. Lyrics Font Size (px)</label>
+      <label>1. Photo Darkness (Overlay)</label>
       <div style="display:flex; align-items:center; gap:6px;">
-        <input type="range" id="fontSizeSlider" min="16" max="60" value="26">
-        <span id="fontSizeDisplay" class="speed-val">26px</span>
+        <input type="range" id="bgDimSlider" min="10" max="90" value="45">
+        <span id="bgDimDisplay" class="speed-val">45%</span>
       </div>
     </div>
     <div class="input-group">
-      <label>2. ആനിമേഷൻ സ്പീഡ് (Multiplier)</label>
+      <label>2. Lyrics Font Size (px)</label>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <input type="range" id="fontSizeSlider" min="16" max="60" value="28">
+        <span id="fontSizeDisplay" class="speed-val">28px</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="input-group">
+      <label>3. Animation Speed (Number)</label>
       <input type="number" id="animSpeedFactor" min="0.2" max="3.0" step="0.1" value="1.0">
+    </div>
+    <div class="input-group">
+      <label>4. Floating Photo Bubbles</label>
+      <select id="bubbleToggleSelect">
+        <option value="yes">On (പാറിപ്പറക്കുന്ന ഫോട്ടോകൾ)</option>
+        <option value="no">Off (ഫുൾസ്ക്രീൻ മാത്രം)</option>
+      </select>
     </div>
   </div>
 
   <div class="input-group">
-    <label>3. Birthday Wishes / Title Banner</label>
-    <input type="text" id="birthdayWishInput" placeholder="ഉദാ: Happy Birthday Dear Aiswarya 🎉">
+    <label>5. Birthday Wish / Banner</label>
+    <input type="text" id="birthdayWishInput" value="Happy Birthday to You 💖" placeholder="ആശംസകൾ ഇവിടെ എഴുതാം...">
   </div>
 
   <div class="grid-2">
     <div class="input-group">
-      <label>4. Emojis (സ്പേസ് നൽകുക)</label>
-      <input type="text" id="customEmojisInput" value="✨ 💖 🌸 🦋 💫 🎂 🎈">
+      <label>6. Emojis (Floating)</label>
+      <input type="text" id="customEmojisInput" value="💖 🎂 ✨ 🎈 🌸 🦋">
     </div>
     <div class="input-group">
-      <label>5. Custom Name / Letters</label>
+      <label>7. Glowing Name / Letters</label>
       <input type="text" id="customNameInput" placeholder="Aiswarya / പേരുകൾ...">
     </div>
   </div>
 
-  <div class="grid-2">
-    <div class="input-group">
-      <label>6. Flower Theme</label>
-      <select id="flowerThemeSelect">
-        <option value="multi">Mix (Red, Yellow, Blue, Green)</option>
-        <option value="rose">Red & Pink Roses</option>
-        <option value="golden">Golden Sparkle</option>
-        <option value="sakura">Sakura Pink</option>
-      </select>
-    </div>
-    <div class="input-group">
-      <label>7. Floating Photos (Circle)</label>
-      <input type="file" id="photoInput" accept="image/*">
-    </div>
+  <div class="input-group">
+    <label>8. Falling Flower Theme</label>
+    <select id="flowerThemeSelect">
+      <option value="rose">Red & Pink Roses (റൊമാന്റിക്/ബർത്ത്‌ഡേ)</option>
+      <option value="golden">Golden Sparkle (ഗോൾഡൻ തിളക്കം)</option>
+      <option value="multi">Mix Colors (കളർഫുൾ)</option>
+      <option value="sakura">Sakura Pink</option>
+    </select>
   </div>
 </div>
 
 <script>
+  const mainPhotoInput = document.getElementById('mainPhotoInput');
   const audioInput = document.getElementById('audioInput');
   const lyricsInput = document.getElementById('lyricsInput');
   const speedSlider = document.getElementById('speedSlider');
@@ -201,11 +220,13 @@
   const customEmojisInput = document.getElementById('customEmojisInput');
   const customNameInput = document.getElementById('customNameInput');
   const flowerThemeSelect = document.getElementById('flowerThemeSelect');
-  const photoInput = document.getElementById('photoInput');
   const fontSizeSlider = document.getElementById('fontSizeSlider');
   const fontSizeDisplay = document.getElementById('fontSizeDisplay');
+  const bgDimSlider = document.getElementById('bgDimSlider');
+  const bgDimDisplay = document.getElementById('bgDimDisplay');
   const animSpeedFactor = document.getElementById('animSpeedFactor');
   const birthdayWishInput = document.getElementById('birthdayWishInput');
+  const bubbleToggleSelect = document.getElementById('bubbleToggleSelect');
 
   let mediaRecorder;
   let recordedChunks = [];
@@ -222,17 +243,35 @@
   let initialOffset = 0;
   let isScrollPaused = false;
 
+  // Background Image Handling
+  let bgImage = null;
+  mainPhotoInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      img.onload = () => { 
+        bgImage = img;
+        initFloatingPhotos();
+      };
+    }
+  });
+
   // Font Size Settings
   let currentFontSize = parseInt(fontSizeSlider.value);
   let FONT = `bold ${currentFontSize}px 'Manjari', sans-serif`;
-  let LINE_SPACING = Math.round(currentFontSize * 1.9);
+  let LINE_SPACING = Math.round(currentFontSize * 1.85);
 
   fontSizeSlider.addEventListener('input', (e) => {
     currentFontSize = parseInt(e.target.value);
     fontSizeDisplay.textContent = `${currentFontSize}px`;
     FONT = `bold ${currentFontSize}px 'Manjari', sans-serif`;
-    LINE_SPACING = Math.round(currentFontSize * 1.9);
+    LINE_SPACING = Math.round(currentFontSize * 1.85);
     updateLines();
+  });
+
+  bgDimSlider.addEventListener('input', (e) => {
+    bgDimDisplay.textContent = `${e.target.value}%`;
   });
 
   function updateSpeed(val) {
@@ -400,7 +439,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Lyrics-Video-${Date.now()}.${mimeType.includes('mp4') ? 'mp4' : 'webm'}`;
+      a.download = `Birthday-Lyrics-${Date.now()}.${mimeType.includes('mp4') ? 'mp4' : 'webm'}`;
       a.click();
       
       recordBtn.style.display = 'inline-block';
@@ -431,7 +470,7 @@
     }
   });
 
-  // ===== 1. PARTICLES & FLOWERS =====
+  // ===== 1. PARTICLES & BOKEH LIGHTS =====
   const SNOW_COUNT = 45;
   const snowParticles = Array.from({ length: SNOW_COUNT }, () => ({
     x: Math.random() * 720,
@@ -456,29 +495,30 @@
     });
   }
 
+  // ===== 2. FLOATING FLOWERS =====
   const THEME_PALETTES = {
-    multi: ['#EF4444', '#FBBF24', '#38BDF8', '#10B981'],
-    rose: ['#E11D48', '#FB7185', '#F43F5E', '#FDA4AF'],
+    rose: ['#E11D48', '#FB7185', '#F43F5E', '#FDA4AF', '#FFFFFF'],
     golden: ['#F59E0B', '#FBBF24', '#FCD34D', '#FEF08A'],
+    multi: ['#EF4444', '#FBBF24', '#38BDF8', '#10B981', '#F472B6'],
     sakura: ['#F472B6', '#FBCFE8', '#F9A8D4', '#FFFFFF']
   };
 
-  const FLOWER_COUNT = 14;
+  const FLOWER_COUNT = 15;
   const flowers = Array.from({ length: FLOWER_COUNT }, () => makeFlower());
 
   function makeFlower(startAtTop) {
-    const palette = THEME_PALETTES[flowerThemeSelect.value] || THEME_PALETTES.multi;
+    const palette = THEME_PALETTES[flowerThemeSelect.value] || THEME_PALETTES.rose;
     return {
       x: Math.random() * 720,
       y: startAtTop ? -30 - Math.random() * 200 : Math.random() * 1280,
-      size: Math.random() * 6 + 7,
+      size: Math.random() * 7 + 8,
       color: palette[Math.floor(Math.random() * palette.length)],
-      speedY: Math.random() * 0.25 + 0.20,
+      speedY: Math.random() * 0.28 + 0.20,
       swayFreq: Math.random() * 0.0007 + 0.0003,
       swayPhase: Math.random() * Math.PI * 2,
       rot: Math.random() * Math.PI * 2,
       rotSpeed: (Math.random() - 0.5) * 0.008,
-      opacity: Math.random() * 0.4 + 0.45
+      opacity: Math.random() * 0.45 + 0.45
     };
   }
 
@@ -492,7 +532,7 @@
       ctx.beginPath();
       ctx.ellipse(0, -f.size * 0.6, f.size * 0.42, f.size * 0.62, 0, 0, Math.PI * 2);
       ctx.fillStyle = f.color;
-      ctx.shadowBlur = 7;
+      ctx.shadowBlur = 8;
       ctx.shadowColor = f.color;
       ctx.fill();
     }
@@ -517,16 +557,14 @@
     });
   }
 
-  // ===== 2. FLOATING NAME LETTERS =====
+  // ===== 3. FLOATING NAME LETTERS =====
   const DEFAULT_CHARS = [
-    { ch: 'A', font: "'Poppins', sans-serif" }, { ch: 'i', font: "'Poppins', sans-serif" },
-    { ch: 's', font: "'Poppins', sans-serif" }, { ch: 'w', font: "'Poppins', sans-serif" },
-    { ch: 'a', font: "'Poppins', sans-serif" }, { ch: 'r', font: "'Poppins', sans-serif" },
-    { ch: 'y', font: "'Poppins', sans-serif" }, { ch: 'a', font: "'Poppins', sans-serif" },
-    { ch: '💖', font: "sans-serif" }, { ch: '✨', font: "sans-serif" }
+    { ch: 'H', font: "'Poppins', sans-serif" }, { ch: 'B', font: "'Poppins', sans-serif" },
+    { ch: 'D', font: "'Poppins', sans-serif" }, { ch: '💖', font: "sans-serif" },
+    { ch: '✨', font: "sans-serif" }, { ch: '🎂', font: "sans-serif" }
   ];
 
-  const GLOW_COLORS = ['#38BDF8', '#F472B6', '#FBBF24', '#34D399', '#A78BFA', '#FB7185', '#FFFFFF'];
+  const GLOW_COLORS = ['#38BDF8', '#F472B6', '#FBBF24', '#34D399', '#FB7185', '#FFFFFF'];
   let charSpawnTimer = 0;
   const activeFloatingLetters = [];
 
@@ -588,7 +626,7 @@
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.shadowColor = l.color;
-      ctx.shadowBlur = 18 * pulse;
+      ctx.shadowBlur = 16 * pulse;
       ctx.fillStyle = l.color;
       ctx.fillText(l.ch, 0, 0);
       ctx.restore();
@@ -596,7 +634,7 @@
     }
   }
 
-  // ===== 3. FLOATING EMOJIS =====
+  // ===== 4. FLOATING EMOJIS =====
   let emojiSpawnTimer = 0;
   const activeEmojis = [];
 
@@ -635,7 +673,7 @@
 
       const fadeIn = Math.min(1, e.age / 1200);
       const fadeOut = Math.min(1, Math.max(0, (e.life - e.age) / 1800));
-      const opacity = fadeIn * fadeOut * 0.8;
+      const opacity = fadeIn * fadeOut * 0.85;
 
       if (e.age >= e.life || y < -40) {
         activeEmojis.splice(i, 1);
@@ -656,41 +694,27 @@
     }
   }
 
-  // ===== 4. MULTI-CIRCLE FLOATING PHOTOS =====
-  let customPhotoImg = null;
+  // ===== 5. FLOATING PHOTO BUBBLES =====
   const floatingPhotos = [];
-
-  photoInput.addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-      const img = new Image();
-      img.src = URL.createObjectURL(file);
-      img.onload = () => { 
-        customPhotoImg = img; 
-        initFloatingPhotos();
-      };
-    }
-  });
-
   function initFloatingPhotos() {
     floatingPhotos.length = 0;
-    const sizes = [120, 90, 70, 55, 45]; // വിവിധ വലിപ്പങ്ങൾ
-    for (let i = 0; i < 7; i++) {
+    const sizes = [110, 85, 65, 50];
+    for (let i = 0; i < 6; i++) {
       floatingPhotos.push({
         x: Math.random() * 600 + 60,
         y: Math.random() * 1280,
         size: sizes[i % sizes.length],
-        speedY: (Math.random() * 0.25 + 0.15),
-        driftX: (Math.random() - 0.5) * 0.2,
+        speedY: (Math.random() * 0.22 + 0.14),
+        driftX: (Math.random() - 0.5) * 0.18,
         swayFreq: Math.random() * 0.0008 + 0.0003,
         swayPhase: Math.random() * Math.PI * 2,
-        opacity: Math.random() * 0.25 + 0.45 // 45% - 70% Transparency
+        opacity: Math.random() * 0.25 + 0.45
       });
     }
   }
 
   function updateAndDrawFloatingPhotos(t, speedFactor) {
-    if (!customPhotoImg) return;
+    if (!bgImage || bubbleToggleSelect.value === 'no') return;
     
     floatingPhotos.forEach(p => {
       p.y += p.speedY * speedFactor;
@@ -707,24 +731,22 @@
       ctx.globalAlpha = p.opacity;
       ctx.translate(px, py);
 
-      // സർക്കിൾ ക്ലിപ്പ്
       ctx.beginPath();
       ctx.arc(0, 0, r, 0, Math.PI * 2);
       ctx.closePath();
       ctx.clip();
 
-      ctx.drawImage(customPhotoImg, -r, -r, p.size, p.size);
+      ctx.drawImage(bgImage, -r, -r, p.size, p.size);
       ctx.restore();
 
-      // ഗ്ലോയിംഗ് ബോർഡർ
       ctx.save();
       ctx.globalAlpha = p.opacity;
       ctx.translate(px, py);
       ctx.beginPath();
       ctx.arc(0, 0, r + 2, 0, Math.PI * 2);
-      ctx.strokeStyle = '#38BDF8';
+      ctx.strokeStyle = '#F472B6';
       ctx.lineWidth = 2.5;
-      ctx.shadowColor = '#38BDF8';
+      ctx.shadowColor = '#F472B6';
       ctx.shadowBlur = 12;
       ctx.stroke();
       ctx.restore();
@@ -732,71 +754,64 @@
     });
   }
 
-  // ===== 5. HAPPY BIRTHDAY BANNER / WISHES =====
-  function drawBirthdayWishes(t) {
-    const text = birthdayWishInput.value.trim();
-    if (!text) return;
+  // ===== 6. FULLSCREEN BACKGROUND PHOTO WITH FEELINGS & GLOW =====
+  function drawFullscreenPhotoBackground(t) {
+    const w = canvas.width;
+    const h = canvas.height;
 
-    ctx.save();
-    const pulse = 1 + 0.05 * Math.sin(t * 0.003);
-    ctx.translate(canvas.width / 2, 120);
-    ctx.scale(pulse, pulse);
+    if (bgImage) {
+      // Gentle breathing/zoom cinematic effect
+      const zoom = 1 + 0.03 * Math.sin(t * 0.0004);
+      const dw = w * zoom;
+      const dh = h * zoom;
+      const dx = (w - dw) / 2;
+      const dy = (h - dh) / 2;
 
-    // ബാക്ക്ഗ്രൗണ്ട് റിബൺ ഗ്ലോ
-    ctx.fillStyle = 'rgba(245, 158, 11, 0.15)';
-    ctx.beginPath();
-    ctx.roundRect(-260, -25, 520, 50, 25);
-    ctx.fill();
+      // Draw Fullscreen Image (Aspect Fill)
+      const imgRatio = bgImage.width / bgImage.height;
+      const canvasRatio = w / h;
+      let sx, sy, sWidth, sHeight;
 
-    ctx.font = "bold 28px 'Dancing Script', 'Manjari', cursive";
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.shadowColor = '#F59E0B';
-    ctx.shadowBlur = 20;
-    ctx.fillStyle = '#FEF08A';
-    ctx.fillText(text, 0, 0);
+      if (imgRatio > canvasRatio) {
+        sHeight = bgImage.height;
+        sWidth = bgImage.height * canvasRatio;
+        sx = (bgImage.width - sWidth) / 2;
+        sy = 0;
+      } else {
+        sWidth = bgImage.width;
+        sHeight = bgImage.width / canvasRatio;
+        sx = 0;
+        sy = (bgImage.height - sHeight) / 2;
+      }
 
-    ctx.strokeStyle = '#D97706';
-    ctx.lineWidth = 1.2;
-    ctx.strokeText(text, 0, 0);
-    ctx.restore();
-  }
+      ctx.drawImage(bgImage, sx, sy, sWidth, sHeight, dx, dy, dw, dh);
 
-  // ===== 6. BACKGROUND ANIMATION =====
-  const BG_PALETTES = [
-    ['#070a14', '#0d1b2a', '#1b263b', '#030712'],
-    ['#150524', '#2d0a4e', '#4c1d95', '#090214'],
-    ['#021c1e', '#00363a', '#006064', '#011014'],
-    ['#1c040f', '#3b0724', '#701a40', '#0f0208']
-  ];
-  let palIdx = 0, palT = 0;
+      // Customizable Dark Overlay for crystal clear Lyrics readability
+      const dimOpacity = (parseInt(bgDimSlider.value) || 45) / 100;
+      ctx.fillStyle = `rgba(10, 15, 29, ${dimOpacity})`;
+      ctx.fillRect(0, 0, w, h);
 
-  function lerpColor(a, b, t) {
-    const ah = parseInt(a.slice(1), 16), bh = parseInt(b.slice(1), 16);
-    const ar = (ah >> 16) & 0xff, ag = (ah >> 8) & 0xff, ab = ah & 0xff;
-    const br = (bh >> 16) & 0xff, bg = (bh >> 8) & 0xff, bb = bh & 0xff;
-    return `rgb(${Math.round(ar + (br - ar) * t)},${Math.round(ag + (bg - ag) * t)},${Math.round(ab + (bb - ab) * t)})`;
-  }
+      // Cinematic Vignette
+      const grad = ctx.createRadialGradient(w / 2, h / 2, w * 0.3, w / 2, h / 2, w * 0.85);
+      grad.addColorStop(0, 'transparent');
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0.7)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, w, h);
 
-  function drawAnimatedBg(t) {
-    const w = canvas.width, h = canvas.height;
-    palT += 0.0004;
-    if (palT >= 1) { palT = 0; palIdx = (palIdx + 1) % BG_PALETTES.length; }
-    const nextIdx = (palIdx + 1) % BG_PALETTES.length;
-    const pal = BG_PALETTES[palIdx].map((c, i) => lerpColor(c, BG_PALETTES[nextIdx][i], palT));
+    } else {
+      // Default Gradient if no photo is uploaded
+      const grad = ctx.createLinearGradient(0, 0, w, h);
+      grad.addColorStop(0, '#0F172A');
+      grad.addColorStop(1, '#020617');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, w, h);
+    }
 
-    const grad = ctx.createLinearGradient(0, 0, w, h);
-    grad.addColorStop(0,    pal[0]);
-    grad.addColorStop(0.35, pal[1]);
-    grad.addColorStop(0.65, pal[2]);
-    grad.addColorStop(1,    pal[3]);
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, w, h);
-
+    // Dreamy Glow Flares (Feelings)
     const flares = [
-      { cx: w * (0.5 + 0.35 * Math.sin(t * 0.0003)), cy: h * (0.3 + 0.15 * Math.cos(t * 0.0002)), r: 350, c: 'rgba(56,189,248,0.12)' },
-      { cx: w * (0.5 + 0.3  * Math.cos(t * 0.0004)), cy: h * (0.7 + 0.12 * Math.sin(t * 0.0003)), r: 300, c: 'rgba(244,114,182,0.10)' },
-      { cx: w * (0.5 - 0.2  * Math.sin(t * 0.0002)), cy: h * 0.5,                                   r: 380, c: 'rgba(52,211,153,0.08)' },
+      { cx: w * (0.5 + 0.35 * Math.sin(t * 0.0003)), cy: h * (0.3 + 0.15 * Math.cos(t * 0.0002)), r: 320, c: 'rgba(244,114,182,0.18)' },
+      { cx: w * (0.5 + 0.3  * Math.cos(t * 0.0004)), cy: h * (0.7 + 0.12 * Math.sin(t * 0.0003)), r: 280, c: 'rgba(56,189,248,0.15)' },
+      { cx: w * (0.5 - 0.2  * Math.sin(t * 0.0002)), cy: h * 0.5,                                   r: 350, c: 'rgba(251,191,36,0.14)' }
     ];
     flares.forEach(b => {
       const rg = ctx.createRadialGradient(b.cx, b.cy, 0, b.cx, b.cy, b.r);
@@ -805,6 +820,37 @@
       ctx.fillStyle = rg;
       ctx.fillRect(0, 0, w, h);
     });
+  }
+
+  // ===== 7. BIRTHDAY WISHES BANNER =====
+  function drawBirthdayWishes(t) {
+    const text = birthdayWishInput.value.trim();
+    if (!text) return;
+
+    ctx.save();
+    const pulse = 1 + 0.04 * Math.sin(t * 0.003);
+    ctx.translate(canvas.width / 2, 115);
+    ctx.scale(pulse, pulse);
+
+    // Glowing Pill Banner
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+    ctx.beginPath();
+    ctx.roundRect(-270, -28, 540, 56, 28);
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(251, 191, 36, 0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.font = "bold 30px 'Dancing Script', 'Poppins', cursive";
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = '#FBBF24';
+    ctx.shadowBlur = 22;
+    ctx.fillStyle = '#FEF08A';
+    ctx.fillText(text, 0, 0);
+
+    ctx.restore();
   }
 
   // ===== MAIN RENDER LOOP =====
@@ -818,11 +864,14 @@
       autoScrollY += scrollSpeed * deltaTime * 1.5;
     }
 
-    drawAnimatedBg(now);
+    // 1. Fullscreen Photo & Background Feelings
+    drawFullscreenPhotoBackground(now);
+
+    // 2. Overlaid Animations
     updateAndDrawSnow(speedFactor);
     updateAndDrawFlowers(now, speedFactor);
 
-    // Emojis
+    // 3. Emojis
     emojiSpawnTimer += deltaTime * 1000 * speedFactor;
     if (emojiSpawnTimer >= 1400) {
       emojiSpawnTimer = 0;
@@ -830,7 +879,7 @@
     }
     updateAndDrawEmojis(now, deltaTime, speedFactor);
 
-    // Glowing Letters
+    // 4. Glowing Letters
     charSpawnTimer += deltaTime * 1000 * speedFactor;
     if (charSpawnTimer >= 650) {
       charSpawnTimer = 0;
@@ -838,13 +887,13 @@
     }
     updateAndDrawLetters(now, deltaTime, speedFactor);
 
-    // Multi Floating Photos
+    // 5. Floating Photo Bubbles
     updateAndDrawFloatingPhotos(now, speedFactor);
 
-    // Birthday Wishes Title
+    // 6. Birthday Wishes Top Title
     drawBirthdayWishes(now);
 
-    // Lyrics Rendering
+    // 7. Lyrics Rendering
     const startYPos = canvas.height * 0.65;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -857,19 +906,19 @@
       const opacity = Math.max(0.08, 1 - centerDist / 700);
 
       ctx.font = FONT;
-      ctx.shadowColor = `rgba(56,189,248,${opacity * 0.7})`;
-      ctx.shadowBlur = 10;
+      ctx.shadowColor = `rgba(244, 114, 182, ${opacity * 0.8})`;
+      ctx.shadowBlur = 12;
       ctx.fillStyle = `rgba(255,255,255,${opacity})`;
 
-      ctx.strokeStyle = `rgba(0,0,0,${opacity * 0.6})`;
-      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = `rgba(0,0,0,${opacity * 0.75})`;
+      ctx.lineWidth = 3;
       ctx.strokeText(line, canvas.width / 2, lineY);
       ctx.fillText(line, canvas.width / 2, lineY);
       ctx.shadowBlur = 0;
     });
 
-    // Top & Bottom Faders
-    const fadeH = 180;
+    // 8. Top & Bottom Smooth Faders
+    const fadeH = 170;
     let tFade = ctx.createLinearGradient(0, 0, 0, fadeH);
     tFade.addColorStop(0, 'rgba(0,0,0,0.85)');
     tFade.addColorStop(1, 'transparent');
@@ -878,7 +927,7 @@
 
     let bFade = ctx.createLinearGradient(0, canvas.height - fadeH, 0, canvas.height);
     bFade.addColorStop(0, 'transparent');
-    bFade.addColorStop(1, 'rgba(0,0,0,0.9)');
+    bFade.addColorStop(1, 'rgba(0,0,0,0.92)');
     ctx.fillStyle = bFade;
     ctx.fillRect(0, canvas.height - fadeH, canvas.width, fadeH);
 
