@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>പാട്ട് — Malayalam Lyrics Player</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Malayalam:wght@300;400;500;700&family=Noto+Serif+Malayalam:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Malayalam:wght@300;400;500;700&family=Noto+Serif+Malayalam:wght@400;600;700&family=Inter:wght@300;400;500;700&family=Lora:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg:#0d0d18; --surface:#13131f; --card:#1a1a2e; --border:#2a2a4a;
@@ -14,11 +14,11 @@
   --error:#f87171; --warn:#fbbf24; --active:#c084fc;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:'Noto Sans Malayalam',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px 12px 60px}
+body{background:var(--bg);color:var(--text);font-family:'Inter','Noto Sans Malayalam',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px 12px 60px}
 
 /* ── NAV TABS ── */
 .tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:20px;width:100%;max-width:680px}
-.tab{flex:1;padding:9px 6px;border:none;background:transparent;color:var(--muted);border-radius:9px;cursor:pointer;font-family:'Noto Sans Malayalam',sans-serif;font-size:12px;font-weight:500;transition:all .2s;text-align:center}
+.tab{flex:1;padding:9px 6px;border:none;background:transparent;color:var(--muted);border-radius:9px;cursor:pointer;font-family:'Inter','Noto Sans Malayalam',sans-serif;font-size:12px;font-weight:500;transition:all .2s;text-align:center}
 .tab.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 2px 12px rgba(192,132,252,.3)}
 .tab:disabled{opacity:.35;cursor:not-allowed}
 
@@ -42,7 +42,7 @@ input::placeholder{color:var(--muted)}
 .input-row input{flex:1}
 
 /* ── BUTTONS ── */
-.btn{padding:11px 18px;border-radius:10px;border:none;cursor:pointer;font-family:'Noto Sans Malayalam',sans-serif;font-size:13px;font-weight:500;transition:all .2s;white-space:nowrap}
+.btn{padding:11px 18px;border-radius:10px;border:none;cursor:pointer;font-family:'Inter','Noto Sans Malayalam',sans-serif;font-size:13px;font-weight:500;transition:all .2s;white-space:nowrap}
 .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
 .btn-primary:hover{opacity:.9;transform:translateY(-1px)}
 .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}
@@ -90,7 +90,7 @@ input::placeholder{color:var(--muted)}
 .mode-desc{font-size:10px;color:var(--muted);margin-top:2px}
 
 /* ── OUTPUT LYRICS ── */
-.lyrics-raw{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;min-height:160px;font-family:'Noto Serif Malayalam',serif;font-size:15px;line-height:2;white-space:pre-wrap;word-break:break-word}
+.lyrics-raw{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;min-height:160px;font-family:'Lora','Noto Serif Malayalam',serif;font-size:15px;line-height:2;white-space:pre-wrap;word-break:break-word}
 .lyrics-raw .lnum{color:var(--muted);font-size:10px;font-family:'Noto Sans Malayalam',sans-serif;margin-right:8px;user-select:none}
 .action-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
 .action-row .btn{flex:1;min-width:80px}
@@ -115,19 +115,19 @@ input::placeholder{color:var(--muted)}
 .ts-row.highlighted{border-color:var(--success);background:rgba(74,222,128,.08)}
 .ts-time{font-size:11px;color:var(--accent2);font-family:monospace;min-width:52px;cursor:pointer;padding:4px 6px;background:rgba(129,140,248,.1);border-radius:5px;text-align:center;border:none;color:var(--accent2)}
 .ts-time:hover{background:rgba(192,132,252,.2)}
-.ts-lyric{flex:1;font-family:'Noto Serif Malayalam',serif;font-size:14px;line-height:1.6;color:var(--text)}
+.ts-lyric{flex:1;font-family:'Lora','Noto Serif Malayalam',serif;font-size:14px;line-height:1.6;color:var(--text)}
 .ts-lyric.header-line{font-size:11px;color:var(--muted);font-family:'Noto Sans Malayalam',sans-serif;font-style:italic}
 .ts-mark{padding:5px 9px;border-radius:6px;border:none;background:rgba(192,132,252,.12);color:var(--accent);cursor:pointer;font-size:11px;transition:all .2s}
 .ts-mark:hover{background:var(--accent);color:#fff}
 .ts-mark.set{background:rgba(74,222,128,.12);color:var(--success)}
 
 /* ── PLAYER ── */
-.player-song-name{font-family:'Noto Serif Malayalam',serif;font-size:20px;font-weight:700;text-align:center;margin-bottom:6px;line-height:1.4}
+.player-song-name{font-family:'Lora','Noto Serif Malayalam',serif;font-size:20px;font-weight:700;text-align:center;margin-bottom:6px;line-height:1.4}
 .player-meta{font-size:12px;color:var(--muted);text-align:center;margin-bottom:18px}
 .player-audio-wrap{margin-bottom:16px}
 .player-audio-wrap audio{width:100%;border-radius:10px;accent-color:var(--accent)}
 .player-lyrics{display:flex;flex-direction:column;gap:2px;max-height:420px;overflow-y:auto;padding:4px 0;scroll-behavior:smooth}
-.pl-line{font-family:'Noto Serif Malayalam',serif;font-size:16px;line-height:2;padding:6px 12px;border-radius:8px;transition:all .3s;color:var(--muted);cursor:pointer}
+.pl-line{font-family:'Lora','Noto Serif Malayalam',serif;font-size:16px;line-height:2;padding:6px 12px;border-radius:8px;transition:all .3s;color:var(--muted);cursor:pointer}
 .pl-line:hover{color:var(--text);background:rgba(129,140,248,.05)}
 .pl-line.active{color:var(--text);background:var(--glow);border-left:3px solid var(--accent);font-size:18px;font-weight:600}
 .pl-line.header{font-family:'Noto Sans Malayalam',sans-serif;font-size:11px;color:var(--muted);letter-spacing:1px;padding:10px 12px 2px}
@@ -147,7 +147,7 @@ input::placeholder{color:var(--muted)}
 <body>
 
 <div class="logo">🎵 പാട്ട്</div>
-<div class="tagline">Malayalam Lyrics Transcriber & Synced Player</div>
+<div class="tagline">Malayalam & English Lyrics Transcriber · Synced Player</div>
 
 <!-- TABS -->
 <div class="tabs">
@@ -169,7 +169,7 @@ input::placeholder{color:var(--muted)}
       <label class="mode-opt selected" id="modeAiOpt" onclick="setEntryMode('ai')">
         <div class="mode-icon">🤖</div>
         <div class="mode-name">AI Transcribe</div>
-        <div class="mode-desc">Gemini audio കേട്ട് lyrics എഴുതും</div>
+        <div class="mode-desc">Gemini audio കേട്ട് lyrics എഴുതും — Malayalam & English</div>
       </label>
       <label class="mode-opt" id="modeManualOpt" onclick="setEntryMode('manual')">
         <div class="mode-icon">✍️</div>
@@ -225,7 +225,7 @@ input::placeholder{color:var(--muted)}
       <button class="btn btn-ghost btn-sm" onclick="resetKey()">Key മാറ്റുക</button>
     </div>
 
-    <div class="card-title">🎤 ഓഡിയോ / വീഡിയോ ഫയൽ</div>
+    <div class="card-title">🎤 ഓഡിയോ / വീഡിയോ ഫയൽ — Malayalam or English</div>
     <div class="drop-zone" id="dropZone">
       <input type="file" id="audioFile" accept="audio/*,video/*" onchange="onFileSelect(this)">
       <div class="drop-icon">🎵</div>
@@ -274,7 +274,7 @@ input::placeholder{color:var(--muted)}
 
     <div id="manualSection" style="display:none;margin-top:16px">
       <div class="card-title">📝 Lyrics ഇവിടെ Paste ചെയ്യുക</div>
-      <textarea id="manualLyricsInput" placeholder="ഓരോ വരിയും ഒരു പുതിയ line-ൽ ടൈപ്പ് ചെയ്യുക...&#10;&#10;[Pallavi] പോലുള്ള headers വേണമെങ്കിൽ ചേർക്കാം, തുടർന്ന് ഒരു ഒഴിഞ്ഞ line." style="width:100%;min-height:220px;font-family:'Noto Serif Malayalam',serif;font-size:15px;line-height:2;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;color:var(--text);resize:vertical;outline:none"></textarea>
+      <textarea id="manualLyricsInput" placeholder="ഓരോ വരിയും ഒരു പുതിയ line-ൽ ടൈപ്പ് ചെയ്യുക...&#10;Malayalam: [Pallavi] / [Charanam 1] പോലുള്ള headers ചേർക്കാം&#10;English: [Verse 1] / [Chorus] / [Bridge] പോലുള്ള headers ചേർക്കാം&#10;&#10;Header-ന് ശേഷം ഒരു ഒഴിഞ്ഞ line ഇടുക." style="width:100%;min-height:220px;font-family:'Lora','Noto Serif Malayalam',serif;font-size:15px;line-height:2;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;color:var(--text);resize:vertical;outline:none"></textarea>
       <div class="err-box" id="manualErrBox"></div>
       <button class="btn btn-primary btn-full" onclick="saveManualSong()">💾 Song + Lyrics Save ചെയ്യുക</button>
     </div>
@@ -282,9 +282,12 @@ input::placeholder{color:var(--muted)}
     <div id="timedSection" style="display:none;margin-top:16px">
       <div class="card-title">⏱ Timestamped Lyrics (LRC Format) Paste ചെയ്യുക</div>
       <div class="info-box" style="margin-bottom:10px">
-        ഓരോ വരിയും ഇങ്ങനെ വേണം: <strong>[mm:ss.xx] lyrics line</strong> — ഉദാ: <code>[00:12.50] ഒരു മധുരമുള്ള ഗാനം</code>. Header വരികൾ (timestamp ഇല്ലാതെ) <strong>[Pallavi]</strong> പോലെ ചേർക്കാം.
+        ഓരോ വരിയും ഇങ്ങനെ വേണം: <strong>[mm:ss.xx] lyrics line</strong><br>
+        Malayalam: <code>[00:12.50] ഒരു മധുരമുള്ള ഗാനം</code><br>
+        English: <code>[00:12.50] We will rock you</code><br>
+        Section headers (timestamp ഇല്ലാതെ): <strong>[Pallavi]</strong> അല്ലെങ്കിൽ <strong>[Chorus]</strong>
       </div>
-      <textarea id="timedLyricsInput" placeholder="[00:05.20] ആദ്യ വരി&#10;[00:11.40] രണ്ടാമത്തെ വരി&#10;[Charanam 1]&#10;[00:20.10] അടുത്ത വരി" style="width:100%;min-height:220px;font-family:'Noto Serif Malayalam',serif;font-size:15px;line-height:2;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;color:var(--text);resize:vertical;outline:none"></textarea>
+      <textarea id="timedLyricsInput" placeholder="[00:05.20] ആദ്യ വരി / First line here&#10;[00:11.40] രണ്ടാം വരി / Second line here&#10;[Charanam 1] or [Verse 1]&#10;[00:20.10] അടുത്ത വരി / Next line" style="width:100%;min-height:220px;font-family:'Lora','Noto Serif Malayalam',serif;font-size:15px;line-height:2;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;color:var(--text);resize:vertical;outline:none"></textarea>
       <div class="err-box" id="timedErrBox"></div>
       <button class="btn btn-primary btn-full" onclick="saveTimedSong()">💾 Song Save ചെയ്ത് Player-ലേക്ക് പോകുക</button>
     </div>
@@ -588,25 +591,42 @@ function clearErr() { document.getElementById('errBox').classList.remove('show')
 // Transcribe
 // ═══════════════════════════════════════════════════
 function buildPrompt(mode) {
-  if (mode==='lyrics') return `നിങ്ങൾ ഒരു Malayalam lyrics expert ആണ്. ഈ audio-യിൽ ഉള്ള ഗാനം ശ്രദ്ധയോടെ കേൾക്കുക.
+  if (mode==='lyrics') return `You are a lyrics transcription expert for both Malayalam and English songs.
 
-ദൗത്യം:
-1. ഗാനത്തിൻ്റെ EVERY WORD, EVERY SYLLABLE ശരിയായി transcribe ചെയ്യുക.
-2. ഓരോ വരിയും (line) പ്രത്യേകം ഒരു line-ൽ എഴുതുക.
-3. Charanam, Pallavi, Interlude sections ഉണ്ടെങ്കിൽ [Pallavi], [Charanam 1] എന്ന് label ചെയ്ത ശേഷം ഒഴിഞ്ഞ line ഇട്ടു കൊണ്ട് വേർതിരിക്കുക.
-4. Output-ൽ ONLY lyrics — extra explanations, notes ഒന്നും വേണ്ട.
-5. Unclear ഭാഗങ്ങൾ [?] ആക്കുക.
+Listen carefully to the audio and identify the language(s) being sung.
 
-Output format: strictly Malayalam script only.`;
-  return `നിങ്ങൾ ഒരു Kerala classical music scholar ആണ്. ഈ audio-യിൽ ഉള്ള ഗാനം ആഴത്തിൽ വിശകലനം ചെയ്യുക.
+Rules:
+1. Transcribe EVERY WORD and SYLLABLE accurately in the ORIGINAL language and script.
+   - If Malayalam: use Malayalam script (ഉദാ: ഒരു മധുരമുള്ള ഗാനം)
+   - If English: use English (e.g., "We will rock you")
+   - If mixed (Manglish / code-mix): transcribe each word in its original language/script
+2. Each lyric line goes on its own separate line.
+3. Label song sections with headers in square brackets, then add a blank line after each section header:
+   - Malayalam songs: [Pallavi], [Charanam 1], [Charanam 2], [Interlude] etc.
+   - English songs: [Verse 1], [Chorus], [Bridge], [Pre-Chorus], [Outro] etc.
+4. Output ONLY the lyrics — no explanations, no notes, no commentary.
+5. Mark unclear parts as [?].
+6. Do NOT translate — keep original language as sung.`;
 
-1. **Lyrics**: [Pallavi]/[Charanam] label ചെയ്ത് line-by-line.
-2. **Raagam**: ഏത് raga? ഉറപ്പില്ലെങ്കിൽ "അജ്ഞാതം".
-3. **Thaalam**: ഏത് thaalam?
+  return `You are a music analysis expert for both Malayalam classical and English/Western songs.
+
+Listen to the audio and identify the language, genre, and musical style. Then provide a complete analysis:
+
+For Malayalam classical songs:
+1. **Lyrics**: [Pallavi]/[Charanam] label ചെയ്ത് line-by-line in Malayalam script.
+2. **Raagam**: ഏത് raga? ഉറപ്പില്ലെങ്കിൽ "Unknown".
+3. **Thaalam**: ഏത് thaalam/time signature?
 4. **Swaram notes**: Key swarams, gamakas.
 5. **Mood/Rasa**: ഗാനത്തിൻ്റെ ഭാവം.
 
-## 🎵 Lyrics\n[Pallavi]\n...\n\n## 🎼 Raagam · Thaalam\n...\n\n## 🎹 Swara Notes\n...\n\n## 💫 Mood\n...`;
+For English/Western songs:
+1. **Lyrics**: [Verse]/[Chorus] labeled, line-by-line in English.
+2. **Genre**: Pop / Rock / R&B / Folk etc.
+3. **Key & Tempo**: Musical key and approximate BPM if detectable.
+4. **Chord feel**: Major/minor, mood.
+5. **Mood**: Overall emotional tone.
+
+## 🎵 Lyrics\n...\n\n## 🎼 Music Info\n...\n\n## 💫 Mood\n...`;
 }
 
 async function transcribe() {
